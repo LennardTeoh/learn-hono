@@ -1,0 +1,21 @@
+{
+  "name": "shoplite-cloudflare-course",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create shoplite-db",
+    "db:migrate:local": "wrangler d1 migrations apply shoplite-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply shoplite-db --remote",
+    "db:seed:local": "wrangler d1 execute shoplite-db --local --file=./seed.sql",
+    "db:seed:remote": "wrangler d1 execute shoplite-db --remote --file=./seed.sql"
+  },
+  "dependencies": {
+    "hono": "^4.9.6"
+  },
+  "devDependencies": {
+    "wrangler": "^4.32.0"
+  }
+}
