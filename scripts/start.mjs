@@ -25,7 +25,8 @@ if (missingEnv.length || String(process.env.BETTER_AUTH_SECRET || '').length < 3
   process.exit(1)
 }
 
-const migration = spawnSync('npm', ['--prefix', 'backend', 'run', 'db:migrate:local'], { stdio: 'inherit' })
+const migration = spawnSync('npm', ['--prefix', 'backend', 'run', 'db:migrate:local'], { stdio: 'inherit', shell: process.platform === 'win32' })
+if (migration.error) throw migration.error
 if (migration.status !== 0) process.exit(migration.status || 1)
 
 console.log('Starting PetitBakery Worker on http://localhost:8787')

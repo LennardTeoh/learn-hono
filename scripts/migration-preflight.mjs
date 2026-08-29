@@ -1,7 +1,11 @@
 import { spawnSync } from 'node:child_process'
 
 const run = (command) => {
-  const result = spawnSync('backend/node_modules/.bin/wrangler', ['d1', 'execute', 'petitbakery-db', '--remote', '--command', command, '--json'], { encoding: 'utf8' })
+  const result = spawnSync('npm', ['--prefix', 'backend', 'exec', '--', 'wrangler', 'd1', 'execute', 'petitbakery-db', '--remote', '--command', command, '--json'], { encoding: 'utf8', shell: process.platform === 'win32' })
+  if (result.error) {
+    process.stderr.write(`${result.error.message}\n`)
+    process.exit(1)
+  }
   if (result.status !== 0) {
     process.stderr.write(result.stderr || result.stdout || 'Wrangler migration preflight failed.\n')
     process.exit(result.status ?? 1)

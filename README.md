@@ -5,7 +5,7 @@ PetitBakery is a beginner-friendly bakery storefront you can run and study.
 ## Quick start: frontend + backend
 
 ```bash
-cp .env.example .env
+node -e "require('node:fs').copyFileSync('.env.example', '.env')"
 npm install --prefix backend
 npm run check
 npm run start
