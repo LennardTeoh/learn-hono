@@ -2,20 +2,24 @@
 
 PetitBakery is a beginner-friendly bakery storefront you can run and study.
 
-## Start the reference app
+## Quick start: frontend + backend
 
 ```bash
+cp .env.example .env
+npm install --prefix backend
 npm run check
 npm run start
 ```
 
-Then open `http://localhost:8788`. The command runs the Hono Worker at
-`http://localhost:8787` and serves `frontend/` at `http://localhost:8788`.
-The Worker loads the repository-root `.env` file through Wrangler. Stop both
-servers with `Ctrl-C`.
+Before starting, replace the `BETTER_AUTH_SECRET` and `RESEND_API_KEY`
+placeholders in `.env` with your local values. `BETTER_AUTH_SECRET` must be at
+least 32 characters; use a real Resend API key if you want verification and
+password-reset emails to work.
 
-For a new checkout, start with `cp .env.example .env` and fill in the local
-secret values.
+`npm run start` applies local D1 migrations, runs the Hono Worker at
+`http://localhost:8787`, and serves `frontend/` at `http://localhost:8788`.
+Open `http://localhost:8788` in your browser and stop both servers with
+`Ctrl-C`.
 
 ## Rebuild in four milestones
 
