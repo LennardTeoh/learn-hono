@@ -54,13 +54,12 @@ The backend therefore validates/bounds all values and reloads current prices fro
 
 ### GitHub Actions is deployment authority
 
-`.github/workflows/cloudflare.yml` separates delivery into three jobs:
+`.github/workflows/deploy-backend.yml` and `.github/workflows/deploy-frontend.yml` keep delivery in two focused workflows:
 
-- `test` runs the project checks and backend type-check before any deploy.
-- `deploy-backend` validates runtime secrets, applies remote D1 migrations and deploys the Hono Worker.
-- `deploy-frontend` uploads only `frontend/` to the Cloudflare Pages project.
+- The backend workflow runs `test-backend`, then `deploy-backend` validates runtime secrets, applies remote D1 migrations and deploys the Hono Worker.
+- The frontend workflow runs `test-frontend`, then `deploy-frontend` uploads only `frontend/` to the Cloudflare Pages project.
 
-Both deploy jobs require `test`; pull requests stop after validation.
+Each deploy job requires its workflow's test job; pull requests stop after validation.
 
 Only GitHub Secrets contain:
 

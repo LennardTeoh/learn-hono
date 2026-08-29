@@ -44,10 +44,11 @@ try {
   }
   if (!stage || stage >= 4) {
     await required('backend/wrangler.jsonc', ['petitbakery-api', 'petitbakery-db', 'd1_databases', 'onboarding@resend.dev'])
-    await required('.github/workflows/cloudflare.yml', ['deploy-backend:', 'deploy-frontend:', 'needs: test', 'CLOUDFLARE_API_TOKEN', 'BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'wrangler pages deploy frontend'])
+    await required('.github/workflows/deploy-backend.yml', ['test-backend:', 'deploy-backend:', 'needs: test-backend', 'CLOUDFLARE_API_TOKEN', 'BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'npm run deploy --prefix backend'])
+    await required('.github/workflows/deploy-frontend.yml', ['test-frontend:', 'deploy-frontend:', 'needs: test-frontend', 'CLOUDFLARE_API_TOKEN', 'wrangler pages deploy frontend'])
     await required('frontend/_headers', ['Content-Security-Policy', 'frame-ancestors'])
     await required('README.md', ['Cloudflare Pages', 'Cloudflare deployment', 'deploy-backend', 'deploy-frontend', 'products/index.html'])
-    await required('ARCHITECTURE.md', ['deploy-backend', 'deploy-frontend', 'Both deploy jobs require'])
+    await required('ARCHITECTURE.md', ['deploy-backend', 'deploy-frontend', 'Each deploy job requires'])
     pass('Cloudflare deployment configuration is present')
   }
   console.log(stage ? `Stage ${stage} ready.` : 'All PetitBakery checks passed.')

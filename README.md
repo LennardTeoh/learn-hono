@@ -247,7 +247,7 @@ http://localhost:8788
 
 ## 1. Create Pages project once
 
-This repository uses **Direct Upload** from GitHub Actions. The workflow keeps the two deploy targets separate: `deploy-backend` publishes the Hono Worker and applies D1 migrations, while `deploy-frontend` uploads only `frontend/` to Pages.
+This repository uses **Direct Upload** from GitHub Actions. Two workflow files keep the deploy targets separate: `deploy-backend.yml` publishes the Hono Worker and applies D1 migrations, while `deploy-frontend.yml` uploads only `frontend/` to Pages.
 
 ```bash
 npx wrangler pages project create petitbakery --production-branch main
@@ -327,13 +327,12 @@ Then replace the broad `https://*.workers.dev` entry in `frontend/_headers` with
 
 ## 8. Push to `main`
 
-The workflow:
+The two workflows run independently:
 
-1. runs the shared `test` job (including project checks and backend type-checking),
-2. runs `deploy-backend` to validate secrets, apply D1 migrations and deploy `backend/` to Workers,
-3. runs `deploy-frontend` to deploy only `frontend/` to Cloudflare Pages.
+1. `deploy-backend.yml` runs `test-backend`, then validates secrets, applies D1 migrations and deploys `backend/` to Workers.
+2. `deploy-frontend.yml` runs `test-frontend`, then deploys only `frontend/` to Cloudflare Pages.
 
-The two deploy jobs both require `test` and can run independently after validation. Pull requests run `test` only; pushes to `main` and manual runs deploy both targets.
+Pull requests run the relevant test job only; pushes to `main` and manual runs deploy that workflow’s target.
 
 Cloudflare credentials remain in GitHub secrets. The hosted storefront and catalogue require no Worker runtime secrets; enabling account registration or transactional email later requires an explicit secret policy.
 
@@ -367,7 +366,8 @@ GET    /api/orders/:id
 nimble-commerce/
 ├── .github/
 │   └── workflows/
-│       └── cloudflare.yml
+│       ├── deploy-backend.yml
+│       └── deploy-frontend.yml
 ├── backend/
 │   ├── migrations/
 │   │   ├── 0001_init.sql
