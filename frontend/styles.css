@@ -49,7 +49,8 @@ button, input, select { font: inherit; }
 .pb-category:nth-child(3) { background: #e78d4f; }
 .pb-category:nth-child(4) { background: #c9713e; }
 .pb-category strong { position: relative; z-index: 1; display: block; font-size: 1.2rem; }
-.pb-category img { position: absolute; right: -8px; bottom: -16px; width: 75%; height: 95%; object-fit: contain; mix-blend-mode: multiply; transform: rotate(-8deg); }
+.pb-category img { position: absolute; right: -2%; bottom: -10%; width: 72%; height: 104%; object-fit: contain; filter: drop-shadow(0 14px 12px rgba(81, 36, 14, .18)); transform: rotate(-6deg); transition: transform .2s ease, filter .2s ease; }
+.pb-category:hover img, .pb-category:focus-visible img { transform: rotate(-3deg) translateY(-4px) scale(1.04); filter: drop-shadow(0 18px 14px rgba(81, 36, 14, .22)); }
 .pb-about { display: grid; grid-template-columns: .8fr 1.2fr; align-items: center; gap: 2rem; padding: 2rem; border-radius: 1.7rem; background: var(--pb-peach); }
 .pb-about h2 { max-width: 340px; }
 .pb-about p { color: var(--pb-muted); line-height: 1.65; }
