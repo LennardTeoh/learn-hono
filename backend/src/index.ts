@@ -22,7 +22,7 @@ app.use('/api/*', async (c, next) => {
   return middleware(c, next)
 })
 
-app.get('/health', (c) => c.json({ ok: true, service: 'nimble-commerce-api' }))
+app.get('/health', (c) => c.json({ ok: true, service: 'petitbakery-api' }))
 
 app.route('/api/auth', authRoutes)
 app.route('/api/products', productRoutes)

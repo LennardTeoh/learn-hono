@@ -29,7 +29,8 @@ try {
     pass('Hono routes and trusted checkout checks are present')
   }
   if (!stage || stage >= 4) {
-    await required('backend/wrangler.jsonc', ['nimble-commerce-api', 'd1_databases'])
+    await required('backend/wrangler.jsonc', ['petitbakery-api', 'petitbakery-db', 'd1_databases'])
+    await required('.github/workflows/cloudflare.yml', ['CLOUDFLARE_API_TOKEN', 'wrangler pages deploy'])
     await required('frontend/_headers', ['Content-Security-Policy', 'frame-ancestors'])
     await required('README.md', ['Cloudflare Pages', 'Cloudflare deployment'])
     pass('Cloudflare deployment configuration is present')

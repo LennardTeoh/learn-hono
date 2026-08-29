@@ -1,9 +1,6 @@
 # PetitBakery — Cloudflare Pages + Hono Workers
 
-PetitBakery is a beginner-friendly bakery storefront you can run, study, and
-rebuild. The finished reference app lives on `main`; the student exercise can
-live on a separate `student-starter` branch when you are ready to remove the
-reference implementation.
+PetitBakery is a beginner-friendly bakery storefront you can run and study.
 
 ## Start the reference app
 
@@ -30,7 +27,6 @@ npm run check:stage4  # Pages, Worker, D1 and security configuration
 ```
 
 Use the “Learn” link in the PetitBakery header for the four-step in-app map.
-The student onboarding deck is delivered as `outputs/petitbakery-onboarding.pptx`.
 
 A beginner-friendly full e-commerce starter using:
 
@@ -40,7 +36,7 @@ A beginner-friendly full e-commerce starter using:
 - **Database:** Cloudflare D1
 - **Bot protection:** Cloudflare Turnstile
 - **Email verification/password reset:** Resend Free adapter
-- **CI/CD:** GitHub Actions + `cloudflare/wrangler-action@v4` (Wrangler pinned to 4.92.0)
+- **CI/CD:** GitHub Actions runs Wrangler directly for D1, Workers, and Pages
 - **Payment:** intentionally omitted; checkout creates a dummy confirmed order
 
 ## Features
@@ -187,7 +183,7 @@ Tailwind documents this CDN as **development-only, not intended for production**
 
 ## 1. Prerequisites
 
-- Node.js 20+ (CI uses Node 24)
+- Node.js 22+ (CI uses Node 22)
 - Cloudflare account
 - Wrangler authenticated locally
 - Resend account for real email
@@ -203,19 +199,13 @@ npm install
 ## 3. Create D1 database
 
 ```bash
-npx wrangler d1 create nimble-shop-db
+npx wrangler d1 create petitbakery-db
 ```
 
 Copy the returned database ID into:
 
 ```text
 backend/wrangler.jsonc
-```
-
-Replace:
-
-```text
-REPLACE_WITH_D1_DATABASE_ID
 ```
 
 ## 4. Apply migrations locally
@@ -285,7 +275,7 @@ http://localhost:8788
 This repository uses **Direct Upload** from GitHub Actions.
 
 ```bash
-npx wrangler pages project create nimble-commerce
+npx wrangler pages project create petitbakery --production-branch main
 ```
 
 Choose `main` as production branch.
@@ -294,7 +284,7 @@ Choose `main` as production branch.
 
 ```bash
 cd backend
-npx wrangler d1 create nimble-shop-db
+npx wrangler d1 create petitbakery-db
 ```
 
 Put the ID in `backend/wrangler.jsonc` and commit the file.
@@ -346,27 +336,23 @@ Repository:
 Settings -> Secrets and variables -> Actions -> Secrets
 ```
 
-Add:
+This repository uses:
 
 ```text
 CLOUDFLARE_API_TOKEN
 CLOUDFLARE_ACCOUNT_ID
-PASSWORD_PEPPER
-RESEND_API_KEY
-TURNSTILE_SECRET_KEY
+DOTENV
 ```
 
-`PASSWORD_PEPPER` should be a long random secret, for example 48 random bytes encoded as base64.
+`DOTENV` stores the complete local `.env` as a GitHub-only backup; GitHub secret names cannot contain a period. The workflow does not read it. It passes only the Cloudflare deployment token and account ID to Wrangler. No application secrets are set on the Worker.
 
 ## 7. GitHub Actions variables
 
-Add repository variables:
+The production origins are committed in `backend/wrangler.jsonc` and `frontend/js/config.js`:
 
 ```text
-APP_ORIGIN=https://nimble-commerce.pages.dev
-PUBLIC_API_BASE=https://nimble-commerce-api.<your-workers-subdomain>.workers.dev
-TURNSTILE_SITE_KEY=<public-site-key>
-EMAIL_FROM=PetitBakery <noreply@mail.yourdomain.com>
+APP_ORIGIN=https://petitbakery.pages.dev
+PUBLIC_API_BASE=https://petitbakery-api.velozz.workers.dev
 ```
 
 For stronger cookie/CSP ergonomics, use a custom domain:
@@ -386,10 +372,9 @@ The workflow:
 2. syntax-checks frontend JavaScript,
 3. applies D1 migrations,
 4. deploys the Worker,
-5. generates public frontend config from GitHub variables,
-6. deploys `frontend/` to Cloudflare Pages.
+5. deploys `frontend/` to Cloudflare Pages.
 
-Cloudflare credentials remain in GitHub secrets.
+Cloudflare credentials remain in GitHub secrets. The hosted storefront and catalogue require no Worker runtime secrets; enabling account registration or transactional email later requires an explicit secret policy.
 
 ---
 
