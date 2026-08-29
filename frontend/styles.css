@@ -22,7 +22,14 @@ button, input, select { font: inherit; }
 .pb-shell { position: relative; z-index: 40; border-bottom: 1px solid var(--pb-line); background: rgba(255, 243, 223, .94); backdrop-filter: blur(14px); }
 .pb-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; max-width: 1180px; margin: auto; padding: .9rem 1.25rem; }
 .pb-brand { display: inline-flex; align-items: center; gap: .65rem; text-decoration: none; font-weight: 900; }
-.pb-mark { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--pb-ink); color: var(--pb-peach); font-family: Georgia, serif; font-size: 1.4rem; }
+.pb-mark { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border: 1px solid var(--pb-ink); border-radius: 50%; background: var(--pb-peach); color: var(--pb-ink); }
+.pb-mark svg { width: 1.8rem; height: 1.8rem; overflow: visible; }
+.pb-mark path, .pb-mark circle { stroke: var(--pb-ink); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.pb-logo-plate { fill: var(--pb-ink); stroke: none !important; }
+.pb-logo-cake { fill: #fffaf2; }
+.pb-logo-icing { fill: var(--pb-apricot); }
+.pb-logo-berry { fill: #e75c3d; }
+.pb-logo-leaf { fill: #6c8a52; }
 .pb-nav-links { display: flex; align-items: center; gap: .35rem; font-size: .83rem; font-weight: 800; }
 .pb-nav-links a { padding: .55rem .7rem; border-radius: 999px; text-decoration: none; }
 .pb-nav-links a:hover, .pb-nav-links a:focus-visible { background: var(--pb-peach); outline: none; }
@@ -30,7 +37,7 @@ button, input, select { font: inherit; }
 .pb-main { max-width: 1180px; margin: auto; padding: 1.25rem; }
 .pb-hero { display: grid; grid-template-columns: 1.1fr .9fr; min-height: 430px; overflow: hidden; border-radius: 0 0 2.2rem 2.2rem; background: var(--pb-peach); box-shadow: var(--pb-shadow); }
 .pb-hero-copy { display: flex; flex-direction: column; justify-content: center; padding: clamp(2rem, 5vw, 5rem); }
-.pb-kicker { display: inline-flex; width: fit-content; padding: .35rem .65rem; border-radius: 999px; background: rgba(255, 250, 242, .78); color: var(--pb-ink); font-size: .7rem; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; }
+.pb-kicker { display: inline-flex; width: fit-content; padding: .35rem .65rem; border: 1px solid var(--pb-line); border-radius: 999px; background: rgba(255, 250, 242, .78); color: var(--pb-ink); font-size: .7rem; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; }
 .pb-hero h1 { max-width: 650px; margin: 1rem 0 0; font-size: clamp(3rem, 7vw, 6.8rem); line-height: .9; }
 .pb-hero p { max-width: 470px; margin: 1.25rem 0 0; color: var(--pb-muted); font-size: 1.04rem; line-height: 1.65; }
 .pb-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.6rem; }
@@ -43,6 +50,8 @@ button, input, select { font: inherit; }
 .pb-section-head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
 .pb-section h2 { margin: 0; font-size: clamp(2rem, 4vw, 3.3rem); line-height: .95; }
 .pb-section-head p { max-width: 34rem; margin: 0; color: var(--pb-muted); line-height: 1.55; }
+.pb-section-head-actions { display: flex; align-items: end; justify-content: end; gap: 1rem; }
+.pb-section-head-actions .pb-button { flex: 0 0 auto; white-space: nowrap; }
 .pb-category-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .8rem; }
 .pb-category { position: relative; min-height: 145px; padding: 1rem; overflow: hidden; border-radius: 1.25rem; background: var(--pb-apricot); color: #fffaf2; text-decoration: none; }
 .pb-category:nth-child(2) { background: #f7b17a; }
@@ -51,6 +60,7 @@ button, input, select { font: inherit; }
 .pb-category strong { position: relative; z-index: 1; display: block; font-size: 1.2rem; }
 .pb-category img { position: absolute; right: -2%; bottom: -10%; width: 72%; height: 104%; object-fit: contain; filter: drop-shadow(0 14px 12px rgba(81, 36, 14, .18)); transform: rotate(-6deg); transition: transform .2s ease, filter .2s ease; }
 .pb-category:hover img, .pb-category:focus-visible img { transform: rotate(-3deg) translateY(-4px) scale(1.04); filter: drop-shadow(0 18px 14px rgba(81, 36, 14, .22)); }
+.pb-about { margin-top: 1.5rem; }
 .pb-about { display: grid; grid-template-columns: .8fr 1.2fr; align-items: center; gap: 2rem; padding: 2rem; border-radius: 1.7rem; background: var(--pb-peach); }
 .pb-about h2 { max-width: 340px; }
 .pb-about p { color: var(--pb-muted); line-height: 1.65; }
@@ -86,7 +96,7 @@ button, input, select { font: inherit; }
 .pb-stars { color: #e16e32; letter-spacing: .15em; }
 .pb-review p { color: var(--pb-muted); line-height: 1.55; }
 .pb-review b { font-size: .85rem; }
-.pb-faq { max-width: 780px; margin: 0 auto; }
+.pb-faq { max-width: none; margin: 0; }
 .pb-faq details { padding: 1rem 0; border-bottom: 1px solid var(--pb-line); }
 .pb-faq summary { cursor: pointer; font-weight: 900; }
 .pb-faq p { margin: .7rem 0 0; color: var(--pb-muted); line-height: 1.55; }
@@ -101,6 +111,10 @@ button, input, select { font: inherit; }
 .pb-tour p { color: var(--pb-muted); line-height: 1.6; }
 .pb-tour-progress { color: var(--pb-muted); font-size: .75rem; font-weight: 900; text-transform: uppercase; letter-spacing: .1em; }
 .pb-tour-actions { display: flex; justify-content: space-between; gap: .6rem; margin-top: 1rem; }
+.pb-float-cart { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 60; display: inline-flex; align-items: center; gap: .55rem; min-height: 3.15rem; padding: .72rem 1rem; border: 1px solid var(--pb-ink); border-radius: 999px; background: var(--pb-ink); color: #fffaf2; box-shadow: 0 14px 30px rgba(36, 18, 13, .22); font-size: .82rem; font-weight: 900; text-decoration: none; }
+.pb-float-cart:hover, .pb-float-cart:focus-visible { background: #4a2517; transform: translateY(-2px); outline: none; }
+.pb-float-cart-icon { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pb-float-cart-count { display: grid; min-width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 999px; background: var(--pb-peach); color: var(--pb-ink); font-size: .72rem; }
 
 /* Keep the smaller auth/cart pages on the same PetitBakery palette while their
    lesson markup remains intentionally simple. */
@@ -126,11 +140,15 @@ button, input, select { font: inherit; }
   .pb-section { padding-top: 3rem; }
   .pb-section-head { display: block; }
   .pb-section-head p { margin-top: .7rem; }
+  .pb-section-head-actions { display: block; }
+  .pb-section-head-actions .pb-button { margin-top: .8rem; }
   .pb-product-grid { gap: .55rem; }
   .pb-product-copy { padding: .7rem; }
   .pb-product-copy p { display: none; }
   .pb-benefits, .pb-reviews { grid-template-columns: 1fr; }
   .pb-about, .pb-offer { padding: 1.25rem; }
+  .pb-about { margin-top: 1rem; }
   .pb-footer-inner { display: block; }
   .pb-footer-inner p + p { margin-top: .4rem; }
+  .pb-float-cart { right: .8rem; bottom: .8rem; }
 }

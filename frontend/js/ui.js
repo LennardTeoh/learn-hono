@@ -43,6 +43,17 @@ export function updateCartBadge() {
   })
 }
 
+function mountFloatCart() {
+  if (location.pathname === '/cart/' || document.getElementById('pb-float-cart')) return
+  const link = document.createElement('a')
+  link.id = 'pb-float-cart'
+  link.className = 'pb-float-cart'
+  link.href = '/cart/'
+  link.setAttribute('aria-label', 'Open cart')
+  link.innerHTML = `<svg class="pb-float-cart-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.2 9.1a2 2 0 0 0 2 1.7h7.7a2 2 0 0 0 1.9-1.5L20 8H7"/><path d="M10 19.5h.01M17 19.5h.01"/></svg><span>Add to cart</span><span data-cart-count class="pb-float-cart-count">0</span>`
+  document.body.appendChild(link)
+}
+
 export async function renderShell() {
   const user = await getCurrentUser()
   const header = document.getElementById('site-header')
@@ -52,12 +63,12 @@ export async function renderShell() {
     header.innerHTML = `
       <div class="pb-shell">
         <div class="pb-nav">
-          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true">P</span><span>PetitBakery</span></a>
+          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path class="pb-logo-plate" d="M9 31h30v4H9z"/><path class="pb-logo-cake" d="M12 28c0-5 4-8 12-8s12 3 12 8v3H12z"/><path class="pb-logo-icing" d="M12 22c2-4 5-5 7-2 2-4 5-4 7 0 2-3 5-2 7 2H12z"/><circle class="pb-logo-berry" cx="24" cy="14" r="3"/><path class="pb-logo-leaf" d="M24 11c-1-3 2-4 4-4-1 3-2 4-4 4z"/></svg></span><span>PetitBakery</span></a>
           <nav class="pb-nav-links" aria-label="Primary">
-            <a href="/products/">Treats</a>
+            <a href="/products/">Shop treats</a>
+            <a href="/#why-title">How it works</a>
             <a href="/#faq-title">FAQ</a>
-            <a href="/" data-open-tour>Learn</a>
-            <a href="/cart/" class="pb-nav-cta">Box <span data-cart-count class="ml-1">0</span></a>
+            <a href="/cart/" class="pb-nav-cta">Cart <span data-cart-count class="ml-1">0</span></a>
             ${user
               ? `<a href="/account/">${escapeHtml(user.displayName)}</a>`
               : `<a href="/login/">Sign in</a>`}
@@ -75,6 +86,7 @@ export async function renderShell() {
   }
 
   mountTour()
+  mountFloatCart()
   document.querySelectorAll('[data-open-tour]').forEach((button) => button.addEventListener('click', (event) => {
     if (button.tagName === 'A' && button.getAttribute('href') === '/') event.preventDefault()
     openTour()
