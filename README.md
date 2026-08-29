@@ -17,6 +17,18 @@ servers with `Ctrl-C`.
 For a new checkout, start with `cp .env.example .env` and fill in the local
 secret values.
 
+## Local commerce E2E
+
+Run the complete local commerce journey with:
+
+```bash
+npm run test:e2e
+```
+
+This is the only supported E2E command. It uses only localhost and Wrangler's
+local D1 database, cleans its test data before and after the run, and never
+needs Cloudflare credentials or a Resend key.
+
 ## Rebuild in four milestones
 
 Run the check after each milestone. The checks are intentionally small and

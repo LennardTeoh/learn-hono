@@ -7,6 +7,7 @@
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply petitbakery-db --local",
+    "db:clean:e2e": "wrangler d1 execute petitbakery-db --local --file=./migrations/e2e_cleanup.sql",
     "db:migrate:remote": "wrangler d1 migrations apply petitbakery-db --remote",
     "db:seed:local": "wrangler d1 execute petitbakery-db --local --file=./migrations/0002_seed_products.sql"
   },
