@@ -63,12 +63,11 @@ export async function renderShell() {
     header.innerHTML = `
       <div class="pb-shell">
         <div class="pb-nav">
-          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><path class="pb-logo-plate" d="M9 31h30v4H9z"/><path class="pb-logo-cake" d="M12 28c0-5 4-8 12-8s12 3 12 8v3H12z"/><path class="pb-logo-icing" d="M12 22c2-4 5-5 7-2 2-4 5-4 7 0 2-3 5-2 7 2H12z"/><circle class="pb-logo-berry" cx="24" cy="14" r="3"/><path class="pb-logo-leaf" d="M24 11c-1-3 2-4 4-4-1 3-2 4-4 4z"/></svg></span><span>PetitBakery</span></a>
+          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true"><img src="/assets/images/petitbakery-logo.png" alt=""></span><span>PetitBakery</span></a>
           <nav class="pb-nav-links" aria-label="Primary">
             <a href="/products/">Shop treats</a>
             <a href="/#why-title">How it works</a>
             <a href="/#faq-title">FAQ</a>
-            <a href="/cart/" class="pb-nav-cta">Cart <span data-cart-count class="ml-1">0</span></a>
             ${user
               ? `<a href="/account/">${escapeHtml(user.displayName)}</a>`
               : `<a href="/login/">Sign in</a>`}
