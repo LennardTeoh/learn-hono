@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import type { AppEnv } from '../types'
-import { csrfMatches, getSession } from '../lib/session'
+import { requireUser } from '../lib/auth-session'
 import { HttpError, readJson, safeText } from '../lib/http'
 
 type CheckoutItem = {
@@ -11,16 +11,15 @@ type CheckoutItem = {
 export const orderRoutes = new Hono<AppEnv>()
 
 orderRoutes.post('/', async (c) => {
-  const session = await getSession(c)
-  if (!session) throw new HttpError(401, 'Sign in to checkout.')
-  if (!csrfMatches(c, session)) throw new HttpError(403, 'Invalid CSRF token.')
+  if (c.req.header('Origin') !== c.env.CORS_ORIGIN) throw new HttpError(403, 'Invalid request origin.')
+  const user = await requireUser(c)
 
   const idempotencyKey = safeText(c.req.header('Idempotency-Key'), 100)
   if (idempotencyKey.length < 8) throw new HttpError(400, 'Idempotency-Key header is required.')
 
   const existing = await c.env.DB
     .prepare('SELECT id FROM orders WHERE user_id = ? AND idempotency_key = ?')
-    .bind(session.user_id, idempotencyKey)
+    .bind(user.id, idempotencyKey)
     .first<{ id: string }>()
 
   if (existing) {
@@ -97,7 +96,7 @@ orderRoutes.post('/', async (c) => {
       )
       .bind(
         orderId,
-        session.user_id,
+        user.id,
         subtotal,
         shipping,
         tax,
@@ -151,23 +150,21 @@ orderRoutes.post('/', async (c) => {
 })
 
 orderRoutes.get('/', async (c) => {
-  const session = await getSession(c)
-  if (!session) throw new HttpError(401, 'Sign in to view orders.')
+  const user = await requireUser(c)
 
   const result = await c.env.DB
     .prepare(
       `SELECT id, status, subtotal_cents, shipping_cents, tax_cents, total_cents, created_at
        FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
     )
-    .bind(session.user_id)
+    .bind(user.id)
     .all()
 
   return c.json({ orders: result.results })
 })
 
 orderRoutes.get('/:id', async (c) => {
-  const session = await getSession(c)
-  if (!session) throw new HttpError(401, 'Sign in to view orders.')
+  const user = await requireUser(c)
 
   const orderId = safeText(c.req.param('id'), 80)
   const order = await c.env.DB
@@ -176,7 +173,7 @@ orderRoutes.get('/:id', async (c) => {
               shipping_name, address1, address2, city, postal_code, country, created_at
        FROM orders WHERE id = ? AND user_id = ?`
     )
-    .bind(orderId, session.user_id)
+    .bind(orderId, user.id)
     .first()
 
   if (!order) throw new HttpError(404, 'Order not found.')

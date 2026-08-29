@@ -10,9 +10,8 @@
     "ENVIRONMENT": "production",
     "APP_ORIGIN": "https://petitbakery.pages.dev",
     "CORS_ORIGIN": "https://petitbakery.pages.dev",
-    "EMAIL_FROM": "PetitBakery <noreply@your-domain.example>",
-    "SESSION_TTL_SECONDS": "604800",
-    "PBKDF2_ITERATIONS": "600000"
+    "BETTER_AUTH_URL": "https://petitbakery-api.velozz.workers.dev/api/auth",
+    "EMAIL_FROM": "PetitBakery <onboarding@resend.dev>"
   },
   "d1_databases": [
     {

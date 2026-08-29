@@ -5,11 +5,11 @@ async function init() {
   await renderShell()
   const user = await getCurrentUser()
   if (!user) {
-    location.href = 'login.html?next=account.html'
+    location.href = 'auth.html?state=signin&next=account.html'
     return
   }
 
-  document.getElementById('account-name').textContent = user.displayName
+  document.getElementById('account-name').textContent = user.name
   document.getElementById('account-email').textContent = user.email
 
   const { orders } = await api('/api/orders')
@@ -25,12 +25,11 @@ async function init() {
 
   document.getElementById('logout').addEventListener('click', async () => {
     try {
-      await api('/api/auth/logout', { method: 'POST', body: '{}' })
+    await api('/api/auth/sign-out', { method: 'POST', body: '{}' })
     } catch (error) {
       toast(error.message, 'error')
       return
     }
-    sessionStorage.removeItem('nimble_csrf')
     location.href = 'index.html'
   })
 }

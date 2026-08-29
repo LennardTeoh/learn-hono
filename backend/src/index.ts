@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { secureHeaders } from 'hono/secure-headers'
 import type { AppEnv } from './types'
-import { authRoutes } from './routes/auth'
+import { createAuth } from './lib/auth'
 import { productRoutes } from './routes/products'
 import { orderRoutes } from './routes/orders'
 import { HttpError } from './lib/http'
@@ -24,7 +24,7 @@ app.use('/api/*', async (c, next) => {
 
 app.get('/health', (c) => c.json({ ok: true, service: 'petitbakery-api' }))
 
-app.route('/api/auth', authRoutes)
+app.on(['GET', 'POST'], '/api/auth/*', (c) => createAuth(c.env).handler(c.req.raw))
 app.route('/api/products', productRoutes)
 app.route('/api/orders', orderRoutes)
 
