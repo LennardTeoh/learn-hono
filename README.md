@@ -11,8 +11,11 @@ npm run start
 
 Then open `http://localhost:8788`. The command runs the Hono Worker at
 `http://localhost:8787` and serves `frontend/` at `http://localhost:8788`.
-Create `backend/.dev.vars` from `backend/.dev.vars.example` for the local auth
-lessons. Stop both servers with `Ctrl-C`.
+The Worker loads the repository-root `.env` file through Wrangler. Stop both
+servers with `Ctrl-C`.
+
+For a new checkout, start with `cp .env.example .env` and fill in the local
+secret values.
 
 ## Rebuild in four milestones
 
@@ -51,7 +54,7 @@ A beginner-friendly full e-commerce starter using:
 - Account page and order history
 - Dummy checkout with shipping address
 - Server-side price/tax/shipping calculation
-- D1-backed users, sessions, products and orders
+- D1-backed Better Auth users/sessions, products and orders
 - Turnstile on abuse-prone auth forms
 - Rate limiting for registration/login/reset flows
 - GitHub Actions validation + D1 migrations + Worker + Pages deployments
@@ -70,7 +73,7 @@ Cloudflare Pages
   v
 Hono API on Cloudflare Worker
   |-- Turnstile verification
-  |-- Auth/session/CSRF middleware logic
+  |-- Better Auth session and origin middleware
   |-- Product + checkout business rules
   |
   +--> Cloudflare D1
@@ -84,15 +87,9 @@ Hono API on Cloudflare Worker
 
 Passwords are **never encrypted or stored in plaintext**.
 
-The Worker:
-
-1. validates a 12–128 character password,
-2. generates a unique random 16-byte salt,
-3. combines the password with a server-side `PASSWORD_PEPPER`,
-4. derives a 256-bit PBKDF2-HMAC-SHA-256 hash,
-5. stores only the hash, salt and iteration count in D1.
-
-The default is **600,000 PBKDF2-HMAC-SHA-256 iterations**, matching the current OWASP PBKDF2 recommendation.
+Better Auth validates and hashes 12–128 character passwords, storing password
+credentials in its D1 `account` table. The Worker never handles plaintext
+password storage.
 
 ### Important Workers Free CPU caveat
 
@@ -120,12 +117,9 @@ Everything else in this starter is designed to stay small enough for the normal 
 
 ### CSRF
 
-Authenticated state-changing requests require:
-
-- the HttpOnly session cookie, **and**
-- a separate random `X-CSRF-Token` header associated with the session.
-
-CORS is restricted to one configured `APP_ORIGIN`.
+Better Auth validates trusted origins and secure cookies. Checkout additionally
+requires an exact `Origin === CORS_ORIGIN` match. CORS is restricted to one
+configured `CORS_ORIGIN`.
 
 ### XSS / browser controls
 
@@ -219,19 +213,9 @@ Migration `0002_seed_products.sql` is applied automatically by Wrangler migratio
 
 ## 5. Configure local secrets
 
-```bash
-cp .dev.vars.example .dev.vars
-```
+Set the local Worker values in the repository-root `.env` file.
 
-Generate a pepper, for example:
-
-```bash
-openssl rand -base64 48
-```
-
-Put it in `PASSWORD_PEPPER`.
-
-For local development, if `RESEND_API_KEY` and `TURNSTILE_SECRET_KEY` are empty, the Worker:
+For local development, if `RESEND_API_KEY` and `TURNSTILE_SECRET_KEY` are empty in `.env`, the Worker:
 - logs email content to the Worker console instead of sending it,
 - skips Turnstile only when `ENVIRONMENT=development`.
 
@@ -344,7 +328,7 @@ CLOUDFLARE_ACCOUNT_ID
 DOTENV
 ```
 
-`DOTENV` stores the complete local `.env` as a GitHub-only backup; GitHub secret names cannot contain a period. The workflow does not read it. It passes only the Cloudflare deployment token and account ID to Wrangler. No application secrets are set on the Worker.
+`DOTENV` stores the complete local `.env` as a GitHub-only backup; GitHub secret names cannot contain a period. Local development reads `.env`; deployment writes only the required runtime secrets to the Worker.
 
 ## 7. GitHub Actions variables
 
@@ -425,7 +409,6 @@ nimble-commerce/
 │   │   │   └── products.ts
 │   │   ├── index.ts
 │   │   └── types.ts
-│   ├── .dev.vars.example
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── wrangler.jsonc

@@ -1,6 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, writeFileSync } from 'node:fs'
-import { randomBytes } from 'node:crypto'
+import { existsSync } from 'node:fs'
 
 const children = []
 const run = (command, args, options = {}) => {
@@ -14,19 +13,9 @@ if (!existsSync('backend/node_modules')) {
   process.exit(1)
 }
 
-if (!existsSync('backend/.dev.vars')) {
-  writeFileSync('backend/.dev.vars', [
-    'ENVIRONMENT=development',
-    'APP_ORIGIN=http://localhost:8788',
-    'CORS_ORIGIN=http://localhost:8788',
-    'EMAIL_FROM=PetitBakery <onboarding@resend.dev>',
-    'SESSION_TTL_SECONDS=604800',
-    'PBKDF2_ITERATIONS=600000',
-    `PASSWORD_PEPPER=${randomBytes(32).toString('base64')}`,
-    'RESEND_API_KEY=',
-    'TURNSTILE_SECRET_KEY='
-  ].join('\n') + '\n')
-  console.log('Created backend/.dev.vars with a local-only password pepper.')
+if (!existsSync('.env')) {
+  console.error('Create a repository-root .env before starting the app.')
+  process.exit(1)
 }
 
 const migration = spawnSync('npm', ['--prefix', 'backend', 'run', 'db:migrate:local'], { stdio: 'inherit' })

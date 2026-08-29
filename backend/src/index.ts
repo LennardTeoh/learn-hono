@@ -15,7 +15,7 @@ app.use('/api/*', async (c, next) => {
   const middleware = cors({
     origin: c.env.CORS_ORIGIN,
     allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'X-CSRF-Token', 'Idempotency-Key'],
+    allowHeaders: ['Content-Type', 'X-Captcha-Response', 'Idempotency-Key'],
     credentials: true,
     maxAge: 86400
   })

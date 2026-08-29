@@ -31,12 +31,10 @@ export function createAuth(env: Bindings) {
         await sendTransactionalEmail(env, { to: user.email, ...verificationEmail(user.name, url) })
       }
     },
-    plugins: [
-      captcha({
-        provider: 'cloudflare-turnstile',
-        secretKey: env.TURNSTILE_SECRET_KEY,
-        endpoints: ['/sign-up/email', '/sign-in/email', '/send-verification-email', '/request-password-reset']
-      })
-    ]
+    plugins: env.TURNSTILE_SECRET_KEY ? [captcha({
+      provider: 'cloudflare-turnstile',
+      secretKey: env.TURNSTILE_SECRET_KEY,
+      endpoints: ['/sign-up/email', '/sign-in/email', '/send-verification-email', '/request-password-reset']
+    })] : []
   })
 }

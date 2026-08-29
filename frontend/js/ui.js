@@ -87,7 +87,7 @@ const TOUR_STEPS = [
   ['Start in the storefront', 'HTML gives you the semantic page and CSS gives it the PetitBakery personality. Begin by changing the hero, categories, and product cards.'],
   ['Follow the browser state', 'The cart is localStorage on purpose. Add a treat, open Cart, and inspect the browser data before a request reaches the backend.'],
   ['Trace the trusted boundary', 'The Worker exposes Hono routes and D1 stores products, users, and orders. Checkout sends IDs and quantities; the server recalculates totals.'],
-  ['Ship it to Cloudflare', 'Pages serves frontend/, Workers runs the API, and D1 holds data. Public config is safe to expose; secrets stay in .dev.vars or GitHub Secrets.']
+  ['Ship it to Cloudflare', 'Pages serves frontend/, Workers runs the API, and D1 holds data. Public config is safe to expose; secrets stay in .env locally or GitHub Secrets.']
 ]
 
 function mountTour() {

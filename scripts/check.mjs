@@ -14,6 +14,7 @@ const pass = (message) => console.log(`✓ ${message}`)
 try {
   await required('frontend/index.html', ['PetitBakery', 'pb-hero', 'pb-category-grid', 'pb-product-grid', 'pb-faq'])
   await required('frontend/styles.css', ['--pb-cream', '.pb-hero', '.pb-product-grid'])
+  await required('.env.example', ['BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'TURNSTILE_SECRET_KEY', 'CLOUDFLARE_API_TOKEN'])
   pass('PetitBakery storefront shell is present')
 
   if (!stage || stage >= 2) {

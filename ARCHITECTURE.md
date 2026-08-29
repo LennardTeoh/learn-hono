@@ -8,7 +8,7 @@
 │ index / product / cart / auth / checkout / account         │
 └───────────────────────┬────────────────────────────────────┘
                         │ HTTPS fetch + credentials
-                        │ X-CSRF-Token on mutations
+                        │ X-Captcha-Response on auth writes
                         v
 ┌────────────────────────────────────────────────────────────┐
 │ Cloudflare Worker — Hono                                   │
