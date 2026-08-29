@@ -37,7 +37,6 @@ A beginner-friendly full e-commerce starter using:
 - **Frontend hosting:** Cloudflare Pages
 - **Backend:** Hono on Cloudflare Workers
 - **Database:** Cloudflare D1
-- **Bot protection:** Cloudflare Turnstile
 - **Email verification/password reset:** Resend Free adapter
 - **CI/CD:** GitHub Actions runs Wrangler directly for D1, Workers, and Pages
 - **Payment:** intentionally omitted; checkout creates a dummy confirmed order
@@ -55,7 +54,6 @@ A beginner-friendly full e-commerce starter using:
 - Dummy checkout with shipping address
 - Server-side price/tax/shipping calculation
 - D1-backed Better Auth users/sessions, products and orders
-- Turnstile on abuse-prone auth forms
 - Rate limiting for registration/login/reset flows
 - GitHub Actions validation + D1 migrations + Worker + Pages deployments
 
@@ -72,7 +70,6 @@ Cloudflare Pages
   | fetch(credentials: include)
   v
 Hono API on Cloudflare Worker
-  |-- Turnstile verification
   |-- Better Auth session and origin middleware
   |-- Product + checkout business rules
   |
@@ -148,7 +145,6 @@ Verification and reset links use 256-bit random tokens. D1 stores only a SHA-256
 
 ### Abuse controls
 
-- Turnstile on register/login/forgot-password
 - D1-backed per-IP rate limits
 - generic forgot-password response to reduce account enumeration
 - request-body limits
@@ -159,7 +155,7 @@ Verification and reset links use 256-bit random tokens. D1 stores only a SHA-256
 
 As of August 2026, **Cloudflare Email Sending to arbitrary recipients requires Workers Paid**. Free accounts can send only to verified destination addresses, which is not sufficient for normal customer signups.
 
-This project therefore keeps **Pages + Workers + D1 + Turnstile on Cloudflare Free**, while using the **Resend Free plan** for verification/reset mail. The email adapter is isolated in `backend/src/lib/email.ts`, so you can replace it later with Cloudflare Email Service if you upgrade.
+This project uses **Pages + Workers + D1**, while using the **Resend Free plan** for verification/reset mail. The email adapter is isolated in `backend/src/lib/email.ts`, so you can replace it later with Cloudflare Email Service if you upgrade.
 
 ## Tailwind CDN note
 
@@ -181,7 +177,6 @@ Tailwind documents this CDN as **development-only, not intended for production**
 - Cloudflare account
 - Wrangler authenticated locally
 - Resend account for real email
-- Turnstile widget for production bot protection
 
 ## 2. Install backend dependencies
 
@@ -215,8 +210,7 @@ Migration `0002_seed_products.sql` is applied automatically by Wrangler migratio
 
 Set the local Worker values in the repository-root `.env` file.
 
-Authentication uses the live `RESEND_API_KEY` and `TURNSTILE_SECRET_KEY` from
-`.env`; no development bypass is enabled.
+Authentication uses the live `RESEND_API_KEY` from `.env`.
 
 ## 6. Start Worker
 
@@ -270,22 +264,7 @@ npx wrangler d1 create petitbakery-db
 
 Put the ID in `backend/wrangler.jsonc` and commit the file.
 
-## 3. Create Turnstile widget
-
-In Cloudflare:
-
-```text
-Turnstile -> Add widget
-```
-
-Add your Pages/custom hostname.
-
-You will get:
-
-- public **site key** -> GitHub repository variable `TURNSTILE_SITE_KEY`
-- secret key -> GitHub secret `TURNSTILE_SECRET_KEY`
-
-## 4. Configure Resend
+## 3. Configure Resend
 
 Create/verify your sending domain in Resend.
 
@@ -394,14 +373,11 @@ nimble-commerce/
 │   │   └── 0002_seed_products.sql
 │   ├── src/
 │   │   ├── lib/
-│   │   │   ├── crypto.ts
 │   │   │   ├── email.ts
 │   │   │   ├── http.ts
 │   │   │   ├── rate-limit.ts
-│   │   │   ├── session.ts
-│   │   │   └── turnstile.ts
+│   │   │   └── auth.ts
 │   │   ├── routes/
-│   │   │   ├── auth.ts
 │   │   │   ├── orders.ts
 │   │   │   └── products.ts
 │   │   ├── index.ts

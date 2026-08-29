@@ -51,5 +51,4 @@ If a secret leaks:
 - rotate `CLOUDFLARE_API_TOKEN`
 - rotate `BETTER_AUTH_SECRET` with a planned session invalidation window
 - rotate `RESEND_API_KEY`
-- rotate `TURNSTILE_SECRET_KEY`
 - invalidate all active sessions if session integrity is in doubt

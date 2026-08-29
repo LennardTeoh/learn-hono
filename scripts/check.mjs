@@ -14,7 +14,7 @@ const pass = (message) => console.log(`✓ ${message}`)
 try {
   await required('frontend/index.html', ['PetitBakery', 'pb-hero', 'pb-category-grid', 'pb-product-grid', 'pb-faq'])
   await required('frontend/styles.css', ['--pb-cream', '.pb-hero', '.pb-product-grid'])
-  await required('.env.example', ['BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'TURNSTILE_SECRET_KEY', 'CLOUDFLARE_API_TOKEN'])
+  await required('.env.example', ['BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'CLOUDFLARE_API_TOKEN'])
   pass('PetitBakery storefront shell is present')
 
   if (!stage || stage >= 2) {
@@ -24,7 +24,7 @@ try {
   }
   if (!stage || stage >= 3) {
     await required('backend/src/index.ts', ['/api/auth', '/api/products', '/api/orders'])
-    await required('backend/src/lib/auth.ts', ['betterAuth', 'BETTER_AUTH_SECRET', 'BETTER_AUTH_URL', "sameSite: 'none'", 'TURNSTILE_SECRET_KEY is not configured', 'cloudflare-turnstile', 'sendVerificationEmail', 'sendResetPassword'])
+    await required('backend/src/lib/auth.ts', ['betterAuth', 'BETTER_AUTH_SECRET', 'BETTER_AUTH_URL', "sameSite: 'none'", 'sendVerificationEmail', 'sendResetPassword'])
     await required('backend/src/routes/orders.ts', ['price_cents', 'Idempotency-Key', 'requireUser', "Origin') !== c.env.CORS_ORIGIN"])
     await required('backend/migrations/0003_better_auth_cutover.sql', ['CREATE TABLE "user"', 'CREATE TABLE session', 'CREATE TABLE account', 'CREATE TABLE verification', 'REFERENCES "user"'])
     await required('scripts/migration-preflight.mjs', ['FROM users', 'FROM orders', 'refusing Better Auth cutover'])
@@ -35,7 +35,7 @@ try {
   }
   if (!stage || stage >= 4) {
     await required('backend/wrangler.jsonc', ['petitbakery-api', 'petitbakery-db', 'd1_databases', 'onboarding@resend.dev'])
-    await required('.github/workflows/cloudflare.yml', ['CLOUDFLARE_API_TOKEN', 'BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'TURNSTILE_SECRET_KEY', 'wrangler pages deploy'])
+    await required('.github/workflows/cloudflare.yml', ['CLOUDFLARE_API_TOKEN', 'BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'wrangler pages deploy'])
     await required('frontend/_headers', ['Content-Security-Policy', 'frame-ancestors'])
     await required('README.md', ['Cloudflare Pages', 'Cloudflare deployment'])
     pass('Cloudflare deployment configuration is present')

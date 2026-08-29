@@ -6,7 +6,6 @@ export type Bindings = {
   EMAIL_FROM: string
   BETTER_AUTH_SECRET: string
   RESEND_API_KEY: string
-  TURNSTILE_SECRET_KEY: string
 }
 
 export type AppEnv = {

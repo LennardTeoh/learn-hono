@@ -39,11 +39,10 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - run: npm ci --prefix backend
       - name: Validate runtime secrets
-        run: test -n "$BETTER_AUTH_SECRET" && test -n "$RESEND_API_KEY" && test -n "$TURNSTILE_SECRET_KEY"
+        run: test -n "$BETTER_AUTH_SECRET" && test -n "$RESEND_API_KEY"
         env:
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       - run: node scripts/migration-preflight.mjs
       - run: printf '%s' "$BETTER_AUTH_SECRET" | npx wrangler secret put BETTER_AUTH_SECRET
         working-directory: backend
@@ -53,10 +52,6 @@ jobs:
         working-directory: backend
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-      - run: printf '%s' "$TURNSTILE_SECRET_KEY" | npx wrangler secret put TURNSTILE_SECRET_KEY
-        working-directory: backend
-        env:
-          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       - run: npm run db:migrate:remote --prefix backend
       - run: npm run deploy --prefix backend
       - run: npx wrangler pages deploy ../frontend --project-name petitbakery --branch main

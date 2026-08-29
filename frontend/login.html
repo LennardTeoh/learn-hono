@@ -1,14 +1,1 @@
-<!doctype html><html lang="en"><head><meta http-equiv="refresh" content="0;url=auth.html?state=signin"><script>location.replace(`auth.html?state=signin${location.search.includes('next=checkout.html')?'&next=checkout.html':location.search.includes('next=account.html')?'&next=account.html':''}`)</script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="light">
-<link rel="stylesheet" href="styles.css">
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<script src="js/config.js"></script><title>Sign in · PetitBakery</title><script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script></head>
-<body class="bg-slate-50 text-slate-900"><header id="site-header"></header><main class="mx-auto max-w-md px-4 py-14 sm:px-6"><div class="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"><h1 class="text-3xl font-black">Welcome back</h1>
-<form id="login-form" class="mt-6 space-y-4">
-<label class="block"><span class="text-sm font-medium">Email</span><input name="email" type="email" required autocomplete="email" class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"></label>
-<label class="block"><span class="text-sm font-medium">Password</span><input name="password" type="password" required autocomplete="current-password" class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"></label>
-<input type="hidden" name="turnstileToken"><div data-turnstile></div>
-<button type="submit" class="w-full rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">Sign in</button>
-</form>
-<div class="mt-5 flex justify-between text-sm"><a href="register.html" class="font-semibold underline">Create account</a><a href="forgot-password.html" class="font-semibold underline">Forgot password?</a></div><p class="mt-4 text-center text-xs text-slate-500"><a href="resend-verification.html" class="underline">Need a new verification link?</a></p></div></main><footer id="site-footer"></footer><script type="module" src="js/auth-pages.js"></script></body></html>
+<!doctype html><meta http-equiv="refresh" content="0;url=auth.html?state=signin"><script>location.replace(`auth.html?state=signin${location.search.includes('next=checkout.html')?'&next=checkout.html':location.search.includes('next=account.html')?'&next=account.html':''}`)</script>
