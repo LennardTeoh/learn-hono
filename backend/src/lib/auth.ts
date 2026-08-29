@@ -4,6 +4,7 @@ import type { Bindings } from '../types'
 import { sendTransactionalEmail, resetPasswordEmail, verificationEmail } from './email'
 
 export function createAuth(env: Bindings) {
+  if (!env.TURNSTILE_SECRET_KEY) throw new Error('TURNSTILE_SECRET_KEY is not configured.')
   return betterAuth({
     database: env.DB,
     secret: env.BETTER_AUTH_SECRET,
@@ -31,10 +32,10 @@ export function createAuth(env: Bindings) {
         await sendTransactionalEmail(env, { to: user.email, ...verificationEmail(user.name, url) })
       }
     },
-    plugins: env.TURNSTILE_SECRET_KEY ? [captcha({
+    plugins: [captcha({
       provider: 'cloudflare-turnstile',
       secretKey: env.TURNSTILE_SECRET_KEY,
       endpoints: ['/sign-up/email', '/sign-in/email', '/send-verification-email', '/request-password-reset']
-    })] : []
+    })]
   })
 }
