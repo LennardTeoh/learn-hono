@@ -7,7 +7,6 @@
     "enabled": true
   },
   "vars": {
-    "ENVIRONMENT": "production",
     "APP_ORIGIN": "https://petitbakery.pages.dev",
     "CORS_ORIGIN": "https://petitbakery.pages.dev",
     "BETTER_AUTH_URL": "https://petitbakery-api.velozz.workers.dev/api/auth",

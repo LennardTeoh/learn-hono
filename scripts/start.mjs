@@ -18,7 +18,7 @@ if (!existsSync('.env')) {
   process.exit(1)
 }
 process.loadEnvFile('.env')
-const requiredEnv = ['APP_ORIGIN', 'CORS_ORIGIN', 'BETTER_AUTH_URL', 'BETTER_AUTH_SECRET']
+const requiredEnv = ['APP_ORIGIN', 'CORS_ORIGIN', 'BETTER_AUTH_URL', 'BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'TURNSTILE_SECRET_KEY']
 const missingEnv = requiredEnv.filter((key) => !process.env[key])
 if (missingEnv.length || String(process.env.BETTER_AUTH_SECRET || '').length < 32) {
   console.error(`Set ${missingEnv.length ? missingEnv.join(', ') : 'a 32+ character BETTER_AUTH_SECRET'} in .env.`)

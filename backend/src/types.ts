@@ -1,6 +1,5 @@
 export type Bindings = {
   DB: D1Database
-  ENVIRONMENT: string
   APP_ORIGIN: string
   CORS_ORIGIN: string
   BETTER_AUTH_URL: string

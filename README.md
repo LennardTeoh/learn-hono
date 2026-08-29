@@ -215,11 +215,8 @@ Migration `0002_seed_products.sql` is applied automatically by Wrangler migratio
 
 Set the local Worker values in the repository-root `.env` file.
 
-For local development, if `RESEND_API_KEY` and `TURNSTILE_SECRET_KEY` are empty in `.env`, the Worker:
-- logs email content to the Worker console instead of sending it,
-- skips Turnstile only when `ENVIRONMENT=development`.
-
-Never use those development fallbacks in production.
+Authentication uses the live `RESEND_API_KEY` and `TURNSTILE_SECRET_KEY` from
+`.env`; no development bypass is enabled.
 
 ## 6. Start Worker
 

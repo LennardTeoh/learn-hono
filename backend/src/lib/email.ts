@@ -8,13 +8,7 @@ type EmailInput = {
 }
 
 export async function sendTransactionalEmail(env: Bindings, input: EmailInput): Promise<void> {
-  if (!env.RESEND_API_KEY) {
-    if (env.ENVIRONMENT !== 'production') {
-      console.log('[DEV EMAIL]', JSON.stringify(input))
-      return
-    }
-    throw new Error('RESEND_API_KEY is not configured.')
-  }
+  if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not configured.')
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
