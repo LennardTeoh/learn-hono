@@ -3,7 +3,6 @@ import type { Bindings } from '../types'
 import { sendTransactionalEmail, resetPasswordEmail, verificationEmail } from './email'
 
 export function createAuth(env: Bindings) {
-  const e2e = env.E2E_TEST_MODE === '1'
   return betterAuth({
     database: env.DB,
     secret: env.BETTER_AUTH_SECRET,
@@ -11,14 +10,12 @@ export function createAuth(env: Bindings) {
     basePath: '/api/auth',
     trustedOrigins: [env.APP_ORIGIN],
     advanced: {
-      useSecureCookies: !e2e,
-      defaultCookieAttributes: e2e
-        ? { sameSite: 'lax', secure: false }
-        : { sameSite: 'none', secure: true }
+      useSecureCookies: true,
+      defaultCookieAttributes: { sameSite: 'none', secure: true }
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: !e2e,
+      requireEmailVerification: true,
       minPasswordLength: 12,
       maxPasswordLength: 128,
       revokeSessionsOnPasswordReset: true,
@@ -27,10 +24,9 @@ export function createAuth(env: Bindings) {
       }
     },
     emailVerification: {
-      sendOnSignUp: !e2e,
-      sendOnSignIn: !e2e,
+      sendOnSignUp: true,
+      sendOnSignIn: true,
       sendVerificationEmail: async ({ user, url }) => {
-        if (e2e) return
         await sendTransactionalEmail(env, { to: user.email, ...verificationEmail(user.name, url) })
       }
     },

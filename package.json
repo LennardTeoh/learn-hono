@@ -4,14 +4,10 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/start.mjs",
-    "test:e2e": "node scripts/test-e2e.mjs",
     "check": "node scripts/check.mjs",
     "check:stage1": "node scripts/check.mjs --stage 1",
     "check:stage2": "node scripts/check.mjs --stage 2",
     "check:stage3": "node scripts/check.mjs --stage 3",
     "check:stage4": "node scripts/check.mjs --stage 4"
-  },
-  "devDependencies": {
-    "cypress": "^15.11.0"
   }
 }
