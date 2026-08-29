@@ -7,7 +7,7 @@ function render() {
   const summary = document.getElementById('cart-summary')
 
   if (!items.length) {
-    host.innerHTML = '<div class="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center"><h2 class="text-xl font-bold">Your cart is empty</h2><p class="mt-2 text-slate-500">Find something you like and come back here.</p><a href="index.html" class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">Browse products</a></div>'
+    host.innerHTML = '<div class="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center"><h2 class="text-xl font-bold">Your cart is empty</h2><p class="mt-2 text-slate-500">Find something you like and come back here.</p><a href="/products/" class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">Browse products</a></div>'
     summary.innerHTML = ''
     return
   }
@@ -40,7 +40,7 @@ function render() {
       </dl>
       <div class="my-5 border-t border-slate-200"></div>
       <div class="flex justify-between text-lg font-black"><span>Estimated total</span><span>${money(subtotal + shipping + tax)}</span></div>
-      <a href="checkout.html" class="mt-6 block rounded-xl bg-slate-950 px-5 py-3 text-center font-semibold text-white hover:bg-slate-800">Continue to checkout</a>
+      <a href="/checkout/" class="mt-6 block rounded-xl bg-slate-950 px-5 py-3 text-center font-semibold text-white hover:bg-slate-800">Continue to checkout</a>
     </div>`
 
   host.querySelectorAll('[data-remove]').forEach((button) => {

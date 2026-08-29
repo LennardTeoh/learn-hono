@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<script src="js/config.js"></script>
+<script src="/js/config.js"></script>
 <title>PetitBakery · Small batch, big joy</title>
 <meta name="description" content="PetitBakery makes bright, small-batch cakes, pastries, cookies and chocolates.">
 </head>
@@ -19,22 +19,22 @@
       <h1 id="hero-title" class="pb-display">A little sweet for your day.</h1>
       <p>Thoughtful cakes, buttery pastries and joyful treats made in tiny batches in Kuala Lumpur.</p>
       <div class="pb-actions">
-        <a class="pb-button" href="#treats">Shop the treats <span aria-hidden="true">↗</span></a>
+        <a class="pb-button" href="/products/">Shop the treats <span aria-hidden="true">↗</span></a>
         <button class="pb-button alt" type="button" data-open-tour>How this app works</button>
       </div>
     </div>
     <div class="pb-hero-art" aria-hidden="true">
-      <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1000&q=85" alt="">
+      <img src="/assets/images/petitbakery-hero-cake.png" alt="Strawberry chantilly cake">
     </div>
   </section>
 
   <section class="pb-section" aria-labelledby="categories-title">
     <div class="pb-section-head"><div><span class="pb-kicker">Pick a mood</span><h2 id="categories-title" class="pb-display">Our categories</h2></div><p>Find something soft, crisp, gooey or deeply chocolatey. Every item is stocked in the learning API.</p></div>
     <div class="pb-category-grid">
-      <a class="pb-category" href="#treats" data-category-link="Cakes"><strong>Cakes</strong><img src="https://images.unsplash.com/photo-1571115177098-24ec42ed204d?auto=format&fit=crop&w=600&q=85" alt=""></a>
-      <a class="pb-category" href="#treats" data-category-link="Pastries"><strong>Pastries</strong><img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=85" alt=""></a>
-      <a class="pb-category" href="#treats" data-category-link="Cookies"><strong>Cookies</strong><img src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=600&q=85" alt=""></a>
-      <a class="pb-category" href="#treats" data-category-link="Chocolates"><strong>Chocolates</strong><img src="https://images.unsplash.com/photo-1548907040-4d42e42f4b80?auto=format&fit=crop&w=600&q=85" alt=""></a>
+      <a class="pb-category" href="/products/?category=Cakes"><strong>Cakes</strong><img src="https://images.unsplash.com/photo-1571115177098-24ec42ed204d?auto=format&fit=crop&w=600&q=85" alt=""></a>
+      <a class="pb-category" href="/products/?category=Pastries"><strong>Pastries</strong><img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=600&q=85" alt=""></a>
+      <a class="pb-category" href="/products/?category=Cookies"><strong>Cookies</strong><img src="https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=600&q=85" alt=""></a>
+      <a class="pb-category" href="/products/?category=Chocolates"><strong>Chocolates</strong><img src="https://images.unsplash.com/photo-1548907040-4d42e42f4b80?auto=format&fit=crop&w=600&q=85" alt=""></a>
     </div>
   </section>
 
@@ -44,13 +44,13 @@
   </section>
 
   <section id="treats" class="pb-section" aria-labelledby="treats-title">
-    <div class="pb-section-head"><div><span class="pb-kicker">Made today</span><h2 id="treats-title" class="pb-display">Most loved treats</h2></div><p>Search the catalogue, open a product, and add a treat to the local cart.</p></div>
-    <div class="pb-toolbar"><input id="search" class="pb-field pb-search" type="search" placeholder="Search cakes, cookies…" aria-label="Search treats"><select id="category" class="pb-field" aria-label="Filter by category"><option value="">All treats</option><option>Cakes</option><option>Pastries</option><option>Cookies</option><option>Chocolates</option></select></div>
+    <div class="pb-section-head"><div><span class="pb-kicker">Made today</span><h2 id="treats-title" class="pb-display">Most loved treats</h2></div><p>A small featured selection from today's bakery shelf.</p></div>
     <div id="product-grid" class="pb-product-grid"><p>Loading treats…</p></div>
+    <a class="pb-button" href="/products/">View all treats <span aria-hidden="true">↗</span></a>
   </section>
 
   <section class="pb-section pb-offer" aria-labelledby="offer-title">
-    <div class="pb-offer-copy"><span class="pb-kicker">Weekend box</span><h2 id="offer-title" class="pb-display">A classic box for the table.</h2><p>Pair a buttery pastry with something chocolatey and delivery is free over RM80.</p><a class="pb-button" href="#treats">Build your box</a></div>
+    <div class="pb-offer-copy"><span class="pb-kicker">Weekend box</span><h2 id="offer-title" class="pb-display">A classic box for the table.</h2><p>Pair a buttery pastry with something chocolatey and delivery is free over RM80.</p><a class="pb-button" href="/products/">Build your box</a></div>
     <div class="pb-offer-art"><img src="https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=600&q=85" alt="Glazed pastry"><img src="https://images.unsplash.com/photo-1575377427642-087cf684f04d?auto=format&fit=crop&w=600&q=85" alt="Chocolate dessert"></div>
   </section>
 
@@ -59,6 +59,6 @@
   <section class="pb-section pb-faq" aria-labelledby="faq-title"><div class="pb-section-head"><div><span class="pb-kicker">Need to know</span><h2 id="faq-title" class="pb-display">Frequently asked questions</h2></div></div><details open><summary>Do you bake everything in small batches?</summary><p>Yes. The catalogue stock is intentionally finite so students can see the API and checkout guard inventory.</p></details><details><summary>Is this a real payment flow?</summary><p>No. The lesson stops at a dummy confirmed order and never collects card details.</p></details><details><summary>Can I change the frontend?</summary><p>Absolutely. Start on the student branch, run the milestone checks, and use the reference branch whenever you need a working comparison.</p></details><details><summary>Where does the data live?</summary><p>Products, users and orders live in Cloudflare D1 behind a Hono Worker. The browser only keeps the cart locally.</p></details></section>
 </main>
 <footer id="site-footer"></footer>
-<script type="module" src="js/home.js"></script>
+<script type="module" src="/js/home.js"></script>
 </body>
 </html>

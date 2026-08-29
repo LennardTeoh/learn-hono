@@ -52,15 +52,15 @@ export async function renderShell() {
     header.innerHTML = `
       <div class="pb-shell">
         <div class="pb-nav">
-          <a href="index.html" class="pb-brand"><span class="pb-mark" aria-hidden="true">P</span><span>PetitBakery</span></a>
+          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true">P</span><span>PetitBakery</span></a>
           <nav class="pb-nav-links" aria-label="Primary">
-            <a href="index.html#treats">Treats</a>
-            <a href="index.html#faq-title">FAQ</a>
-            <a href="index.html" data-open-tour>Learn</a>
-            <a href="cart.html" class="pb-nav-cta">Box <span data-cart-count class="ml-1">0</span></a>
+            <a href="/products/">Treats</a>
+            <a href="/#faq-title">FAQ</a>
+            <a href="/" data-open-tour>Learn</a>
+            <a href="/cart/" class="pb-nav-cta">Box <span data-cart-count class="ml-1">0</span></a>
             ${user
-              ? `<a href="account.html">${escapeHtml(user.displayName)}</a>`
-              : `<a href="login.html">Sign in</a>`}
+              ? `<a href="/account/">${escapeHtml(user.displayName)}</a>`
+              : `<a href="/login/">Sign in</a>`}
           </nav>
         </div>
       </div>`
@@ -76,7 +76,7 @@ export async function renderShell() {
 
   mountTour()
   document.querySelectorAll('[data-open-tour]').forEach((button) => button.addEventListener('click', (event) => {
-    if (button.tagName === 'A' && button.getAttribute('href') === 'index.html') event.preventDefault()
+    if (button.tagName === 'A' && button.getAttribute('href') === '/') event.preventDefault()
     openTour()
   }))
 

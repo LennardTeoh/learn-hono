@@ -12,13 +12,13 @@ async function init() {
       <div class="rounded-3xl border border-slate-200 bg-white p-8 text-center">
         <h2 class="text-2xl font-black">Sign in to finish checkout</h2>
         <p class="mt-2 text-slate-500">Your cart stays in this browser.</p>
-        <a href="auth.html?state=signin&next=checkout.html" class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">Sign in</a>
+        <a href="/login/?next=/checkout/" class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">Sign in</a>
       </div>`
     return
   }
 
   if (!items.length) {
-    location.href = 'cart.html'
+    location.href = '/cart/'
     return
   }
 
@@ -60,7 +60,7 @@ async function init() {
           <h2 class="mt-5 text-3xl font-black text-slate-950">Order confirmed</h2>
           <p class="mt-2 text-slate-600">Dummy checkout complete. No payment was processed.</p>
           <p class="mt-3 text-sm font-mono text-slate-500">Order ${escapeHtml(data.orderId)}</p>
-          <a href="account.html" class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">View orders</a>
+          <a href="/account/" class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">View orders</a>
         </div>`
     } catch (error) {
       toast(error.message, 'error')

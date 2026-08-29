@@ -7,7 +7,7 @@ let allProducts = []
 function productCard(product) {
   return `
     <article class="pb-product-card">
-      <a href="product.html?id=${encodeURIComponent(product.id)}" class="pb-product-image">
+      <a href="/product/?id=${encodeURIComponent(product.id)}" class="pb-product-image">
         <img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}" class="h-full w-full object-cover" loading="lazy">
       </a>
       <div class="pb-product-copy">
@@ -15,7 +15,7 @@ function productCard(product) {
           <span>${escapeHtml(product.category)}</span>
           <span>${product.stock} left</span>
         </div>
-        <a href="product.html?id=${encodeURIComponent(product.id)}"><h3>${escapeHtml(product.name)}</h3></a>
+        <a href="/product/?id=${encodeURIComponent(product.id)}"><h3>${escapeHtml(product.name)}</h3></a>
         <p>${escapeHtml(product.description)}</p>
         <div class="pb-product-bottom">
           <span class="pb-price">${money(product.price_cents)}</span>
@@ -45,29 +45,7 @@ async function init() {
   await renderShell()
   const data = await api('/api/products')
   allProducts = data.products
-  render(allProducts)
-
-  const search = document.getElementById('search')
-  const category = document.getElementById('category')
-
-  const apply = () => {
-    const q = search.value.trim().toLowerCase()
-    const cat = category.value
-    render(allProducts.filter((product) =>
-      (!q || `${product.name} ${product.description}`.toLowerCase().includes(q)) &&
-      (!cat || product.category === cat)
-    ))
-  }
-
-  search.addEventListener('input', apply)
-  category.addEventListener('change', apply)
-
-  document.querySelectorAll('[data-category-link]').forEach((link) => {
-    link.addEventListener('click', () => {
-      category.value = link.dataset.categoryLink || ''
-      apply()
-    })
-  })
+  render(allProducts.slice(0, 4))
 }
 
 init().catch((error) => {

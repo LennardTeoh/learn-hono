@@ -12,14 +12,17 @@ const required = async (file, needles) => {
 const pass = (message) => console.log(`✓ ${message}`)
 
 try {
-  await required('frontend/index.html', ['PetitBakery', 'pb-hero', 'pb-category-grid', 'pb-product-grid', 'pb-faq'])
+  await required('frontend/index.html', ['PetitBakery', 'pb-hero', 'pb-category-grid', 'pb-product-grid', 'pb-faq', '/products/'])
   await required('frontend/styles.css', ['--pb-cream', '.pb-hero', '.pb-product-grid'])
+  for (const route of ['products', 'product', 'cart', 'checkout', 'login', 'register', 'account', 'verify', 'verification', 'resend-verification', 'forgot-password', 'reset-password']) await required(`frontend/${route}/index.html`, ['PetitBakery'])
+  await required('frontend/assets/images/petitbakery-hero-cake.png', [])
   await required('.env.example', ['BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'CLOUDFLARE_API_TOKEN'])
   pass('PetitBakery storefront shell is present')
 
   if (!stage || stage >= 2) {
     await required('backend/migrations/0002_seed_products.sql', ['Cakes', 'Pastries', 'Cookies', 'Chocolates'])
-    await required('frontend/js/home.js', ['/api/products', 'data-category-link'])
+    await required('frontend/js/home.js', ['/api/products'])
+    await required('frontend/js/products.js', ['/api/products', 'category'])
     pass('Bakery catalogue and cart entry points are present')
   }
   if (!stage || stage >= 3) {

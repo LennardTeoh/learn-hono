@@ -5,7 +5,7 @@ async function init() {
   await renderShell()
   const user = await getCurrentUser()
   if (!user) {
-    location.href = 'auth.html?state=signin&next=account.html'
+    location.href = '/login/?next=/account/'
     return
   }
 
@@ -30,7 +30,7 @@ async function init() {
       toast(error.message, 'error')
       return
     }
-    location.href = 'index.html'
+    location.href = '/'
   })
 }
 
