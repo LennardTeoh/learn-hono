@@ -1,21 +1,21 @@
 {
-  "name": "shoplite-cloudflare-course",
-  "version": "1.0.0",
+  "name": "nimble-commerce-api",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:create": "wrangler d1 create shoplite-db",
-    "db:migrate:local": "wrangler d1 migrations apply shoplite-db --local",
-    "db:migrate:remote": "wrangler d1 migrations apply shoplite-db --remote",
-    "db:seed:local": "wrangler d1 execute shoplite-db --local --file=./seed.sql",
-    "db:seed:remote": "wrangler d1 execute shoplite-db --remote --file=./seed.sql"
+    "typecheck": "tsc --noEmit",
+    "db:migrate:local": "wrangler d1 migrations apply nimble-shop-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply nimble-shop-db --remote",
+    "db:seed:local": "wrangler d1 execute nimble-shop-db --local --file=./migrations/0002_seed_products.sql"
   },
   "dependencies": {
-    "hono": "^4.9.6"
+    "hono": "^4.13.3"
   },
   "devDependencies": {
-    "wrangler": "^4.32.0"
+    "@cloudflare/workers-types": "^5.20260827.1",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.92.0"
   }
 }

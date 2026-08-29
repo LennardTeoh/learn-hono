@@ -1,0 +1,11 @@
+ENVIRONMENT=development
+APP_ORIGIN=http://localhost:8788
+CORS_ORIGIN=http://localhost:8788
+EMAIL_FROM=Nimble Shop <onboarding@resend.dev>
+SESSION_TTL_SECONDS=604800
+PBKDF2_ITERATIONS=600000
+
+# Secrets — copy this file to .dev.vars for local development only.
+PASSWORD_PEPPER=replace-with-at-least-32-random-bytes
+RESEND_API_KEY=
+TURNSTILE_SECRET_KEY=

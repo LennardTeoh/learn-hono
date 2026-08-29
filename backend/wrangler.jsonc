@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nimble-commerce-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-20",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "ENVIRONMENT": "production",
+    "APP_ORIGIN": "https://nimble-commerce.pages.dev",
+    "CORS_ORIGIN": "https://nimble-commerce.pages.dev",
+    "EMAIL_FROM": "Nimble Shop <noreply@your-domain.example>",
+    "SESSION_TTL_SECONDS": "604800",
+    "PBKDF2_ITERATIONS": "600000"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nimble-shop-db",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ]
+}

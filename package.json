@@ -1,0 +1,13 @@
+{
+  "name": "petitbakery-course",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "check": "node scripts/check.mjs",
+    "check:stage1": "node scripts/check.mjs --stage 1",
+    "check:stage2": "node scripts/check.mjs --stage 2",
+    "check:stage3": "node scripts/check.mjs --stage 3",
+    "check:stage4": "node scripts/check.mjs --stage 4"
+  }
+}

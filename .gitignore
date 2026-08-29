@@ -1,0 +1,5 @@
+node_modules/
+.wrangler/
+backend/.dev.vars
+.DS_Store
+outputs/*.inspect.ndjson
