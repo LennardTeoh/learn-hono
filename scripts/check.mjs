@@ -17,7 +17,7 @@ try {
   for (const route of ['products', 'product', 'cart', 'checkout', 'login', 'register', 'account', 'verify', 'verification', 'resend-verification', 'forgot-password', 'reset-password']) await required(`frontend/${route}/index.html`, ['PetitBakery'])
   await required('frontend/assets/images/petitbakery-hero-cake.png', [])
   await required('frontend/assets/images/petitbakery-logo.png', [])
-  await required('frontend/js/ui.js', ['petitbakery-logo.png', 'pb-float-cart', 'Add to cart'])
+  await required('frontend/js/ui.js', ['petitbakery-logo.png', 'pb-float-cart', 'Add to cart', 'pb-nav-login'])
   await required('frontend/js/product-images.js', ['prod_strawberry_cloud', 'prod_caramel_bonbon', '/assets/images/products/'])
   await required('frontend/js/catalog-fallback.js', ['prod_strawberry_cloud', 'prod_caramel_bonbon', 'fallbackProducts'])
   for (const image of ['strawberry-cloud', 'chocolate-fudge', 'lemon-tart', 'butter-croissant', 'strawberry-danish', 'cinnamon-roll', 'sea-salt-cookie', 'brown-butter-cookie', 'pistachio-cookie', 'truffle-box', 'dark-bark', 'caramel-bonbon']) await required(`frontend/assets/images/products/${image}.png`, [])

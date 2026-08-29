@@ -70,7 +70,7 @@ export async function renderShell() {
             <a href="/#faq-title">FAQ</a>
             ${user
               ? `<a href="/account/">${escapeHtml(user.displayName)}</a>`
-              : `<a href="/login/">Sign in</a>`}
+              : `<a href="/login/" class="pb-nav-login">Sign in</a>`}
           </nav>
         </div>
       </div>`
