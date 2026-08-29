@@ -16,6 +16,12 @@ placeholders in `.env` with your local values. `BETTER_AUTH_SECRET` must be at
 least 32 characters; use a real Resend API key if you want verification and
 password-reset emails to work.
 
+Generate a fresh Better Auth secret with Node.js:
+
+```bash
+node -e "const fs=require('node:fs'),crypto=require('node:crypto'),p='.env'; let s=fs.readFileSync(p,'utf8'); s=s.replace(/^BETTER_AUTH_SECRET=.*$/m, 'BETTER_AUTH_SECRET='+crypto.randomBytes(32).toString('hex')); fs.writeFileSync(p,s)"
+```
+
 `npm run start` applies local D1 migrations, runs the Hono Worker at
 `http://localhost:8787`, and serves `frontend/` at `http://localhost:8788`.
 Open `http://localhost:8788` in your browser and stop both servers with
