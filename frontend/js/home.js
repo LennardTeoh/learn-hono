@@ -1,5 +1,6 @@
 import { api } from './api.js'
 import { addToCart } from './cart-store.js'
+import { imageForProduct } from './product-images.js'
 import { escapeHtml, money, renderShell, toast } from './ui.js'
 
 let allProducts = []
@@ -8,7 +9,7 @@ function productCard(product) {
   return `
     <article class="pb-product-card">
       <a href="/product/?id=${encodeURIComponent(product.id)}" class="pb-product-image">
-        <img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}" class="h-full w-full object-cover" loading="lazy">
+        <img src="${escapeHtml(imageForProduct(product))}" alt="${escapeHtml(product.name)}" class="h-full w-full object-cover" loading="lazy">
       </a>
       <div class="pb-product-copy">
         <div class="pb-product-meta">

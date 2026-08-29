@@ -1,5 +1,6 @@
 import { api } from './api.js'
 import { addToCart } from './cart-store.js'
+import { imageForProduct } from './product-images.js'
 import { escapeHtml, money, renderShell, toast } from './ui.js'
 
 async function init() {
@@ -11,7 +12,7 @@ async function init() {
   document.title = `${product.name} · PetitBakery`
   document.getElementById('product-detail').innerHTML = `
     <div class="overflow-hidden rounded-3xl bg-[color:var(--pb-peach)]">
-      <img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}" class="aspect-square h-full w-full object-cover">
+      <img src="${escapeHtml(imageForProduct(product))}" alt="${escapeHtml(product.name)}" class="aspect-square h-full w-full object-cover">
     </div>
     <div class="flex flex-col justify-center">
       <p class="text-sm font-semibold uppercase tracking-wider text-[color:var(--pb-muted)]">${escapeHtml(product.category)}</p>

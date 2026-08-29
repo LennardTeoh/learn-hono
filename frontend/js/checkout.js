@@ -1,5 +1,6 @@
 import { api, getCurrentUser } from './api.js'
 import { clearCart, getCart, cartSubtotal } from './cart-store.js'
+import { imageForCartItem } from './product-images.js'
 import { escapeHtml, money, renderShell, setBusy, toast } from './ui.js'
 
 async function init() {
@@ -29,7 +30,7 @@ async function init() {
     <div class="rounded-3xl border border-slate-200 bg-white p-6">
       <h2 class="font-black">Order summary</h2>
       <div class="mt-4 space-y-4">
-        ${items.map((item) => `<div class="flex gap-3"><img src="${escapeHtml(item.imageUrl)}" class="h-14 w-14 rounded-lg object-cover" alt=""><div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">${escapeHtml(item.name)}</p><p class="text-xs text-slate-500">Qty ${item.quantity}</p></div><p class="text-sm font-semibold">${money(item.priceCents * item.quantity)}</p></div>`).join('')}
+        ${items.map((item) => `<div class="flex gap-3"><img src="${escapeHtml(imageForCartItem(item))}" class="h-14 w-14 rounded-lg object-cover" alt=""><div class="min-w-0 flex-1"><p class="truncate text-sm font-semibold">${escapeHtml(item.name)}</p><p class="text-xs text-slate-500">Qty ${item.quantity}</p></div><p class="text-sm font-semibold">${money(item.priceCents * item.quantity)}</p></div>`).join('')}
       </div>
       <div class="my-5 border-t"></div>
       <dl class="space-y-2 text-sm"><div class="flex justify-between"><dt>Subtotal</dt><dd>${money(subtotal)}</dd></div><div class="flex justify-between"><dt>Shipping</dt><dd>${shipping ? money(shipping) : 'Free'}</dd></div><div class="flex justify-between"><dt>Tax</dt><dd>${money(tax)}</dd></div></dl>

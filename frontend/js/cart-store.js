@@ -1,4 +1,5 @@
 const CART_KEY = 'nimble_cart_v1'
+import { imageForProduct } from './product-images.js'
 
 export function getCart() {
   try {
@@ -24,7 +25,7 @@ export function addToCart(product, quantity = 1) {
       productId: product.id,
       name: product.name,
       priceCents: product.price_cents,
-      imageUrl: product.image_url,
+      imageUrl: imageForProduct(product),
       quantity: Math.min(10, Math.max(1, quantity))
     })
   }

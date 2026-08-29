@@ -1,4 +1,5 @@
 import { getCart, removeFromCart, updateQuantity, cartSubtotal } from './cart-store.js'
+import { imageForCartItem } from './product-images.js'
 import { escapeHtml, money, renderShell } from './ui.js'
 
 function render() {
@@ -14,7 +15,7 @@ function render() {
 
   host.innerHTML = items.map((item) => `
     <div class="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4">
-      <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" class="h-24 w-24 rounded-xl object-cover">
+      <img src="${escapeHtml(imageForCartItem(item))}" alt="${escapeHtml(item.name)}" class="h-24 w-24 rounded-xl object-cover">
       <div class="min-w-0 flex-1">
         <div class="flex justify-between gap-4">
           <div><h3 class="font-bold text-slate-950">${escapeHtml(item.name)}</h3><p class="mt-1 text-sm text-slate-500">${money(item.priceCents)} each</p></div>

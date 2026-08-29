@@ -1,11 +1,12 @@
 import { api } from './api.js'
 import { addToCart } from './cart-store.js'
+import { imageForProduct } from './product-images.js'
 import { escapeHtml, money, renderShell, toast } from './ui.js'
 
 let allProducts = []
 
 function card(product) {
-  return `<article class="pb-product-card"><a href="/product/?id=${encodeURIComponent(product.id)}" class="pb-product-image"><img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}" loading="lazy"></a><div class="pb-product-copy"><div class="pb-product-meta"><span>${escapeHtml(product.category)}</span><span>${product.stock} left</span></div><a href="/product/?id=${encodeURIComponent(product.id)}"><h2>${escapeHtml(product.name)}</h2></a><p>${escapeHtml(product.description)}</p><div class="pb-product-bottom"><span class="pb-price">${money(product.price_cents)}</span><button data-add="${escapeHtml(product.id)}" class="pb-mini-button" type="button">Add to box</button></div></div></article>`
+  return `<article class="pb-product-card"><a href="/product/?id=${encodeURIComponent(product.id)}" class="pb-product-image"><img src="${escapeHtml(imageForProduct(product))}" alt="${escapeHtml(product.name)}" loading="lazy"></a><div class="pb-product-copy"><div class="pb-product-meta"><span>${escapeHtml(product.category)}</span><span>${product.stock} left</span></div><a href="/product/?id=${encodeURIComponent(product.id)}"><h2>${escapeHtml(product.name)}</h2></a><p>${escapeHtml(product.description)}</p><div class="pb-product-bottom"><span class="pb-price">${money(product.price_cents)}</span><button data-add="${escapeHtml(product.id)}" class="pb-mini-button" type="button">Add to box</button></div></div></article>`
 }
 
 function render(products) {
