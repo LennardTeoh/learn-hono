@@ -38,7 +38,7 @@ try {
     await required('backend/migrations/0003_better_auth_cutover.sql', ['CREATE TABLE "user"', 'CREATE TABLE session', 'CREATE TABLE account', 'CREATE TABLE verification', 'REFERENCES "user"'])
     await required('scripts/migration-preflight.mjs', ['FROM users', 'FROM orders', 'refusing Better Auth cutover'])
     if (existsSync('backend/src/routes/auth.ts') || existsSync('backend/src/lib/session.ts') || existsSync('backend/src/lib/crypto.ts')) throw new Error('Legacy custom-auth code remains')
-    const typecheck = spawnSync('npm', ['--prefix', 'backend', 'run', 'typecheck'], { stdio: 'inherit' })
+    const typecheck = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['--prefix', 'backend', 'run', 'typecheck'], { stdio: 'inherit' })
     if (typecheck.status !== 0) throw new Error('Backend typecheck failed')
     pass('Hono routes and trusted checkout checks are present')
   }
