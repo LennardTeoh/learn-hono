@@ -29,7 +29,7 @@ npm run check:stage3  # Hono API, auth and trusted checkout
 npm run check:stage4  # Pages, Worker, D1 and security configuration
 ```
 
-Use the “Learn” link in the PetitBakery header for the four-step in-app map.
+The architecture notes in `ARCHITECTURE.md` explain the browser, Pages, Worker and D1 boundaries.
 
 A beginner-friendly full e-commerce starter using:
 
@@ -38,7 +38,7 @@ A beginner-friendly full e-commerce starter using:
 - **Backend:** Hono on Cloudflare Workers
 - **Database:** Cloudflare D1
 - **Email verification/password reset:** Resend Free adapter
-- **CI/CD:** GitHub Actions runs Wrangler directly for D1, Workers, and Pages
+- **CI/CD:** GitHub Actions validates first, then deploys the Worker and Pages frontend in separate jobs
 - **Payment:** intentionally omitted; checkout creates a dummy confirmed order
 
 ## Features
@@ -247,7 +247,7 @@ http://localhost:8788
 
 ## 1. Create Pages project once
 
-This repository uses **Direct Upload** from GitHub Actions.
+This repository uses **Direct Upload** from GitHub Actions. The workflow keeps the two deploy targets separate: `deploy-backend` publishes the Hono Worker and applies D1 migrations, while `deploy-frontend` uploads only `frontend/` to Pages.
 
 ```bash
 npx wrangler pages project create petitbakery --production-branch main
@@ -301,10 +301,11 @@ This repository uses:
 ```text
 CLOUDFLARE_API_TOKEN
 CLOUDFLARE_ACCOUNT_ID
-DOTENV
+BETTER_AUTH_SECRET
+RESEND_API_KEY
 ```
 
-`DOTENV` stores the complete local `.env` as a GitHub-only backup; GitHub secret names cannot contain a period. Local development reads `.env`; deployment writes only the required runtime secrets to the Worker.
+The backend deploy job writes the two runtime secrets to the Worker. The frontend deploy job needs only the Cloudflare token and account ID; it does not receive application secrets.
 
 ## 7. GitHub Actions variables
 
@@ -328,11 +329,11 @@ Then replace the broad `https://*.workers.dev` entry in `frontend/_headers` with
 
 The workflow:
 
-1. type-checks Hono/TypeScript,
-2. syntax-checks frontend JavaScript,
-3. applies D1 migrations,
-4. deploys the Worker,
-5. deploys `frontend/` to Cloudflare Pages.
+1. runs the shared `test` job (including project checks and backend type-checking),
+2. runs `deploy-backend` to validate secrets, apply D1 migrations and deploy `backend/` to Workers,
+3. runs `deploy-frontend` to deploy only `frontend/` to Cloudflare Pages.
+
+The two deploy jobs both require `test` and can run independently after validation. Pull requests run `test` only; pushes to `main` and manual runs deploy both targets.
 
 Cloudflare credentials remain in GitHub secrets. The hosted storefront and catalogue require no Worker runtime secrets; enabling account registration or transactional email later requires an explicit secret policy.
 
@@ -366,7 +367,7 @@ GET    /api/orders/:id
 nimble-commerce/
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml
+│       └── cloudflare.yml
 ├── backend/
 │   ├── migrations/
 │   │   ├── 0001_init.sql
@@ -386,19 +387,23 @@ nimble-commerce/
 │   ├── tsconfig.json
 │   └── wrangler.jsonc
 ├── frontend/
-│   ├── js/
 │   ├── _headers
+│   ├── assets/
+│   │   └── images/
+│   ├── js/
 │   ├── index.html
-│   ├── product.html
-│   ├── cart.html
-│   ├── checkout.html
-│   ├── register.html
-│   ├── login.html
-│   ├── forgot-password.html
-│   ├── reset-password.html
-│   ├── verify.html
-│   ├── resend-verification.html
-│   └── account.html
+│   ├── products/index.html
+│   ├── product/index.html
+│   ├── cart/index.html
+│   ├── checkout/index.html
+│   ├── register/index.html
+│   ├── login/index.html
+│   ├── forgot-password/index.html
+│   ├── reset-password/index.html
+│   ├── verify/index.html
+│   ├── verification/index.html
+│   ├── resend-verification/index.html
+│   └── account/index.html
 ├── ARCHITECTURE.md
 ├── PRODUCT_DESIGN.md
 ├── SECURITY.md

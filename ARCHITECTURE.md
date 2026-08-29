@@ -5,7 +5,8 @@
 │ Cloudflare Pages                                           │
 │ HTML + CSS + JS + Tailwind Browser CDN                     │
 │                                                            │
-│ index / product / cart / auth / checkout / account         │
+│ / /products/ /product/?id=… /cart/ /checkout/              │
+│ /login/ /register/ /account/ and verification folders     │
 └───────────────────────┬────────────────────────────────────┘
                         │ HTTPS fetch + credentials
                         │ X-Captcha-Response on auth writes
@@ -52,6 +53,14 @@ The browser may control:
 The backend therefore validates/bounds all values and reloads current prices from D1.
 
 ### GitHub Actions is deployment authority
+
+`.github/workflows/cloudflare.yml` separates delivery into three jobs:
+
+- `test` runs the project checks and backend type-check before any deploy.
+- `deploy-backend` validates runtime secrets, applies remote D1 migrations and deploys the Hono Worker.
+- `deploy-frontend` uploads only `frontend/` to the Cloudflare Pages project.
+
+Both deploy jobs require `test`; pull requests stop after validation.
 
 Only GitHub Secrets contain:
 

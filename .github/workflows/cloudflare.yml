@@ -23,7 +23,7 @@ jobs:
       - run: npm ci --prefix backend
       - run: npm run check
 
-  deploy:
+  deploy-backend:
     if: github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-latest
@@ -54,5 +54,17 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
       - run: npm run db:migrate:remote --prefix backend
       - run: npm run deploy --prefix backend
-      - run: npx wrangler pages deploy ../frontend --project-name petitbakery --branch main
-        working-directory: backend
+
+  deploy-frontend:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npx wrangler pages deploy frontend --project-name petitbakery --branch main
