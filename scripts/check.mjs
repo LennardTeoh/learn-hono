@@ -36,6 +36,7 @@ try {
     await required('backend/src/lib/auth.ts', ['betterAuth', 'BETTER_AUTH_SECRET', 'BETTER_AUTH_URL', "sameSite: 'none'", 'sendVerificationEmail', 'sendResetPassword'])
     await required('backend/src/routes/orders.ts', ['price_cents', 'Idempotency-Key', 'requireUser', "Origin') !== c.env.CORS_ORIGIN"])
     await required('backend/migrations/0003_better_auth_cutover.sql', ['CREATE TABLE "user"', 'CREATE TABLE session', 'CREATE TABLE account', 'CREATE TABLE verification', 'REFERENCES "user"', 'legacy_users', 'legacy_orders'])
+    await required('backend/migrations/0004_reset_catalog.sql', ['DROP TABLE IF EXISTS order_items', 'DROP TABLE IF EXISTS orders', 'CREATE TABLE "user"', 'DROP TABLE IF EXISTS legacy_users'])
     await required('scripts/migration-preflight.mjs', ['FROM users', 'FROM orders', 'legacy_users', 'legacy_orders', 'refusing Better Auth cutover'])
     if (existsSync('backend/src/routes/auth.ts') || existsSync('backend/src/lib/session.ts') || existsSync('backend/src/lib/crypto.ts')) throw new Error('Legacy custom-auth code remains')
     const typecheck = spawnSync('npm', ['--prefix', 'backend', 'run', 'typecheck'], { stdio: 'inherit', shell: process.platform === 'win32' })
