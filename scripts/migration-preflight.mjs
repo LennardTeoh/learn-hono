@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 
 const run = (command) => {
   const result = spawnSync('npm', ['--prefix', 'backend', 'exec', '--', 'wrangler', 'd1', 'execute', 'petitbakery-db', '--remote', '--command', command, '--json'], { encoding: 'utf8', shell: process.platform === 'win32' })
@@ -17,7 +18,12 @@ const tables = run("SELECT name FROM sqlite_master WHERE type = 'table' AND name
 const users = tables.includes('users') ? Number(run('SELECT count(*) AS users FROM users;')[0]?.users || 0) : 0
 const orders = tables.includes('orders') ? Number(run('SELECT count(*) AS orders FROM orders;')[0]?.orders || 0) : 0
 if (users || orders) {
-  console.error('Legacy users or orders exist; refusing Better Auth cutover. Write an explicit preservation migration.')
-  process.exit(1)
+  const migration = readFileSync('backend/migrations/0003_better_auth_cutover.sql', 'utf8')
+  if (!migration.includes('legacy_users') || !migration.includes('legacy_orders')) {
+    console.error('Legacy users or orders exist; refusing Better Auth cutover. Write an explicit preservation migration.')
+    process.exit(1)
+  }
+  console.log('✓ Legacy users/orders found; preservation migration is present.')
+} else {
+  console.log('✓ Better Auth cutover preflight passed (legacy users/orders are empty).')
 }
-console.log('✓ Better Auth cutover preflight passed (legacy users/orders are empty).')

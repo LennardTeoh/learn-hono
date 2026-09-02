@@ -1,12 +1,25 @@
--- CI runs migration-preflight.mjs before this destructive, empty-data cutover.
+-- Preserve the legacy account and order tables while moving the app to Better Auth.
+-- Legacy passwords and sessions are retained for rollback, but users must reset
+-- their password before signing in because Better Auth uses a different hash format.
 PRAGMA foreign_keys = OFF;
 
-DROP TABLE order_items;
-DROP TABLE orders;
-DROP TABLE email_verification_tokens;
-DROP TABLE password_reset_tokens;
-DROP TABLE sessions;
-DROP TABLE users;
+DROP INDEX IF EXISTS idx_users_email;
+DROP INDEX IF EXISTS idx_email_verification_user;
+DROP INDEX IF EXISTS idx_email_verification_token;
+DROP INDEX IF EXISTS idx_password_reset_user;
+DROP INDEX IF EXISTS idx_password_reset_token;
+DROP INDEX IF EXISTS idx_sessions_user;
+DROP INDEX IF EXISTS idx_sessions_expiry;
+DROP INDEX IF EXISTS idx_orders_user_idempotency;
+DROP INDEX IF EXISTS idx_orders_user;
+DROP INDEX IF EXISTS idx_order_items_order;
+
+ALTER TABLE users RENAME TO legacy_users;
+ALTER TABLE email_verification_tokens RENAME TO legacy_email_verification_tokens;
+ALTER TABLE password_reset_tokens RENAME TO legacy_password_reset_tokens;
+ALTER TABLE sessions RENAME TO legacy_sessions;
+ALTER TABLE order_items RENAME TO legacy_order_items;
+ALTER TABLE orders RENAME TO legacy_orders;
 
 CREATE TABLE "user" (
   id TEXT PRIMARY KEY,
@@ -17,6 +30,10 @@ CREATE TABLE "user" (
   createdAt INTEGER NOT NULL,
   updatedAt INTEGER NOT NULL
 );
+
+INSERT INTO "user" (id, name, email, emailVerified, createdAt, updatedAt)
+SELECT id, display_name, email, email_verified, created_at, updated_at
+FROM legacy_users;
 
 CREATE TABLE session (
   id TEXT PRIMARY KEY,
@@ -77,6 +94,13 @@ CREATE TABLE orders (
 CREATE UNIQUE INDEX idx_orders_user_idempotency ON orders(user_id, idempotency_key);
 CREATE INDEX idx_orders_user ON orders(user_id);
 
+INSERT INTO orders
+  (id, user_id, status, subtotal_cents, shipping_cents, tax_cents, total_cents,
+   shipping_name, address1, address2, city, postal_code, country, idempotency_key, created_at)
+SELECT id, user_id, status, subtotal_cents, shipping_cents, tax_cents, total_cents,
+       shipping_name, address1, address2, city, postal_code, country, idempotency_key, created_at
+FROM legacy_orders;
+
 CREATE TABLE order_items (
   id TEXT PRIMARY KEY,
   order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -86,4 +110,10 @@ CREATE TABLE order_items (
   quantity INTEGER NOT NULL CHECK (quantity > 0)
 );
 CREATE INDEX idx_order_items_order ON order_items(order_id);
+
+INSERT INTO order_items
+  (id, order_id, product_id, product_name, unit_price_cents, quantity)
+SELECT id, order_id, product_id, product_name, unit_price_cents, quantity
+FROM legacy_order_items;
+
 PRAGMA foreign_keys = ON;
