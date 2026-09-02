@@ -11,6 +11,15 @@ npm run check
 npm run start
 ```
 
+From PowerShell, use:
+
+```powershell
+Copy-Item .env.example .env
+npm install --prefix backend
+npm run check
+npm run start
+```
+
 Before starting, replace the `BETTER_AUTH_SECRET` and `RESEND_API_KEY`
 placeholders in `.env` with your local values. `BETTER_AUTH_SECRET` must be at
 least 32 characters; use a real Resend API key if you want verification and
