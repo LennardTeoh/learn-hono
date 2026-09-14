@@ -63,7 +63,7 @@ export async function renderShell() {
     header.innerHTML = `
       <div class="pb-shell">
         <div class="pb-nav">
-          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true"><img src="/assets/images/petitbakery-logo.png" alt=""></span><span>PetitBakery</span></a>
+          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true"><img src="/assets/images/petitbakery-logo.png" alt=""></span><span>LUMIÈRE</span></a>
           <nav class="pb-nav-links" aria-label="Primary">
             <a href="/products/">Shop treats</a>
             <a href="/#faq-title">FAQ</a>
@@ -78,7 +78,7 @@ export async function renderShell() {
   if (footer) {
     footer.innerHTML = `
       <div class="pb-footer"><div class="pb-footer-inner">
-        <p>© 2026 PetitBakery · a Cloudflare Pages + Hono learning app.</p>
+        <p>© 2026 LUMIÈRE · a Cloudflare Pages + Hono learning app.</p>
         <p>Dummy checkout only — no payment information is collected.</p>
       </div></div>`
   }
