@@ -20,7 +20,7 @@ function productCard(product) {
         <p>${escapeHtml(product.description)}</p>
         <div class="pb-product-bottom">
           <span class="pb-price">${money(product.price_cents)}</span>
-          <button data-add="${escapeHtml(product.id)}" class="pb-mini-button" type="button">Add to box</button>
+          <button data-add="${escapeHtml(product.id)}" class="pb-mini-button" type="button">Add to bag</button>
         </div>
       </div>
     </article>`
