@@ -65,6 +65,7 @@ export async function renderShell() {
         <div class="pb-nav">
           <a href="/" class="pb-brand">
             <span class="pb-mark" aria-hidden="true">
+            // petitbakery-logo.png
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#312f2c" width="60%" height="60%">
                 <path d="M50 12 C53 38, 62 47, 88 50 C62 53, 53 62, 50 88 C47 62, 38 53, 12 50 C38 47, 47 38, 50 12 Z" />
               </svg>
