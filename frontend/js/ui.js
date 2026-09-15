@@ -49,8 +49,8 @@ function mountFloatCart() {
   link.id = 'pb-float-cart'
   link.className = 'pb-float-cart'
   link.href = '/cart/'
-  link.setAttribute('aria-label', 'Open bag')
-  link.innerHTML = `<svg class="pb-float-cart-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.2 9.1a2 2 0 0 0 2 1.7h7.7a2 2 0 0 0 1.9-1.5L20 8H7"/><path d="M10 19.5h.01M17 19.5h.01"/></svg><span>Bag</span><span data-cart-count class="pb-float-cart-count">0</span>`
+  link.setAttribute('aria-label', 'Open cart')
+  link.innerHTML = `<svg class="pb-float-cart-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l1.2 9.1a2 2 0 0 0 2 1.7h7.7a2 2 0 0 0 1.9-1.5L20 8H7"/><path d="M10 19.5h.01M17 19.5h.01"/></svg><span>Add to cart</span><span data-cart-count class="pb-float-cart-count">0</span>`
   document.body.appendChild(link)
 }
 
@@ -63,16 +63,9 @@ export async function renderShell() {
     header.innerHTML = `
       <div class="pb-shell">
         <div class="pb-nav">
-          <a href="/" class="pb-brand">
-            <span class="pb-mark" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#312f2c" width="60%" height="60%">
-                <path d="M50 12 C53 38, 62 47, 88 50 C62 53, 53 62, 50 88 C47 62, 38 53, 12 50 C38 47, 47 38, 50 12 Z" />
-              </svg>
-            </span>
-            <span>LUMIÈRE</span>
-          </a>
+          <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true"><img src="/assets/images/petitbakery-logo.png" alt=""></span><span>PetitBakery</span></a>
           <nav class="pb-nav-links" aria-label="Primary">
-            <a href="/products/">Shop pieces</a>
+            <a href="/products/">Shop treats</a>
             <a href="/#faq-title">FAQ</a>
             ${user
               ? `<a href="/account/">${escapeHtml(user.displayName)}</a>`
@@ -85,7 +78,7 @@ export async function renderShell() {
   if (footer) {
     footer.innerHTML = `
       <div class="pb-footer"><div class="pb-footer-inner">
-        <p>© 2026 LUMIÈRE · a Cloudflare Pages + Hono learning app.</p>
+        <p>© 2026 PetitBakery · a Cloudflare Pages + Hono learning app.</p>
         <p>Dummy checkout only — no payment information is collected.</p>
       </div></div>`
   }
