@@ -36,9 +36,9 @@ export function verificationEmail(name: string, url: string): Pick<EmailInput, '
   const safeName = escapeHtml(name)
   const safeUrl = escapeHtml(url)
   return {
-    subject: 'Verify your PetitBakery email',
-    html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto"><h2>Verify your email</h2><p>Hi ${safeName},</p><p>Confirm your address to activate your PetitBakery account.</p><p><a href="${safeUrl}" style="display:inline-block;background:#111827;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none">Verify email</a></p><p>This link expires in 60 minutes.</p></div>`,
-    text: `Hi ${name}, verify your PetitBakery email: ${url}\nThis link expires in 60 minutes.`
+    subject: 'Verify your LUMIÈRE email',
+    html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto"><h2>Verify your email</h2><p>Hi ${safeName},</p><p>Confirm your address to activate your LUMIÈRE account.</p><p><a href="${safeUrl}" style="display:inline-block;background:#111827;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none">Verify email</a></p><p>This link expires in 60 minutes.</p></div>`,
+    text: `Hi ${name}, verify your LUMIÈRE email: ${url}\nThis link expires in 60 minutes.`
   }
 }
 
@@ -46,9 +46,9 @@ export function resetPasswordEmail(name: string, url: string): Pick<EmailInput, 
   const safeName = escapeHtml(name)
   const safeUrl = escapeHtml(url)
   return {
-    subject: 'Reset your PetitBakery password',
+    subject: 'Reset your LUMIÈRE password',
     html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto"><h2>Reset your password</h2><p>Hi ${safeName},</p><p>Use the secure link below to choose a new password.</p><p><a href="${safeUrl}" style="display:inline-block;background:#111827;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none">Reset password</a></p><p>This link expires in 30 minutes. If you did not request this, ignore this email.</p></div>`,
-    text: `Hi ${name}, reset your PetitBakery password: ${url}\nThis link expires in 30 minutes.`
+    text: `Hi ${name}, reset your LUMIÈRE password: ${url}\nThis link expires in 30 minutes.`
   }
 }
 
