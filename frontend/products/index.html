@@ -1,3 +1,57 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"><link rel="stylesheet" href="/styles.css"><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script><script src="/js/config.js"></script><title>Collection · PetitBakery</title></head>
-<body class="bg-slate-50 text-slate-900"><header id="site-header" class="sticky top-0 z-40"></header><main class="pb-main"><section class="pb-section" aria-labelledby="treats-title"><div class="pb-section-head"><div><span class="pb-kicker">Curated selection</span><h1 id="treats-title" class="pb-display">All the pieces</h1></div><p>Search the catalogue, filter by category, and add a piece to your local cart.</p></div><div class="pb-toolbar"><input id="search" class="pb-field pb-search" type="search" placeholder="Search bags, bangles…" aria-label="Search pieces"><select id="category" class="pb-field" aria-label="Filter by category"><option value="">All pieces</option><option>Bags</option><option>Bangles</option><option>Watches</option><option>Necklaces</option></select></div><div id="product-grid" class="pb-product-grid" aria-live="polite"><p>Loading pieces…</p></div></section></main><footer id="site-footer"></footer><script type="module" src="/js/products.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="/js/config.js"></script>
+  <title>Collection · LUMIÈRE</title>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header id="site-header" class="sticky top-0 z-40"></header>
+  
+  <main class="pb-main">
+    <section class="pb-section" aria-labelledby="treats-title">
+      
+      <div class="pb-section-head mb-4">
+        <div>
+          <span class="pb-kicker">Curated selection</span>
+          <h1 id="treats-title" class="pb-display">All the pieces</h1>
+        </div>
+        <p>Search the catalogue, filter by category, and add a piece to your local cart.</p>
+      </div>
+
+      <!-- New Category Pills -->
+      <div id="category-pills" class="flex flex-wrap gap-2 mb-6">
+        <button class="category-pill active px-5 py-1.5 rounded-full border border-slate-900 bg-slate-900 text-white text-xs font-bold tracking-wider uppercase transition-colors" data-category="">ALL</button>
+        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Bags">BAG</button>
+        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Bangles">BANGLE</button>
+        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Watches">WATCH</button>
+        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Necklaces">NECKLACE</button>
+      </div>
+
+      <div class="pb-toolbar">
+        <input id="search" class="pb-field pb-search" type="search" placeholder="Search bags, bangles…" aria-label="Search pieces">
+        
+        <!-- New Sort Dropdown -->
+        <select id="sort" class="pb-field" aria-label="Sort pieces">
+          <option value="featured">Featured</option>
+          <option value="az">A-Z</option>
+          <option value="za">Z-A</option>
+          <option value="price-asc">Price ↑</option>
+          <option value="price-desc">Price ↓</option>
+        </select>
+      </div>
+
+      <div id="product-grid" class="pb-product-grid" aria-live="polite">
+        <p>Loading pieces…</p>
+      </div>
+    </section>
+  </main>
+  
+  <footer id="site-footer"></footer>
+  <script type="module" src="/js/products.js"></script>
+</body>
+</html>
