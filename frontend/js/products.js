@@ -21,21 +21,69 @@ function render(products) {
 async function init() {
   await renderShell()
   allProducts = (await api('/api/products')).products
+  
   const search = document.getElementById('search')
-  const category = document.getElementById('category')
-  category.value = new URLSearchParams(location.search).get('category') || ''
+  const sortSelect = document.getElementById('sort')
+  const pills = document.querySelectorAll('.category-pill')
+  
+  let currentCategory = new URLSearchParams(location.search).get('category') || ''
+  
   const apply = () => {
     const q = search.value.trim().toLowerCase()
-    render(allProducts.filter((product) => (!q || `${product.name} ${product.description}`.toLowerCase().includes(q)) && (!category.value || product.category === category.value)))
+    const sortValue = sortSelect ? sortSelect.value : 'featured'
+
+    let filtered = allProducts.filter((product) => 
+      (!q || `${product.name} ${product.description}`.toLowerCase().includes(q)) && 
+      (!currentCategory || product.category === currentCategory)
+    )
+
+    if (sortValue === 'az') {
+      filtered.sort((a, b) => a.name.localeCompare(b.name))
+    } else if (sortValue === 'za') {
+      filtered.sort((a, b) => b.name.localeCompare(a.name))
+    } else if (sortValue === 'price-asc') {
+      filtered.sort((a, b) => a.price_cents - b.price_cents)
+    } else if (sortValue === 'price-desc') {
+      filtered.sort((a, b) => b.price_cents - a.price_cents)
+    }
+
+    render(filtered)
   }
-  search.addEventListener('input', apply)
-  category.addEventListener('change', () => {
-    const url = new URL(location.href)
-    if (category.value) url.searchParams.set('category', category.value)
-    else url.searchParams.delete('category')
-    history.replaceState(null, '', url)
-    apply()
+
+  // Handle category pill clicks
+  pills.forEach(pill => {
+    pill.addEventListener('click', (e) => {
+      currentCategory = e.target.dataset.category
+      
+      // Update visual styles: remove dark from all, add light
+      pills.forEach(p => {
+        p.classList.remove('bg-slate-900', 'text-white', 'border-slate-900')
+        p.classList.add('bg-transparent', 'text-slate-700', 'border-slate-300')
+      })
+      
+      // Apply dark style to clicked pill
+      e.target.classList.remove('bg-transparent', 'text-slate-700', 'border-slate-300')
+      e.target.classList.add('bg-slate-900', 'text-white', 'border-slate-900')
+
+      // Update URL silently
+      const url = new URL(location.href)
+      if (currentCategory) url.searchParams.set('category', currentCategory)
+      else url.searchParams.delete('category')
+      history.replaceState(null, '', url)
+
+      apply()
+    })
   })
+
+  // Set initial pill state if URL has a category parameter
+  if (currentCategory) {
+    const activePill = Array.from(pills).find(p => p.dataset.category === currentCategory)
+    if (activePill) activePill.click()
+  }
+
+  search.addEventListener('input', apply)
+  if (sortSelect) sortSelect.addEventListener('change', apply)
+  
   apply()
 }
 
