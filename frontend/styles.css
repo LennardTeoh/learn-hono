@@ -139,3 +139,40 @@ button, input, select { font: inherit; }
   .pb-footer-inner p + p { margin-top: .4rem; }
   .pb-float-cart { right: .8rem; bottom: .8rem; }
 }
+/* Keep long luxury product names intact and scale them to fit */
+.pb-product-copy {
+  min-width: 0;
+}
+
+.pb-product-copy h2 {
+  white-space: normal !important;
+  
+  /* Tell the browser to ONLY wrap at spaces, never mid-word */
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  
+  /* Slightly reduce the massive font size so "Speedmaster" fits on one line */
+  font-size: 1.75rem !important; 
+  line-height: 1.1 !important;
+}
+
+.pb-product-copy p {
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+}
+/* Ensure product cards stretch uniformly and buttons lock to the bottom */
+.pb-product-card {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important; /* Forces all cards in a row to match the tallest one */
+}
+
+.pb-product-copy {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-grow: 1 !important; /* Forces the text area to expand and fill available space */
+}
+
+.pb-product-bottom {
+  margin-top: auto !important; /* Magically pushes the price and button to the absolute bottom */
+}
