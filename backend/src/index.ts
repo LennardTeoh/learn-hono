@@ -22,7 +22,7 @@ app.use('/api/*', async (c, next) => {
   return middleware(c, next)
 })
 
-app.get('/health', (c) => c.json({ ok: true, service: 'petitbakery-api' }))
+app.get('/health', (c) => c.json({ ok: true, service: 'lumiere-api' }))
 
 app.on(['GET', 'POST'], '/api/auth/*', (c) => createAuth(c.env).handler(c.req.raw))
 app.route('/api/products', productRoutes)
