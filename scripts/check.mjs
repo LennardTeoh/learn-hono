@@ -12,24 +12,24 @@ const required = async (file, needles) => {
 const pass = (message) => console.log(`✓ ${message}`)
 
 try {
-  await required('frontend/index.html', ['PetitBakery', 'pb-hero', 'pb-category-grid', 'pb-product-grid', 'pb-faq', '/products/'])
+  await required('frontend/index.html', ['LUMIÈRE', 'pb-hero', 'pb-category-grid', 'pb-product-grid', 'pb-faq', '/products/'])
   await required('frontend/styles.css', ['--pb-cream', '.pb-hero', '.pb-product-grid'])
-  for (const route of ['products', 'product', 'cart', 'checkout', 'login', 'register', 'account', 'verify', 'verification', 'resend-verification', 'forgot-password', 'reset-password']) await required(`frontend/${route}/index.html`, ['PetitBakery'])
+  for (const route of ['products', 'product', 'cart', 'checkout', 'login', 'register', 'account', 'verify', 'verification', 'resend-verification', 'forgot-password', 'reset-password']) await required(`frontend/${route}/index.html`, ['LUMIÈRE'])
   await required('frontend/assets/images/petitbakery-hero-cake.png', [])
   await required('frontend/assets/images/petitbakery-logo.png', [])
   await required('frontend/js/ui.js', ['petitbakery-logo.png', 'pb-float-cart', 'Add to cart', 'pb-nav-login'])
-  await required('frontend/js/product-images.js', ['prod_strawberry_cloud', 'prod_caramel_bonbon', '/assets/images/products/'])
-  await required('frontend/js/catalog-fallback.js', ['prod_strawberry_cloud', 'prod_caramel_bonbon', 'fallbackProducts'])
-  for (const image of ['strawberry-cloud', 'chocolate-fudge', 'lemon-tart', 'butter-croissant', 'strawberry-danish', 'cinnamon-roll', 'sea-salt-cookie', 'brown-butter-cookie', 'pistachio-cookie', 'truffle-box', 'dark-bark', 'caramel-bonbon']) await required(`frontend/assets/images/products/${image}.png`, [])
-  for (const image of ['category-cake-cutout', 'category-croissant-cutout', 'category-cookie-cutout', 'category-truffle-cutout']) await required(`frontend/assets/images/products/${image}.png`, [])
+  await required('frontend/js/product-images.js', ['prod_lv_neverfull', 'prod_bvlgari_bzero1', '/assets/images/products/'])
+  await required('frontend/js/catalog-fallback.js', ['prod_lv_neverfull', 'prod_bvlgari_bzero1', 'fallbackProducts'])
+  for (const image of ['lv-neverfull', 'dior-lady', 'chanel-flap', 'hermes-birkin', 'rolex-submariner', 'rolex-datejust', 'cartier-tank', 'apm-meteorites', 'cartier-love', 'vca-alhambra', 'tiffany-smile', 'bvlgari-bzero1']) await required(`frontend/assets/images/products/${image}.png`, [])
+  for (const image of ['category-bags-cutout', 'category-watches-cutout', 'category-bangles-cutout', 'category-necklaces-cutout']) await required(`frontend/assets/images/products/${image}.png`, [])
   await required('.env.example', ['BETTER_AUTH_SECRET', 'RESEND_API_KEY', 'CLOUDFLARE_API_TOKEN'])
-  pass('PetitBakery storefront shell is present')
+  pass('Lumière storefront shell is present')
 
   if (!stage || stage >= 2) {
-    await required('backend/migrations/0002_seed_products.sql', ['Cakes', 'Pastries', 'Cookies', 'Chocolates'])
+    await required('backend/migrations/0002_seed_products.sql', ['Bags', 'Watches', 'Bangles', 'Necklaces'])
     await required('frontend/js/home.js', ['/api/products'])
     await required('frontend/js/products.js', ['/api/products', 'category'])
-    pass('Bakery catalogue and cart entry points are present')
+    pass('Lumière catalogue and cart entry points are present')
   }
   if (!stage || stage >= 3) {
     await required('backend/src/index.ts', ['/api/auth', '/api/products', '/api/orders'])
@@ -53,7 +53,7 @@ try {
     await required('ARCHITECTURE.md', ['deploy-backend', 'deploy-frontend', 'Each deploy job requires'])
     pass('Cloudflare deployment configuration is present')
   }
-  console.log(stage ? `Stage ${stage} ready.` : 'All PetitBakery checks passed.')
+  console.log(stage ? `Stage ${stage} ready.` : 'All Lumière checks passed.')
 } catch (error) {
   console.error(`✗ ${error.message}`)
   process.exit(1)
