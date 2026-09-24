@@ -27,7 +27,7 @@ productRoutes.get('/', async (c) => {
      FROM products
      WHERE ${clauses.join(' AND ')}
      ORDER BY created_at DESC
-     LIMIT 50`
+     LIMIT 200`
   ).bind(...params)
 
   const result = await statement.all()
