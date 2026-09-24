@@ -65,21 +65,22 @@ export async function renderShell() {
         <div class="pb-nav">
           <a href="/" class="pb-brand"><span class="pb-mark" aria-hidden="true"><img src="/assets/images/petitbakery-logo.png" alt=""></span><span>LUMIÈRE</span></a>
           <nav class="flex items-center gap-6 text-sm font-medium tracking-wider text-slate-700">
-  <a href="/catalog/" class="hover:text-slate-950">THE COLLECTION</a>
-  <a href="/faq/" class="hover:text-slate-950">FAQ</a>
+            <a href="/products/" class="hover:text-slate-950">THE COLLECTION</a>
+            <a href="/authenticate/" class="hover:text-slate-950">AUTHENTICATE</a>
+            <a href="/faq/" class="hover:text-slate-950">FAQ</a>
   
-  ${user ? `
-    <!-- SVG Profile Icon for logged-in users -->
-    <a href="/account/" class="ml-2 text-slate-700 hover:text-slate-950 transition-colors" aria-label="Account">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.25" stroke="currentColor" class="h-6 w-6">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-      </svg>
-    </a>
-  ` : `
-    <!-- Sign In button for logged-out users -->
-    <a href="/login/" class="ml-2 rounded-full border border-slate-300 px-5 py-2 hover:bg-slate-50 transition-colors">SIGN IN</a>
-  `}
-</nav>
+            ${user ? `
+              <!-- SVG Profile Icon for logged-in users -->
+              <a href="/account/" class="ml-2 text-slate-700 hover:text-slate-950 transition-colors" aria-label="Account">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.25" stroke="currentColor" class="h-6 w-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+              </a>
+            ` : `
+              <!-- Sign In button for logged-out users -->
+              <a href="/login/" class="ml-2 rounded-full border border-slate-300 px-5 py-2 hover:bg-slate-50 transition-colors">SIGN IN</a>
+            `}
+          </nav>
         </div>
       </div>`
   }
@@ -87,13 +88,12 @@ export async function renderShell() {
   if (footer) {
     footer.innerHTML = `
       <div class="pb-footer"><div class="pb-footer-inner">
-        <p>© 2026 PetitBakery · a Cloudflare Pages + Hono learning app.</p>
+        <p>© 2026 LUMIÈRE · LUXURY DEMO</p>
         <p>Dummy checkout only — no payment information is collected.</p>
       </div></div>`
   }
 
   mountFloatCart()
-
   updateCartBadge()
 }
 
