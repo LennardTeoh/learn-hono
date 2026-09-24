@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>Frequently Asked Questions · LUMIÈRE</title>
+  
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="/js/config.js"></script>
+</head>
+<body class="min-h-screen flex flex-col" style="background-color: var(--pb-cream);">
+  
+  <header id="site-header" class="sticky top-0 z-40 shrink-0"></header>
+  
+  <main class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 flex-grow w-full">
+    <div class="text-center mb-16">
+      <span class="pb-kicker" style="margin: 0 auto 0.75rem;">Support & Inquiry</span>
+      <h1 class="pb-display" style="font-size: clamp(2.5rem, 5vw, 3.5rem); color: var(--pb-ink); margin-bottom: 1rem;">Frequently Asked Questions</h1>
+      <p style="color: var(--pb-muted); font-family: 'Inter', sans-serif; font-size: 1rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+        Everything you need to know about our curated pieces, ordering process, and authenticity verification system.
+      </p>
+    </div>
+
+    <!-- FAQ Accordions Container -->
+    <div class="bg-white border border-gray-200 rounded-3xl p-8 sm:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-6">
+      
+      <details class="group pb-6 border-b border-gray-100 open:pb-6">
+        <summary class="cursor-pointer uppercase tracking-wider font-semibold text-sm text-gray-900 outline-none flex justify-between items-center list-none">
+          <span>Are pieces produced in small batches?</span>
+          <span class="transition-transform group-open:rotate-180 text-gray-400">&darr;</span>
+        </summary>
+        <p class="mt-4 text-gray-600 font-sans text-sm leading-relaxed">
+          Yes. The catalogue stock is intentionally finite so students and collectors can see the API and checkout guard inventory in real time.
+        </p>
+      </details>
+
+      <details class="group pb-6 border-b border-gray-100 open:pb-6">
+        <summary class="cursor-pointer uppercase tracking-wider font-semibold text-sm text-gray-900 outline-none flex justify-between items-center list-none">
+          <span>Is this a real payment flow?</span>
+          <span class="transition-transform group-open:rotate-180 text-gray-400">&darr;</span>
+        </summary>
+        <p class="mt-4 text-gray-600 font-sans text-sm leading-relaxed">
+          No. The lesson stops at a dummy confirmed order and never collects sensitive credit card or banking details.
+        </p>
+      </details>
+
+      <details class="group pb-6 border-b border-gray-100 open:pb-6">
+        <summary class="cursor-pointer uppercase tracking-wider font-semibold text-sm text-gray-900 outline-none flex justify-between items-center list-none">
+          <span>How does product authentication work?</span>
+          <span class="transition-transform group-open:rotate-180 text-gray-400">&darr;</span>
+        </summary>
+        <p class="mt-4 text-gray-600 font-sans text-sm leading-relaxed">
+          You can enter your unique serial number (found in your receipt or item documentation) into our Authenticate portal to verify its secure origin against our external ledger database.
+        </p>
+      </details>
+
+      <details class="group pb-6 border-b border-gray-100 open:pb-6">
+        <summary class="cursor-pointer uppercase tracking-wider font-semibold text-sm text-gray-900 outline-none flex justify-between items-center list-none">
+          <span>Where does the application data live?</span>
+          <span class="transition-transform group-open:rotate-180 text-gray-400">&darr;</span>
+        </summary>
+        <p class="mt-4 text-gray-600 font-sans text-sm leading-relaxed">
+          Products, user sessions, and verified orders live securely in a Cloudflare D1 database behind a high-performance Hono Worker. The browser only stores your active cart locally.
+        </p>
+      </details>
+
+      <details class="group">
+        <summary class="cursor-pointer uppercase tracking-wider font-semibold text-sm text-gray-900 outline-none flex justify-between items-center list-none">
+          <span>Can I customize or modify the frontend design?</span>
+          <span class="transition-transform group-open:rotate-180 text-gray-400">&darr;</span>
+        </summary>
+        <p class="mt-4 text-gray-600 font-sans text-sm leading-relaxed">
+          Absolutely. You can start on your student branch, run milestone checks, and utilize the clean modular structure to tweak components as needed.
+        </p>
+      </details>
+
+    </div>
+  </main>
+
+  <footer id="site-footer" class="shrink-0"></footer>
+  
+  <script type="module" src="/js/faq.js"></script>
+</body>
+</html>
