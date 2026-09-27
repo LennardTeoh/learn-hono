@@ -1,22 +1,22 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "petitbakery-api",
+  "name": "lumiere-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-20",
   "observability": {
     "enabled": true
   },
   "vars": {
-    "APP_ORIGIN": "https://petitbakery-4jk.pages.dev",
-    "CORS_ORIGIN": "https://petitbakery-4jk.pages.dev",
-    "BETTER_AUTH_URL": "https://petitbakery-api.p22014454.workers.dev/api/auth",
-    "EMAIL_FROM": "PetitBakery <onboarding@resend.dev>"
+    "APP_ORIGIN": "https://lumiere-bpk.pages.dev",
+    "CORS_ORIGIN": "https://lumiere-bpk.pages.dev",
+    "BETTER_AUTH_URL": "https://lumiere-api.p22014454.workers.dev/api/auth",
+    "EMAIL_FROM": "Lumière <onboarding@resend.dev>"
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "petitbakery-db",
-      "database_id": "65a50425-90d8-45ac-b215-568fac25814a"
+      "database_name": "lumiere-db",
+      "database_id": "eae92745-8c51-42eb-bdd5-af055ada0710"
     }
   ]
 }
