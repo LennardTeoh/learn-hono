@@ -12,35 +12,46 @@
   <header id="site-header"></header>
   
   <main class="flex-grow w-full max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-    <div class="mb-10 flex justify-between items-end">
-      <div>
-        <h1 class="text-4xl font-serif text-slate-900">Admin Command Center</h1>
-        <p class="text-slate-500 mt-2 font-serif">Platform metrics and logistics management.</p>
-      </div>
-    </div>
-    
-    <!-- NEW: Live KPI Summary Cards -->
-    <div id="admin-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-      <!-- Populated dynamically by admin.js -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-serif text-slate-900">Command Center</h1>
+      <p class="text-slate-500 mt-2 font-serif">Manage platform logistics and luxury inventory.</p>
     </div>
 
-    <h2 class="text-2xl font-serif text-slate-900 mb-6">Logistics & Fulfillment</h2>
-    <div id="admin-root">
-      <!-- Populated dynamically by admin.js -->
+    <!-- Tab Navigation -->
+    <div class="mb-8 border-b border-slate-200">
+      <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+        <button id="tab-logistics" class="border-slate-900 text-slate-900 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-serif transition-colors">Logistics & Fulfillment</button>
+        <button id="tab-catalog" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-serif transition-colors">Catalog Management</button>
+      </nav>
+    </div>
+    
+    <!-- VIEW: LOGISTICS -->
+    <div id="view-logistics" class="block">
+      <div id="admin-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"></div>
+      <div id="admin-root"></div>
+    </div>
+
+    <!-- VIEW: CATALOG -->
+    <div id="view-catalog" class="hidden">
+      <div class="mb-6 flex justify-between items-end">
+        <h2 class="text-2xl font-serif text-slate-900">Inventory Overview</h2>
+        <button id="add-product-btn" class="bg-slate-900 text-white text-[10px] uppercase tracking-widest font-bold py-3 px-6 hover:bg-slate-800 transition-colors">
+          + New Listing
+        </button>
+      </div>
+      <div id="catalog-root"></div>
     </div>
   </main>
   
-  <!-- Shipping Update Modal -->
+  <!-- Shipping Update Modal (Kept from previous steps) -->
   <div id="shipping-modal" class="fixed inset-0 bg-slate-900/40 hidden z-50 flex items-center justify-center backdrop-blur-sm">
     <div class="bg-white p-8 border border-slate-200 shadow-xl w-full max-w-md relative">
       <button id="close-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition-colors">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
-      
       <h2 class="text-2xl font-serif text-slate-900 mb-6">Update Logistics</h2>
       <form id="shipping-form" class="space-y-6">
         <input type="hidden" id="modal-order-id">
-        
         <div>
           <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Fulfillment Status</label>
           <select id="modal-status" class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
@@ -50,16 +61,11 @@
             <option value="delivered">Delivered</option>
           </select>
         </div>
-        
         <div>
           <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Waybill / Tracking Number</label>
           <input type="text" id="modal-tracking" placeholder="e.g. 1Z999999999" class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
-          <p class="text-[10px] text-slate-500 mt-2 tracking-wide">Leave blank if updating to processing.</p>
         </div>
-        
-        <button type="submit" class="w-full bg-slate-900 text-white text-[10px] uppercase tracking-widest font-bold py-4 hover:bg-slate-800 transition-colors">
-          Commit Update
-        </button>
+        <button type="submit" class="w-full bg-slate-900 text-white text-[10px] uppercase tracking-widest font-bold py-4 hover:bg-slate-800 transition-colors">Commit Update</button>
       </form>
     </div>
   </div>
