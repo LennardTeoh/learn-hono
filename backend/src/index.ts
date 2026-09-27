@@ -20,8 +20,9 @@ app.use('/api/*', async (c, next) => {
       }
       return c.env.CORS_ORIGIN
     },
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'X-Captcha-Response', 'Idempotency-Key'],
+    // ADDED: PATCH, PUT, and DELETE to whitelist admin database edits
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'X-Captcha-Response', 'Idempotency-Key', 'Authorization'],
     credentials: true,
     maxAge: 86400
   })

@@ -69,6 +69,7 @@ function setupTabs() {
   const inactiveTabClasses = ['border-transparent', 'text-slate-500', 'hover:border-slate-300', 'hover:text-slate-700'];
 
   tabLogistics.addEventListener('click', () => {
+    window.location.hash = 'logistics'; // Save state to URL
     viewLogistics.classList.remove('hidden');
     viewCatalog.classList.add('hidden');
     tabLogistics.classList.add(...activeTabClasses);
@@ -78,6 +79,7 @@ function setupTabs() {
   });
 
   tabCatalog.addEventListener('click', () => {
+    window.location.hash = 'catalog'; // Save state to URL
     viewCatalog.classList.remove('hidden');
     viewLogistics.classList.add('hidden');
     tabCatalog.classList.add(...activeTabClasses);
@@ -85,6 +87,11 @@ function setupTabs() {
     tabLogistics.classList.remove(...activeTabClasses);
     tabLogistics.classList.add(...inactiveTabClasses);
   });
+
+  // Memory Feature: Check URL on load and automatically open the Catalog tab if needed
+  if (window.location.hash === '#catalog') {
+    tabCatalog.click();
+  }
 }
 
 function renderCatalogTable(root, products) {
@@ -288,8 +295,12 @@ productForm?.addEventListener('submit', async (e) => {
       })
     });
     
-    if (!response.ok) throw new Error('Failed to save product. (Check backend routes for POST/PATCH /api/products)');
+    if (!response.ok) throw new Error('Failed to save product.');
+    
+    // THE FIX: Explicitly lock the URL to the catalog tab before reloading
+    window.location.hash = 'catalog';
     window.location.reload();
+    
   } catch (error) {
     alert(error.message);
     submitBtn.textContent = 'SAVE PRODUCT';
