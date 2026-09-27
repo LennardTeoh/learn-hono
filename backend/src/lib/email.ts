@@ -17,7 +17,7 @@ export async function sendTransactionalEmail(env: Bindings, input: EmailInput): 
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: env.EMAIL_FROM,
+      from: 'Lumière <onboarding@resend.dev>',
       to: [input.to],
       subject: input.subject,
       html: input.html,
