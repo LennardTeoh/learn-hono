@@ -2,28 +2,64 @@ import { api } from './api.js'
 import { renderShell, setBusy, toast } from './ui.js'
 
 const state = document.body.dataset.authState || new URLSearchParams(location.search).get('state') || 'signin'
-const next = ['/account/', '/checkout/'].includes(new URLSearchParams(location.search).get('next')) ? new URLSearchParams(location.search).get('next') : '/account/'
 const root = document.getElementById('auth-root')
-const form = (title, fields, button, links = '') => `<h1 class="text-3xl font-black">${title}</h1><form class="mt-6 space-y-4">${fields}<button class="w-full rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white">${button}</button></form>${links}`
-const email = '<label class="block"><span class="text-sm font-medium">Email</span><input name="email" type="email" required autocomplete="email" class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"></label>'
-const password = '<label class="block"><span class="text-sm font-medium">Password</span><input name="password" type="password" required minlength="12" maxlength="128" autocomplete="current-password" class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"></label>'
-const authRoute = (value) => ({ signin: '/login/', signup: '/register/', forgot: '/forgot-password/', resend: '/resend-verification/', reset: '/reset-password/', verified: '/verify/', sent: '/verification/' }[value])
-function go(value) { location.href = `${authRoute(value)}${value === 'signin' ? `?next=${encodeURIComponent(next)}` : ''}` }
+
+const form = (title, subtitle, fields, button, links = '') => `
+  <div class="text-center mb-10">
+    <p class="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">${subtitle}</p>
+    <h1 class="text-4xl font-serif text-slate-900">${title}</h1>
+  </div>
+  <form class="space-y-6 text-left">
+    ${fields}
+    <button class="w-full lumiere-btn mt-4">${button}</button>
+  </form>
+  <div class="mt-8 text-center text-xs text-slate-500">${links}</div>
+`;
+
+const email = `<div><label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Email</label><input name="email" type="email" required placeholder="Enter your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white"></div>`
+const password = `<div><label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Password</label><input name="password" type="password" required minlength="12" maxlength="128" placeholder="Enter your password" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white"></div>`
+
+function go(value) { 
+  location.href = `${{ signin: '/login/', signup: '/register/', forgot: '/forgot-password/', resend: '/resend-verification/', reset: '/reset-password/', verified: '/verify/', sent: '/verification/' }[value]}` 
+}
 
 await renderShell()
-if (state === 'verified') root.innerHTML = '<h1 class="text-3xl font-black">Email verified</h1><p class="mt-3 text-slate-500">Your PetitBakery account is ready.</p><a class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white" href="/login/">Sign in</a>'
-else if (state === 'sent') root.innerHTML = '<h1 class="text-3xl font-black">Check your inbox</h1><p class="mt-3 text-slate-500">We sent a verification link. Once confirmed, return here to sign in.</p><a class="mt-6 inline-block rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white" href="/login/">Sign in</a>'
-else if (state === 'signup') root.innerHTML = form('Create your account', '<label class="block"><span class="text-sm font-medium">Name</span><input name="name" required minlength="2" maxlength="60" autocomplete="name" class="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3"></label>' + email + password.replace('current-password', 'new-password'), 'Create account', '<p class="mt-5 text-center text-sm">Already registered? <a class="underline" href="/login/">Sign in</a></p>')
-else if (state === 'forgot') root.innerHTML = form('Reset your password', email, 'Send reset link', '<p class="mt-5 text-center text-sm"><a class="underline" href="/login/">Back to sign in</a></p>')
-else if (state === 'reset') root.innerHTML = form('Choose a new password', password.replace('current-password', 'new-password'), 'Update password')
-else if (state === 'resend') root.innerHTML = form('Resend verification', email, 'Send verification link')
-else root.innerHTML = form('Welcome back', email + password, 'Sign in', '<div class="mt-5 flex justify-between text-sm"><a class="underline" href="/register/">Create account</a><a class="underline" href="/forgot-password/">Forgot password?</a></div><p class="mt-4 text-center text-xs"><a class="underline" href="/resend-verification/">Need a verification link?</a></p>')
+root.className = "bg-white border border-slate-200 p-10 sm:p-14 w-full max-w-lg mx-auto";
+
+if (state === 'verified') root.innerHTML = '<h1 class="text-4xl font-serif text-slate-900 text-center">Email verified</h1><p class="mt-4 text-slate-500 text-center">Your LUMIÈRE account is ready.</p><a class="mt-8 block w-full lumiere-btn text-center" href="/login/">Log In</a>'
+else if (state === 'sent') root.innerHTML = '<h1 class="text-4xl font-serif text-slate-900 text-center">Check your inbox</h1><p class="mt-4 text-slate-500 text-center">We sent a verification link. Once confirmed, return here.</p><a class="mt-8 block w-full lumiere-btn text-center" href="/login/">Log In</a>'
+else if (state === 'signup') root.innerHTML = form('Create Account', 'Welcome', `<div><label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Full Name</label><input name="name" required minlength="2" maxlength="60" placeholder="Enter your name" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white"></div>` + email + password, 'Sign Up', `Already have an account? <a class="underline text-slate-900 hover:text-slate-500" href="/login/">Log in</a>`)
+else if (state === 'forgot') root.innerHTML = form('Reset Password', 'Recovery', email, 'Send reset link', `<a class="underline text-slate-900 hover:text-slate-500" href="/login/">Back to Log In</a>`)
+else root.innerHTML = form('Log In', 'Welcome Back', email + password, 'Log In', `New to Lumière? <a class="underline text-slate-900 hover:text-slate-500" href="/register/">Create an account</a><br><br><a class="text-slate-400 hover:text-slate-900" href="/forgot-password/">Forgot password?</a>`)
+
 if (!['verified', 'sent'].includes(state)) {
-  root.querySelector('form').addEventListener('submit', async event => { event.preventDefault(); const button = root.querySelector('button'); setBusy(button, true); const data = Object.fromEntries(new FormData(event.currentTarget)); try {
-    if (state === 'signup') { await api('/api/auth/sign-up/email', { method: 'POST', body: JSON.stringify({ ...data, callbackURL: '/verify/' }) }); go('sent') }
-    else if (state === 'forgot') { await api('/api/auth/request-password-reset', { method: 'POST', body: JSON.stringify({ email: data.email, redirectTo: '/reset-password/' }) }); root.innerHTML = '<h1 class="text-3xl font-black">Check your inbox</h1><p class="mt-3 text-slate-500">If that address has an account, a reset link is on its way.</p>' }
-    else if (state === 'reset') { await api('/api/auth/reset-password', { method: 'POST', body: JSON.stringify({ token: new URLSearchParams(location.search).get('token'), newPassword: data.password }) }); go('signin') }
-    else if (state === 'resend') { await api('/api/auth/send-verification-email', { method: 'POST', body: JSON.stringify({ email: data.email, callbackURL: '/verify/' }) }); go('sent') }
-    else { await api('/api/auth/sign-in/email', { method: 'POST', body: JSON.stringify({ email: data.email, password: data.password }) }); location.href = next }
-  } catch (error) { toast(error.message, 'error') } finally { setBusy(button, false) } })
+  root.querySelector('form').addEventListener('submit', async event => { 
+    event.preventDefault(); 
+    const button = root.querySelector('button'); 
+    setBusy(button, true); 
+    const data = Object.fromEntries(new FormData(event.currentTarget)); 
+    try {
+      if (state === 'signup') { 
+        await api('/api/auth/sign-up/email', { method: 'POST', body: JSON.stringify({ ...data, callbackURL: '/verify/' }) }); 
+        go('sent'); 
+      }
+      else if (state === 'forgot') { 
+        await api('/api/auth/request-password-reset', { method: 'POST', body: JSON.stringify({ email: data.email, redirectTo: '/reset-password/' }) }); 
+        root.innerHTML = '<h1 class="text-4xl font-serif text-slate-900 text-center">Check your inbox</h1><p class="mt-4 text-slate-500 text-center">If that address has an account, a reset link is on its way.</p>'; 
+      }
+      else { 
+        // Execute sign-in request
+        await api('/api/auth/sign-in/email', { 
+          method: 'POST', 
+          body: JSON.stringify({ email: data.email, password: data.password }) 
+        });
+        
+        // Force hard redirect to home page upon successful auth
+        window.location.replace('/');
+      }
+    } catch (error) { 
+      toast(error.message, 'error'); 
+      setBusy(button, false); 
+    } 
+  })
 }
