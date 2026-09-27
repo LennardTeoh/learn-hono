@@ -18,9 +18,40 @@ async function init() {
 
   try {
     const { orders } = await api('/api/orders/all');
+    renderMetrics(orders);
     renderAdminTable(root, orders);
   } catch (error) {
     root.innerHTML = `<div class="border border-red-200 bg-red-50 p-6 text-red-600">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function renderMetrics(orders) {
+  if (!orders) return;
+  
+  const totalOrders = orders.length;
+  const totalRevenueCents = orders.reduce((sum, order) => sum + order.total_cents, 0);
+  
+  // Count how many orders still need to be shipped
+  const pendingOrders = orders.filter(o => o.status === 'confirmed' || o.status === 'processing').length;
+  
+  const metricsRoot = document.getElementById('admin-metrics');
+  if (metricsRoot) {
+    metricsRoot.innerHTML = `
+      <div class="bg-white p-6 border border-slate-200 shadow-sm flex flex-col justify-center">
+        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Gross Revenue</p>
+        <h3 class="text-3xl font-serif text-slate-900">${money(totalRevenueCents)}</h3>
+      </div>
+      <div class="bg-white p-6 border border-slate-200 shadow-sm flex flex-col justify-center">
+        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Total Orders</p>
+        <h3 class="text-3xl font-serif text-slate-900">${totalOrders}</h3>
+      </div>
+      <div class="bg-white p-6 border border-slate-200 shadow-sm flex flex-col justify-center">
+        <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Action Required</p>
+        <h3 class="text-3xl font-serif ${pendingOrders > 0 ? 'text-amber-600' : 'text-slate-900'}">
+          ${pendingOrders} ${pendingOrders === 1 ? 'Shipment' : 'Shipments'}
+        </h3>
+      </div>
+    `;
   }
 }
 
@@ -123,7 +154,6 @@ form.addEventListener('submit', async (e) => {
 
     if (!response.ok) throw new Error('Failed to update tracking');
     
-    // Refresh the page to show the updated table
     window.location.reload();
   } catch (error) {
     alert(error.message);
