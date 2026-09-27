@@ -5,6 +5,29 @@ const API_URL = 'https://lumiere-api.p22014454.workers.dev';
 
 async function init() {
   await renderShell();
+  
+  // Override the standard customer header with an exclusive Admin Navigation bar
+  const header = document.getElementById('site-header');
+  if (header) {
+    header.innerHTML = `
+      <div class="w-full flex items-center justify-between px-4 py-8 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div class="flex items-center gap-4">
+          <a href="/admin/" class="text-2xl font-serif text-slate-900 tracking-widest uppercase">LUMIÈRE</a>
+          <span class="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase border-l border-slate-300 pl-4 mt-1">Command Center</span>
+        </div>
+        <nav class="flex gap-8 text-[10px] font-bold tracking-[0.2em] text-slate-900 uppercase items-center">
+          <a href="/" class="hover:text-slate-500 transition-colors">View Storefront</a>
+          <button id="admin-logout" class="hover:text-slate-500 transition-colors uppercase tracking-[0.2em] font-bold cursor-pointer">Logout</button>
+        </nav>
+      </div>
+    `;
+
+    document.getElementById('admin-logout')?.addEventListener('click', async () => {
+      try { await api('/api/auth/sign-out', { method: 'POST' }); } catch (e) {}
+      window.location.replace('/login/');
+    });
+  }
+
   const root = document.getElementById('admin-root');
   
   const user = await getCurrentUser();
@@ -90,7 +113,8 @@ function renderCatalogTable(root, products) {
         <td class="py-4 px-4 text-sm text-slate-900">${product.stock} units</td>
         <td class="py-4 px-4">${status}</td>
         <td class="py-4 px-4 text-right">
-          <button class="border border-slate-300 text-slate-500 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors mr-2">Edit</button>
+          <button class="edit-product-btn border border-slate-300 text-slate-500 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors mr-2" 
+                  data-product='${JSON.stringify(product)}'>Edit</button>
         </td>
       </tr>
     `;
@@ -114,9 +138,16 @@ function renderCatalogTable(root, products) {
       </table>
     </div>
   `;
+
+  // Attach safe click listeners to all Edit buttons
+  root.querySelectorAll('.edit-product-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const product = JSON.parse(btn.getAttribute('data-product'));
+      window.openProductModal(product.id, product.name, product.price_cents, product.stock, product.active ? 1 : 0, product.image_url || '');
+    });
+  });
 }
 
-// --- LOGISTICS TABLE LOGIC ---
 function renderMetrics(orders) {
   if (!orders) return;
   const totalOrders = orders.length;
@@ -168,24 +199,22 @@ function renderAdminTable(root, orders) {
   root.innerHTML = `<div class="overflow-x-auto shadow-sm border border-slate-200"><table class="w-full text-left border-collapse min-w-[900px]"><thead><tr class="bg-slate-100 border-b border-slate-200"><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Order ID</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Date</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Customer</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Revenue</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Status</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Tracking</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-// --- MODAL LOGIC ---
-const modal = document.getElementById('shipping-modal');
-const form = document.getElementById('shipping-form');
-const closeBtn = document.getElementById('close-modal-btn');
+// --- LOGISTICS MODAL LOGIC ---
+const shippingModal = document.getElementById('shipping-modal');
+const shippingForm = document.getElementById('shipping-form');
 
 window.openUpdateModal = (orderId, currentStatus, currentTracking) => {
   document.getElementById('modal-order-id').value = orderId;
   document.getElementById('modal-status').value = currentStatus;
   document.getElementById('modal-tracking').value = currentTracking;
-  modal.classList.remove('hidden');
+  shippingModal.classList.remove('hidden');
 };
-const closeModal = () => modal.classList.add('hidden');
-closeBtn.addEventListener('click', closeModal);
-modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.getElementById('close-modal-btn')?.addEventListener('click', () => shippingModal.classList.add('hidden'));
+shippingModal?.addEventListener('click', (e) => { if (e.target === shippingModal) shippingModal.classList.add('hidden'); });
 
-form.addEventListener('submit', async (e) => {
+shippingForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const submitBtn = form.querySelector('button[type="submit"]');
+  const submitBtn = shippingForm.querySelector('button[type="submit"]');
   submitBtn.textContent = 'UPDATING...';
   submitBtn.disabled = true;
   try {
@@ -200,6 +229,70 @@ form.addEventListener('submit', async (e) => {
   } catch (error) {
     alert(error.message);
     submitBtn.textContent = 'COMMIT UPDATE';
+    submitBtn.disabled = false;
+  }
+});
+
+
+// --- PRODUCT MODAL LOGIC ---
+const productModal = document.getElementById('product-modal');
+const productForm = document.getElementById('product-form');
+const addProductBtn = document.getElementById('add-product-btn');
+
+window.openProductModal = (id, name, priceCents, stock, active, imageUrl) => {
+  document.getElementById('product-modal-title').textContent = 'Edit Product';
+  document.getElementById('modal-product-id').value = id;
+  document.getElementById('modal-product-name').value = name;
+  document.getElementById('modal-product-price').value = (priceCents / 100).toFixed(2);
+  document.getElementById('modal-product-stock').value = stock;
+  document.getElementById('modal-product-image').value = imageUrl;
+  document.getElementById('modal-product-status').value = active;
+  productModal.classList.remove('hidden');
+};
+
+addProductBtn?.addEventListener('click', () => {
+  document.getElementById('product-modal-title').textContent = 'New Listing';
+  document.getElementById('modal-product-id').value = '';
+  document.getElementById('modal-product-name').value = '';
+  document.getElementById('modal-product-price').value = '';
+  document.getElementById('modal-product-stock').value = '1';
+  document.getElementById('modal-product-image').value = '';
+  document.getElementById('modal-product-status').value = '1';
+  productModal.classList.remove('hidden');
+});
+
+document.getElementById('close-product-btn')?.addEventListener('click', () => productModal.classList.add('hidden'));
+productModal?.addEventListener('click', (e) => { if (e.target === productModal) productModal.classList.add('hidden'); });
+
+productForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = productForm.querySelector('button[type="submit"]');
+  submitBtn.textContent = 'SAVING...';
+  submitBtn.disabled = true;
+
+  const id = document.getElementById('modal-product-id').value;
+  const method = id ? 'PATCH' : 'POST';
+  const endpoint = id ? `${API_URL}/api/products/${id}` : `${API_URL}/api/products`;
+
+  try {
+    const response = await fetch(endpoint, {
+      method: method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        name: document.getElementById('modal-product-name').value.trim(),
+        price_cents: Math.round(parseFloat(document.getElementById('modal-product-price').value) * 100),
+        stock: parseInt(document.getElementById('modal-product-stock').value, 10),
+        image_url: document.getElementById('modal-product-image').value.trim(),
+        active: parseInt(document.getElementById('modal-product-status').value, 10)
+      })
+    });
+    
+    if (!response.ok) throw new Error('Failed to save product. (Check backend routes for POST/PATCH /api/products)');
+    window.location.reload();
+  } catch (error) {
+    alert(error.message);
+    submitBtn.textContent = 'SAVE PRODUCT';
     submitBtn.disabled = false;
   }
 });

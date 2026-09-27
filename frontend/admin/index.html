@@ -42,16 +42,65 @@
       <div id="catalog-root"></div>
     </div>
   </main>
+
+  <!-- Product Management Modal -->
+  <div id="product-modal" class="fixed inset-0 bg-slate-900/40 hidden z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white p-8 border border-slate-200 shadow-xl w-full max-w-md relative max-h-[90vh] overflow-y-auto">
+      <button id="close-product-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition-colors">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+      
+      <h2 id="product-modal-title" class="text-2xl font-serif text-slate-900 mb-6">New Listing</h2>
+      <form id="product-form" class="space-y-5">
+        <input type="hidden" id="modal-product-id">
+        
+        <div>
+          <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Item Name</label>
+          <input type="text" id="modal-product-name" required class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Price (RM)</label>
+            <input type="number" step="0.01" id="modal-product-price" required class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Stock Count</label>
+            <input type="number" id="modal-product-stock" required class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Image URL</label>
+          <input type="text" id="modal-product-image" class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
+        </div>
+
+        <div>
+          <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Visibility Status</label>
+          <select id="modal-product-status" class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
+            <option value="1">Active (Visible on Storefront)</option>
+            <option value="0">Hidden (Draft / Archive)</option>
+          </select>
+        </div>
+        
+        <button type="submit" class="w-full bg-slate-900 text-white text-[10px] uppercase tracking-widest font-bold py-4 hover:bg-slate-800 transition-colors mt-4">
+          Save Product
+        </button>
+      </form>
+    </div>
+  </div>
   
-  <!-- Shipping Update Modal (Kept from previous steps) -->
+  <!-- Shipping Update Modal -->
   <div id="shipping-modal" class="fixed inset-0 bg-slate-900/40 hidden z-50 flex items-center justify-center backdrop-blur-sm">
     <div class="bg-white p-8 border border-slate-200 shadow-xl w-full max-w-md relative">
       <button id="close-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition-colors">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
+      
       <h2 class="text-2xl font-serif text-slate-900 mb-6">Update Logistics</h2>
       <form id="shipping-form" class="space-y-6">
         <input type="hidden" id="modal-order-id">
+        
         <div>
           <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Fulfillment Status</label>
           <select id="modal-status" class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
@@ -61,11 +110,15 @@
             <option value="delivered">Delivered</option>
           </select>
         </div>
+        
         <div>
           <label class="block text-[10px] uppercase tracking-widest text-slate-900 mb-2 font-bold">Waybill / Tracking Number</label>
           <input type="text" id="modal-tracking" placeholder="e.g. 1Z999999999" class="w-full border-b border-slate-300 bg-transparent py-2 text-sm focus:outline-none focus:border-slate-900 font-serif">
         </div>
-        <button type="submit" class="w-full bg-slate-900 text-white text-[10px] uppercase tracking-widest font-bold py-4 hover:bg-slate-800 transition-colors">Commit Update</button>
+        
+        <button type="submit" class="w-full bg-slate-900 text-white text-[10px] uppercase tracking-widest font-bold py-4 hover:bg-slate-800 transition-colors">
+          Commit Update
+        </button>
       </form>
     </div>
   </div>
