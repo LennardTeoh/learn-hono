@@ -8,6 +8,9 @@ type CheckoutItem = {
   quantity?: number
 }
 
+// Master Admin Email - Only this account can view all orders and update shipping
+const ADMIN_EMAIL = 'lumiere.csproject@gmail.com'
+
 export const orderRoutes = new Hono<AppEnv>()
 
 orderRoutes.post('/', async (c) => {
@@ -149,7 +152,27 @@ orderRoutes.post('/', async (c) => {
   )
 })
 
-// MODIFIED: Added tracking_number to the SELECT statement
+// ADMIN ROUTE: Must be placed BEFORE /:id to prevent routing conflicts
+orderRoutes.get('/all', async (c) => {
+  const user = await requireUser(c)
+  
+  if (user.email !== ADMIN_EMAIL) {
+    throw new HttpError(403, 'Unauthorized. Admin access only.')
+  }
+  
+  const result = await c.env.DB
+    .prepare(
+      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
+              shipping_name, email, created_at
+       FROM orders 
+       LEFT JOIN user ON orders.user_id = user.id
+       ORDER BY created_at DESC LIMIT 100`
+    )
+    .all()
+
+  return c.json({ orders: result.results })
+})
+
 orderRoutes.get('/', async (c) => {
   const user = await requireUser(c)
 
@@ -164,7 +187,6 @@ orderRoutes.get('/', async (c) => {
   return c.json({ orders: result.results })
 })
 
-// MODIFIED: Added tracking_number to the SELECT statement
 orderRoutes.get('/:id', async (c) => {
   const user = await requireUser(c)
 
@@ -191,11 +213,13 @@ orderRoutes.get('/:id', async (c) => {
   return c.json({ order, items: items.results })
 })
 
-// NEW: Route to update shipping status and add a tracking number
+// ADMIN ROUTE: Secure shipping update
 orderRoutes.patch('/:id/shipping', async (c) => {
   const user = await requireUser(c)
   
-  // Note: For a production e-commerce store, you should verify if the user has an 'admin' role here
+  if (user.email !== ADMIN_EMAIL) {
+    throw new HttpError(403, 'Unauthorized. Admin access only.')
+  }
   
   const orderId = safeText(c.req.param('id'), 80)
   const body = await readJson<{ status?: string, tracking_number?: string }>(c)
@@ -215,23 +239,4 @@ orderRoutes.patch('/:id/shipping', async (c) => {
   }
   
   throw new HttpError(500, 'Failed to update order')
-
-  // NEW: Admin route to fetch all orders
-orderRoutes.get('/all', async (c) => {
-  const user = await requireUser(c)
-  
-  // TO DO FOR YOUR GROUP MATE: Add a security check here later to ensure user.email == 'admin@lumiere.com'
-  
-  const result = await c.env.DB
-    .prepare(
-      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
-              shipping_name, email, created_at
-       FROM orders 
-       LEFT JOIN user ON orders.user_id = user.id
-       ORDER BY created_at DESC LIMIT 100`
-    )
-    .all()
-
-  return c.json({ orders: result.results })
-})
 })

@@ -1,37 +1,79 @@
-import { renderShell, setBusy } from './ui.js';
+import { getCurrentUser } from './api.js'
+import { renderShell, escapeHtml } from './ui.js'
+
+// Ensure this matches your live Worker
+const API_URL = 'https://lumiere-api.p22014454.workers.dev';
 
 async function init() {
   await renderShell();
 
-  const form = document.getElementById('auth-form');
-  const successBox = document.getElementById('success-box');
-  const serialInput = document.getElementById('serial-input');
-  const displaySerial = document.getElementById('display-serial');
-  const submitBtn = form.querySelector('button[type="submit"]');
+  // If a user is already logged in and navigates to the login page, redirect them immediately
+  const user = await getCurrentUser();
+  if (user) {
+    window.location.href = user.email === 'admin@lumiere.com' ? '/admin/' : '/account/';
+    return;
+  }
 
-  if (!form) return;
+  // Bind to your existing HTML login form
+  const loginForm = document.getElementById('login-form');
+  const errorDiv = document.getElementById('login-error'); // Optional: Add <div id="login-error"></div> to your login HTML
 
-  form.addEventListener('submit', async (e) => {
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const serialNumber = serialInput.value.trim().toUpperCase();
-      if (!serialNumber) return;
+      // Assumes your inputs have id="email" and id="password"
+      const emailInput = document.getElementById('email').value.trim();
+      const passwordInput = document.getElementById('password').value;
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
 
-      setBusy(submitBtn, true, 'VERIFYING...');
-      successBox.classList.add('hidden');
+      if (submitBtn) {
+        submitBtn.textContent = 'AUTHENTICATING...';
+        submitBtn.disabled = true;
+      }
+
+      if (errorDiv) errorDiv.innerHTML = '';
 
       try {
-          await new Promise(resolve => setTimeout(resolve, 1200));
+        const response = await fetch(`${API_URL}/api/auth/sign-in/email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: emailInput,
+            password: passwordInput
+          })
+        });
 
-          displaySerial.textContent = serialNumber;
-          successBox.classList.remove('hidden');
-          
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || 'Invalid email or password.');
+        }
+
+        // --- THE ROUTING LOGIC ---
+        // If the credentials match the master admin account, bypass the customer account page
+        if (emailInput === 'admin@lumiere.com') {
+          window.location.href = '/admin/';
+        } else {
+          window.location.href = '/account/';
+        }
+
       } catch (error) {
-          console.error('Verification failed:', error);
-      } finally {
-          setBusy(submitBtn, false);
+        console.error('Login Error:', error);
+        if (errorDiv) {
+          errorDiv.innerHTML = `<div class="p-3 bg-red-50 border border-red-200 text-red-600 text-sm font-serif mb-4">${escapeHtml(error.message)}</div>`;
+        } else {
+          alert(`Login failed: ${error.message}`);
+        }
+        
+        if (submitBtn) {
+          submitBtn.textContent = 'SIGN IN'; // Reset button text on failure
+          submitBtn.disabled = false;
+        }
       }
-  });
+    });
+  }
 }
 
 init().catch(console.error);
