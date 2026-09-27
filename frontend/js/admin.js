@@ -3,10 +3,14 @@ import { money, renderShell, escapeHtml } from './ui.js'
 
 const API_URL = 'https://lumiere-api.p22014454.workers.dev';
 
+// Global state to handle live sorting
+let catalogData = [];
+let sortColumn = 'name';
+let sortAscending = true;
+
 async function init() {
   await renderShell();
   
-  // Override the standard customer header with an exclusive Admin Navigation bar
   const header = document.getElementById('site-header');
   if (header) {
     header.innerHTML = `
@@ -38,7 +42,6 @@ async function init() {
 
   setupTabs();
   
-  // Load Logistics
   root.innerHTML = '<p class="text-slate-500 font-serif text-center py-12">Loading master order list...</p>';
   try {
     const { orders } = await api('/api/orders/all');
@@ -48,12 +51,12 @@ async function init() {
     root.innerHTML = `<div class="border border-red-200 bg-red-50 p-6 text-red-600">${escapeHtml(error.message)}</div>`;
   }
 
-  // Load Catalog
   const catalogRoot = document.getElementById('catalog-root');
   catalogRoot.innerHTML = '<p class="text-slate-500 font-serif text-center py-12">Loading inventory...</p>';
   try {
     const { products } = await api('/api/products');
-    renderCatalogTable(catalogRoot, products);
+    catalogData = products; // Store in global memory for sorting
+    renderCatalogTable(catalogRoot);
   } catch (error) {
     catalogRoot.innerHTML = `<div class="border border-red-200 bg-red-50 p-6 text-red-600">Failed to load catalog.</div>`;
   }
@@ -69,7 +72,6 @@ function setupTabs() {
   const inactiveTabClasses = ['border-transparent', 'text-slate-500', 'hover:border-slate-300', 'hover:text-slate-700'];
 
   tabLogistics.addEventListener('click', () => {
-    window.location.hash = 'logistics'; // Save state to URL
     viewLogistics.classList.remove('hidden');
     viewCatalog.classList.add('hidden');
     tabLogistics.classList.add(...activeTabClasses);
@@ -79,7 +81,6 @@ function setupTabs() {
   });
 
   tabCatalog.addEventListener('click', () => {
-    window.location.hash = 'catalog'; // Save state to URL
     viewCatalog.classList.remove('hidden');
     viewLogistics.classList.add('hidden');
     tabCatalog.classList.add(...activeTabClasses);
@@ -87,20 +88,47 @@ function setupTabs() {
     tabLogistics.classList.remove(...activeTabClasses);
     tabLogistics.classList.add(...inactiveTabClasses);
   });
-
-  // Memory Feature: Check URL on load and automatically open the Catalog tab if needed
-  if (window.location.hash === '#catalog') {
-    tabCatalog.click();
-  }
 }
 
-function renderCatalogTable(root, products) {
-  if (!products || products.length === 0) {
+
+function renderCatalogTable(root) {
+  if (!catalogData || catalogData.length === 0) {
     root.innerHTML = `<p class="text-center py-12 text-slate-500 font-serif">No products found in the database.</p>`;
     return;
   }
 
-  const rows = products.map(product => {
+  // 1. Sort the array mathematically based on current state
+  const sortedProducts = [...catalogData].sort((a, b) => {
+    let valA, valB;
+    
+    if (sortColumn === 'name') {
+      valA = (a.name || '').toLowerCase();
+      valB = (b.name || '').toLowerCase();
+    } else if (sortColumn === 'price') {
+      valA = Number(a.price_cents) || 0;
+      valB = Number(b.price_cents) || 0;
+    } else if (sortColumn === 'stock') {
+      valA = Number(a.stock) || 0;
+      valB = Number(b.stock) || 0;
+    } else if (sortColumn === 'status') {
+      valA = Number(a.active) || 0;
+      valB = Number(b.active) || 0;
+    }
+
+    if (valA < valB) return sortAscending ? -1 : 1;
+    if (valA > valB) return sortAscending ? 1 : -1;
+    return 0;
+  });
+
+  // 2. Determine which arrow icon to show on the headers
+  const getArrow = (col) => {
+    if (sortColumn !== col) return `<span class="text-slate-300 ml-1">↕</span>`;
+    return sortAscending 
+      ? `<span class="text-slate-900 ml-1">↑</span>` 
+      : `<span class="text-slate-900 ml-1">↓</span>`;
+  };
+
+  const rows = sortedProducts.map(product => {
     const amount = money(product.price_cents);
     const status = product.active ? 
       '<span class="text-green-600 bg-green-50 px-2 py-1 text-[9px] font-bold tracking-widest uppercase">Active</span>' : 
@@ -121,7 +149,7 @@ function renderCatalogTable(root, products) {
         <td class="py-4 px-4">${status}</td>
         <td class="py-4 px-4 text-right">
           <button class="edit-product-btn border border-slate-300 text-slate-500 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors mr-2" 
-                  data-product='${JSON.stringify(product)}'>Edit</button>
+                  data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'>Edit</button>
         </td>
       </tr>
     `;
@@ -132,10 +160,18 @@ function renderCatalogTable(root, products) {
       <table class="w-full text-left border-collapse min-w-[900px]">
         <thead>
           <tr class="bg-slate-100 border-b border-slate-200">
-            <th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Item Name</th>
-            <th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Price</th>
-            <th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Stock Count</th>
-            <th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Status</th>
+            <th class="sort-header py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase cursor-pointer hover:bg-slate-200 select-none transition-colors" data-sort="name">
+              Item Name ${getArrow('name')}
+            </th>
+            <th class="sort-header py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase cursor-pointer hover:bg-slate-200 select-none transition-colors" data-sort="price">
+              Price ${getArrow('price')}
+            </th>
+            <th class="sort-header py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase cursor-pointer hover:bg-slate-200 select-none transition-colors" data-sort="stock">
+              Stock Count ${getArrow('stock')}
+            </th>
+            <th class="sort-header py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase cursor-pointer hover:bg-slate-200 select-none transition-colors" data-sort="status">
+              Status ${getArrow('status')}
+            </th>
             <th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Actions</th>
           </tr>
         </thead>
@@ -145,6 +181,20 @@ function renderCatalogTable(root, products) {
       </table>
     </div>
   `;
+
+  // --- NEW: Attach secure click listeners to all sortable headers ---
+  root.querySelectorAll('.sort-header').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.getAttribute('data-sort');
+      if (sortColumn === col) {
+        sortAscending = !sortAscending;
+      } else {
+        sortColumn = col;
+        sortAscending = true;
+      }
+      renderCatalogTable(root);
+    });
+  });
 
   // Attach safe click listeners to all Edit buttons
   root.querySelectorAll('.edit-product-btn').forEach(btn => {
@@ -185,60 +235,45 @@ function renderAdminTable(root, orders) {
     root.innerHTML = `<p class="text-center py-12 text-slate-500 font-serif">No orders in the system.</p>`;
     return;
   }
+  
+  // Status color mapping
+  const statusColors = {
+    'confirmed': 'bg-amber-100 text-amber-800',
+    'processing': 'bg-blue-100 text-blue-800',
+    'shipped': 'bg-indigo-100 text-indigo-800',
+    'delivered': 'bg-green-100 text-green-800'
+  };
+
   const rows = orders.map(order => {
     let dateStr = new Date(order.created_at * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const idShort = order.id.split('-')[0].substring(0, 8).toUpperCase();
+    const currentStatus = (order.status || 'confirmed').toLowerCase();
+    const badgeColor = statusColors[currentStatus] || 'bg-slate-100 text-slate-600';
+
     return `
       <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
         <td class="py-4 px-4 text-sm font-medium text-slate-900">#${idShort}</td>
         <td class="py-4 px-4 text-sm text-slate-500">${dateStr}</td>
         <td class="py-4 px-4 text-sm text-slate-900">${escapeHtml(order.shipping_name)}</td>
         <td class="py-4 px-4 text-sm text-slate-900">${money(order.total_cents)}</td>
-        <td class="py-4 px-4 text-sm"><span class="inline-block px-2 py-1 text-[9px] font-bold tracking-widest uppercase bg-slate-100 text-slate-600">${(order.status || 'confirmed').toUpperCase()}</span></td>
+        <td class="py-4 px-4 text-sm"><span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeColor}">${currentStatus}</span></td>
         <td class="py-4 px-4 text-sm font-serif text-slate-700">${order.tracking_number || '<span class="text-slate-300 italic">Unassigned</span>'}</td>
         <td class="py-4 px-4 text-right">
-          <button onclick="window.openUpdateModal('${order.id}', '${order.status || 'confirmed'}', '${order.tracking_number || ''}')" class="border border-slate-900 text-slate-900 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors">Update</button>
+          <button data-order-id="${order.id}" class="update-order-btn border border-slate-900 text-slate-900 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-pointer">Update</button>
         </td>
       </tr>
     `;
   }).join('');
   
   root.innerHTML = `<div class="overflow-x-auto shadow-sm border border-slate-200"><table class="w-full text-left border-collapse min-w-[900px]"><thead><tr class="bg-slate-100 border-b border-slate-200"><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Order ID</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Date</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Customer</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Revenue</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Status</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Tracking</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
 
-// --- LOGISTICS MODAL LOGIC ---
-const shippingModal = document.getElementById('shipping-modal');
-const shippingForm = document.getElementById('shipping-form');
-
-window.openUpdateModal = (orderId, currentStatus, currentTracking) => {
-  document.getElementById('modal-order-id').value = orderId;
-  document.getElementById('modal-status').value = currentStatus;
-  document.getElementById('modal-tracking').value = currentTracking;
-  shippingModal.classList.remove('hidden');
-};
-document.getElementById('close-modal-btn')?.addEventListener('click', () => shippingModal.classList.add('hidden'));
-shippingModal?.addEventListener('click', (e) => { if (e.target === shippingModal) shippingModal.classList.add('hidden'); });
-
-shippingForm?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const submitBtn = shippingForm.querySelector('button[type="submit"]');
-  submitBtn.textContent = 'UPDATING...';
-  submitBtn.disabled = true;
-  try {
-    const response = await fetch(`${API_URL}/api/orders/${document.getElementById('modal-order-id').value}/shipping`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: document.getElementById('modal-status').value, tracking_number: document.getElementById('modal-tracking').value.trim() || null })
+  root.querySelectorAll('.update-order-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const orderId = btn.getAttribute('data-order-id');
+      window.location.href = `/admin/order/?id=${orderId}`;
     });
-    if (!response.ok) throw new Error('Failed to update tracking');
-    window.location.reload();
-  } catch (error) {
-    alert(error.message);
-    submitBtn.textContent = 'COMMIT UPDATE';
-    submitBtn.disabled = false;
-  }
-});
+  });
+}
 
 
 // --- PRODUCT MODAL LOGIC ---
@@ -297,17 +332,15 @@ productForm?.addEventListener('submit', async (e) => {
     
     if (!response.ok) throw new Error('Failed to save product.');
     
-    // THE FIX: Hide the modal and seamlessly refresh the table without reloading the page
-    document.getElementById('product-modal').classList.add('hidden');
-    
+    // Hide modal, pull latest database data into global memory, and smoothly redraw the table
+    productModal.classList.add('hidden');
     const catalogRoot = document.getElementById('catalog-root');
     catalogRoot.innerHTML = '<p class="text-slate-500 font-serif text-center py-12">Refreshing inventory...</p>';
     
-    // Fetch the updated products list from the database and redraw the table
     const { products } = await api('/api/products');
-    renderCatalogTable(catalogRoot, products);
+    catalogData = products;
+    renderCatalogTable(catalogRoot);
     
-    // Reset the button back to its original state
     submitBtn.textContent = 'SAVE PRODUCT';
     submitBtn.disabled = false;
     

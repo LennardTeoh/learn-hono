@@ -47,6 +47,22 @@ export function createAuth(env: Bindings) {
           }
         }
       })
-    ]
+    ],
+    // Automatically force 2FA enabled status on every new user registration
+    databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            try {
+              await env.DB.prepare(
+                `UPDATE user SET two_factor_enabled = 1 WHERE id = ?`
+              ).bind(user.id).run();
+            } catch (e) {
+              console.error('Failed to enforce 2FA:', e);
+            }
+          }
+        }
+      }
+    }
   })
 }

@@ -8,7 +8,6 @@ type CheckoutItem = {
   quantity?: number
 }
 
-// Master Admin Email - Only this account can view all orders and update shipping
 const ADMIN_EMAIL = 'lumiere.csproject@gmail.com'
 
 export const orderRoutes = new Hono<AppEnv>()
@@ -152,7 +151,7 @@ orderRoutes.post('/', async (c) => {
   )
 })
 
-// ADMIN ROUTE: Must be placed BEFORE /:id to prevent routing conflicts
+// ADMIN ROUTE: Must be placed BEFORE /:id
 orderRoutes.get('/all', async (c) => {
   const user = await requireUser(c)
   
@@ -189,16 +188,28 @@ orderRoutes.get('/', async (c) => {
 
 orderRoutes.get('/:id', async (c) => {
   const user = await requireUser(c)
-
   const orderId = safeText(c.req.param('id'), 80)
-  const order = await c.env.DB
-    .prepare(
-      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
-              shipping_name, address1, address2, city, postal_code, country, created_at
-       FROM orders WHERE id = ? AND user_id = ?`
-    )
-    .bind(orderId, user.id)
-    .first()
+  
+  let order;
+  if (user.email === ADMIN_EMAIL) {
+    order = await c.env.DB
+      .prepare(
+        `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
+                shipping_name, address1, address2, city, postal_code, country, created_at
+         FROM orders WHERE id = ?`
+      )
+      .bind(orderId)
+      .first()
+  } else {
+    order = await c.env.DB
+      .prepare(
+        `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
+                shipping_name, address1, address2, city, postal_code, country, created_at
+         FROM orders WHERE id = ? AND user_id = ?`
+      )
+      .bind(orderId, user.id)
+      .first()
+  }
 
   if (!order) throw new HttpError(404, 'Order not found.')
 
@@ -213,7 +224,6 @@ orderRoutes.get('/:id', async (c) => {
   return c.json({ order, items: items.results })
 })
 
-// ADMIN ROUTE: Secure shipping update
 orderRoutes.patch('/:id/shipping', async (c) => {
   const user = await requireUser(c)
   
