@@ -48,14 +48,51 @@ if (!['verified', 'sent'].includes(state)) {
         root.innerHTML = '<h1 class="text-4xl font-serif text-slate-900 text-center">Check your inbox</h1><p class="mt-4 text-slate-500 text-center">If that address has an account, a reset link is on its way.</p>'; 
       }
       else { 
-        // Execute sign-in request
-        await api('/api/auth/sign-in/email', { 
+        // 1. Execute initial sign-in request
+        const response = await api('/api/auth/sign-in/email', { 
           method: 'POST', 
           body: JSON.stringify({ email: data.email, password: data.password }) 
         });
         
-        // Force hard redirect to home page upon successful auth
-        window.location.replace('/');
+        // 2. Intercept Better Auth's Two-Factor requirement
+        if (response && response.twoFactorRedirect) {
+          root.innerHTML = form(
+            'Two-Factor Authentication', 
+            'Security Check', 
+            `<div>
+               <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">6-Digit Code</label>
+               <input name="otp" type="text" required pattern="[a-zA-Z0-9]{6}" placeholder="Enter the code sent to your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
+             </div>`, 
+            'Verify & Log In'
+          );
+          
+          // 3. Handle the OTP submission
+          root.querySelector('form').addEventListener('submit', async otpEvent => {
+            otpEvent.preventDefault();
+            const otpButton = root.querySelector('button');
+            setBusy(otpButton, true);
+            const otpData = Object.fromEntries(new FormData(otpEvent.currentTarget));
+            
+            try {
+              // Send the OTP back to Better Auth for final verification
+              await api('/api/auth/two-factor/verify-otp', {
+                method: 'POST',
+                body: JSON.stringify({ code: otpData.otp })
+              });
+              
+              // Direct successful admins to their dashboard, regular users to the home page
+              const userEmail = String(data.email).trim().toLowerCase();
+window.location.replace(userEmail === 'lumiere.csproject@gmail.com' ? '/admin/' : '/');
+            } catch (error) {
+              toast(error.message, 'error');
+              setBusy(otpButton, false);
+            }
+          });
+        } else {
+          // If no 2FA is required, redirect immediately based on email
+          const userEmail = String(data.email).trim().toLowerCase();
+window.location.replace(userEmail === 'lumiere.csproject@gmail.com' ? '/admin/' : '/');
+        }
       }
     } catch (error) { 
       toast(error.message, 'error'); 
