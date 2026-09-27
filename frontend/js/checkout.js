@@ -69,29 +69,24 @@ async function init() {
   deliveryRadios.forEach(radio => {
     radio.addEventListener('change', (e) => {
       if (e.target.value === 'pickup') {
-        // Hide and disable Shipping
         addressSection.classList.add('hidden')
         addressInputs.forEach(input => {
           input.required = false
           input.disabled = true
         })
         
-        // Show and enable Billing
         billingSection.classList.remove('hidden')
         billingInputs.forEach(input => {
-          // Address line 2 is usually optional, so we skip requiring it
           if (input.name !== 'address2') input.required = true
           input.disabled = false
         })
       } else {
-        // Show and enable Shipping
         addressSection.classList.remove('hidden')
         addressInputs.forEach(input => {
           if (input.name !== 'address2') input.required = true
           input.disabled = false
         })
         
-        // Hide and disable Billing
         billingSection.classList.add('hidden')
         billingInputs.forEach(input => {
           input.required = false
@@ -102,28 +97,31 @@ async function init() {
     })
   })
 
-  // Initialize summary and listen for state changes
   renderSummary()
   const stateSelect = document.getElementById('state-select')
   if (stateSelect) {
     stateSelect.addEventListener('change', renderSummary)
   }
 
-  // Form Submission Logic - Redirects to Payment Page
+  // Form Submission Logic - Routes dynamically based on cart subtotal
   const form = document.getElementById('checkout-form')
   form.addEventListener('submit', (event) => {
     event.preventDefault()
     
-    // Gather form data
     const payload = Object.fromEntries(new FormData(form).entries())
     payload.items = getCart().map((item) => ({ productId: item.productId, quantity: item.quantity }))
-    
-    // Store delivery method state for final calculation on the payment page
     payload.isPickup = getDeliveryMethod() === 'pickup'
     
-    // Save to session storage and redirect
     sessionStorage.setItem('lumiere_checkout', JSON.stringify(payload))
-    window.location.href = '/payment/'
+    
+    const subtotal = cartSubtotal()
+    if (subtotal > 500000) {
+      // Over RM 5,000 -> Redirect to Credit/Debit Card & Online Banking Page
+      window.location.href = '/card-payment/'
+    } else {
+      // Under RM 5,000 -> Redirect to Touch 'n Go E-Wallet Page
+      window.location.href = '/payment/'
+    }
   })
 }
 
