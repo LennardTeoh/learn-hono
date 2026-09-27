@@ -297,9 +297,19 @@ productForm?.addEventListener('submit', async (e) => {
     
     if (!response.ok) throw new Error('Failed to save product.');
     
-    // THE FIX: Explicitly lock the URL to the catalog tab before reloading
-    window.location.hash = 'catalog';
-    window.location.reload();
+    // THE FIX: Hide the modal and seamlessly refresh the table without reloading the page
+    document.getElementById('product-modal').classList.add('hidden');
+    
+    const catalogRoot = document.getElementById('catalog-root');
+    catalogRoot.innerHTML = '<p class="text-slate-500 font-serif text-center py-12">Refreshing inventory...</p>';
+    
+    // Fetch the updated products list from the database and redraw the table
+    const { products } = await api('/api/products');
+    renderCatalogTable(catalogRoot, products);
+    
+    // Reset the button back to its original state
+    submitBtn.textContent = 'SAVE PRODUCT';
+    submitBtn.disabled = false;
     
   } catch (error) {
     alert(error.message);
