@@ -1,63 +1,61 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="light">
-<link rel="stylesheet" href="/styles.css">
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<script src="/js/config.js"></script>
-<title>LUMIÈRE · Curated Luxury</title>
-<meta name="description" content="Lumière offers curated luxury bags, bangles, and elegant accessories.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="/js/config.js"></script>
+  <title>LUMIÈRE · Luxury</title>
 </head>
-<body>
-<header id="site-header"></header>
-<main class="pb-main">
-  <section class="pb-hero" aria-labelledby="hero-title">
-    <div class="pb-hero-copy">
-      <span class="pb-kicker">Curated · Elegant · Timeless</span>
-      <h1 id="hero-title" class="pb-display">Elevate your everyday style.</h1>
-      <p>Thoughtful accessories, elegant bags and timeless bangles crafted for the modern aesthetic.</p>
-      <div class="pb-actions">
-        <a class="pb-button" href="/products/">Shop the collection <span aria-hidden="true">↗</span></a>
+<body class="min-h-screen flex flex-col bg-slate-50">
+  <header id="site-header"></header>
+  
+  <main class="flex-grow w-full flex flex-col justify-center max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    
+    <!-- Hero Section -->
+    <div class="bg-white border border-slate-200 p-8 sm:p-16 grid lg:grid-cols-2 gap-12 items-center shadow-sm">
+      <div>
+        <p class="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-6">Curated · Elegant · Timeless</p>
+        <h1 class="text-5xl sm:text-6xl font-serif text-slate-900 mb-6 leading-tight">Elevate your everyday style.</h1>
+        <p class="text-slate-500 mb-10 leading-relaxed text-lg max-w-md">Thoughtful accessories, elegant bags and timeless bangles crafted for the modern aesthetic.</p>
+        
+        <a href="/products/" class="bg-slate-950 hover:bg-slate-800 text-white text-[10px] font-bold tracking-[0.2em] uppercase px-8 py-4 inline-block transition-colors text-center cursor-pointer">SHOP THE COLLECTION ↗</a>
+      </div>
+      <div class="aspect-[4/3] overflow-hidden">
+        <img src="/assets/images/lumiere-hero-bag.png" alt="Luxury Collection" class="w-full h-full object-cover">
       </div>
     </div>
-    <div class="pb-hero-art" aria-hidden="true">
-      <!-- Update this image path to a luxury bag or accessory -->
-      <img src="/assets/images/lumiere-hero-bag.png" alt="Luxury designer bag">
+
+    <!-- Category Section -->
+    <div class="mt-20 mb-10">
+      <p class="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-4">Discover</p>
+      <h2 class="text-4xl font-serif text-slate-900 mb-10">Our Collection</h2>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <a href="/products/?category=Bags" class="block bg-white border border-slate-200 p-10 text-center hover:border-slate-400 transition-colors shadow-sm">
+          <h3 class="font-serif text-xl text-slate-900 mb-3">Bags</h3>
+          <p class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Explore Selection</p>
+        </a>
+        <a href="/products/?category=Bangles" class="block bg-white border border-slate-200 p-10 text-center hover:border-slate-400 transition-colors shadow-sm">
+          <h3 class="font-serif text-xl text-slate-900 mb-3">Bangles</h3>
+          <p class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Explore Selection</p>
+        </a>
+        <a href="/products/?category=Watches" class="block bg-white border border-slate-200 p-10 text-center hover:border-slate-400 transition-colors shadow-sm">
+          <h3 class="font-serif text-xl text-slate-900 mb-3">Watches</h3>
+          <p class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Explore Selection</p>
+        </a>
+        <a href="/products/?category=Necklaces" class="block bg-white border border-slate-200 p-10 text-center hover:border-slate-400 transition-colors shadow-sm">
+          <h3 class="font-serif text-xl text-slate-900 mb-3">Necklaces</h3>
+          <p class="text-[9px] font-bold tracking-widest text-slate-400 uppercase">Explore Selection</p>
+        </a>
+      </div>
     </div>
-  </section>
-
-  <section class="pb-section" aria-labelledby="categories-title">
-    <div class="pb-section-head"><div><span class="pb-kicker">Discover</span><h2 id="categories-title" class="pb-display">Our Collection</h2></div><p>Find something timeless, bold, elegant or deeply personal. Every item is stocked in the learning API.</p></div>
-    <div class="pb-category-grid">
-      <a class="pb-category" href="/products/?category=Bags"><strong>Bags</strong><img src="/assets/images/products/category-bag-cutout.png" alt="Designer Bag"></a>
-      <a class="pb-category" href="/products/?category=Bangles"><strong>Bangles</strong><img src="/assets/images/products/category-bangle-cutout.png" alt="Gold Bangle"></a>
-      <a class="pb-category" href="/products/?category=Watches"><strong>Watches</strong><img src="/assets/images/products/category-watch-cutout.png" alt="Classic Watch"></a>
-      <a class="pb-category" href="/products/?category=Necklaces"><strong>Necklaces</strong><img src="/assets/images/products/category-necklace-cutout.png" alt="Elegant Necklace"></a>
-    </div>
-  </section>
-
-  <section class="pb-section pb-about" aria-labelledby="why-title">
-    <div><span class="pb-kicker">Why Lumière</span><h2 id="why-title" class="pb-display">Finest materials. Exquisite details.</h2></div>
-    <div><p>Our pieces are made for gifting, treasuring, and wearing every day. The storefront is intentionally simple so you can see every step from browser click to database write.</p><div class="pb-benefits"><div class="pb-benefit"><b>01 · Crafted</b><span>Produced in limited runs, never hidden behind mystery stock.</span></div><div class="pb-benefit"><b>02 · Clear</b><span>Server totals are the source of truth at checkout.</span></div><div class="pb-benefit"><b>03 · Learnable</b><span>Plain HTML, JavaScript and Hono you can change confidently.</span></div></div></div>
-  </section>
-
-  <section id="treats" class="pb-section" aria-labelledby="treats-title">
-    <div class="pb-section-head"><div><span class="pb-kicker">New Arrivals</span><h2 id="treats-title" class="pb-display">Most loved pieces</h2></div><div class="pb-section-head-actions"><p>A small featured selection from today's collection.</p><a class="pb-button" href="/products/">View all pieces <span aria-hidden="true">↗</span></a></div></div>
-    <div id="product-grid" class="pb-product-grid"><p>Loading pieces…</p></div>
-  </section>
-
-  <section class="pb-section pb-offer" aria-labelledby="offer-title">
-    <div class="pb-offer-copy"><span class="pb-kicker">Signature Set</span><h2 id="offer-title" class="pb-display">A classic pairing for your wardrobe.</h2><p>Pair a timeless bangle with an elegant bag and delivery is free over RM800.</p><a class="pb-button" href="/products/">Build your set</a></div>
-    <div class="pb-offer-art"><img src="/assets/images/products/signature-bangle.png" alt="Signature Bangle"><img src="/assets/images/products/leather-wallet.png" alt="Leather Wallet"></div>
-  </section>
-
-  <section class="pb-section" aria-labelledby="reviews-title"><div class="pb-section-head"><div><span class="pb-kicker">Kind words</span><h2 id="reviews-title" class="pb-display">Loved by our customers</h2></div></div><div class="pb-reviews"><blockquote class="pb-review"><div class="pb-stars" aria-label="5 out of 5 stars">★★★★★</div><p>“The little details make ordering feel calm, and the bag arrived exactly as promised in stunning packaging.”</p><b>— Aina, first-time customer</b></blockquote><blockquote class="pb-review"><div class="pb-stars" aria-label="5 out of 5 stars">★★★★★</div><p>“A lovely example app because I can see where the browser ends and the API begins.”</p><b>— Ray, fashion enthusiast</b></blockquote><blockquote class="pb-review"><div class="pb-stars" aria-label="5 out of 5 stars">★★★★★</div><p>“The signature set is breathtaking. The gold bangle is my absolute favorite piece to wear.”</p><b>— Mei, repeat customer</b></blockquote></div></section>
-
-  <section class="pb-section pb-faq" aria-labelledby="faq-title"><div class="pb-section-head"><div><span class="pb-kicker">Need to know</span><h2 id="faq-title" class="pb-display">Frequently asked questions</h2></div></div><details open><summary>Are pieces produced in small batches?</summary><p>Yes. The catalogue stock is intentionally finite so students can see the API and checkout guard inventory.</p></details><details><summary>Is this a real payment flow?</summary><p>No. The lesson stops at a dummy confirmed order and never collects card details.</p></details><details><summary>Can I change the frontend?</summary><p>Absolutely. Start on the student branch, run the milestone checks, and use the reference branch whenever you need a working comparison.</p></details><details><summary>Where does the data live?</summary><p>Products, users and orders live in Cloudflare D1 behind a Hono Worker. The browser only keeps the cart locally.</p></details></section>
-</main>
-<footer id="site-footer"></footer>
-<script type="module" src="/js/home.js"></script>
+    
+  </main>
+  
+  <footer id="site-footer"></footer>
+  
+  <script type="module" src="/js/home.js"></script>
 </body>
 </html>
