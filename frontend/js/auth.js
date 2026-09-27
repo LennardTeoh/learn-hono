@@ -38,6 +38,7 @@ if (!['verified', 'sent'].includes(state)) {
     const button = root.querySelector('button'); 
     setBusy(button, true); 
     const data = Object.fromEntries(new FormData(event.currentTarget)); 
+    
     try {
       if (state === 'signup') { 
         await api('/api/auth/sign-up/email', { method: 'POST', body: JSON.stringify({ ...data, callbackURL: '/verify/' }) }); 
@@ -48,13 +49,16 @@ if (!['verified', 'sent'].includes(state)) {
         root.innerHTML = '<h1 class="text-4xl font-serif text-slate-900 text-center">Check your inbox</h1><p class="mt-4 text-slate-500 text-center">If that address has an account, a reset link is on its way.</p>'; 
       }
       else { 
-        // 1. Execute initial sign-in request
+        // 1. Force exact formatting on the email for strict matching
+        const userEmail = String(data.email).trim().toLowerCase();
+
+        // 2. Execute initial sign-in request
         const response = await api('/api/auth/sign-in/email', { 
           method: 'POST', 
-          body: JSON.stringify({ email: data.email, password: data.password }) 
+          body: JSON.stringify({ email: userEmail, password: data.password }) 
         });
         
-        // 2. Intercept Better Auth's Two-Factor requirement
+        // 3. Intercept 2FA requirement (Customers Only)
         if (response && response.twoFactorRedirect) {
           root.innerHTML = form(
             'Two-Factor Authentication', 
@@ -66,7 +70,6 @@ if (!['verified', 'sent'].includes(state)) {
             'Verify & Log In'
           );
           
-          // 3. Handle the OTP submission
           root.querySelector('form').addEventListener('submit', async otpEvent => {
             otpEvent.preventDefault();
             const otpButton = root.querySelector('button');
@@ -74,24 +77,25 @@ if (!['verified', 'sent'].includes(state)) {
             const otpData = Object.fromEntries(new FormData(otpEvent.currentTarget));
             
             try {
-              // Send the OTP back to Better Auth for final verification
               await api('/api/auth/two-factor/verify-otp', {
                 method: 'POST',
                 body: JSON.stringify({ code: otpData.otp })
               });
               
-              // Direct successful admins to their dashboard, regular users to the home page
-              const userEmail = String(data.email).trim().toLowerCase();
-window.location.replace(userEmail === 'lumiere.csproject@gmail.com' ? '/admin/' : '/');
+              // Customers go directly to home page after OTP
+              window.location.replace('/');
             } catch (error) {
               toast(error.message, 'error');
               setBusy(otpButton, false);
             }
           });
         } else {
-          // If no 2FA is required, redirect immediately based on email
-          const userEmail = String(data.email).trim().toLowerCase();
-window.location.replace(userEmail === 'lumiere.csproject@gmail.com' ? '/admin/' : '/');
+          // 4. Admin bypasses 2FA and routes directly to the dashboard
+          if (userEmail === 'lumiere.csproject@gmail.com') {
+            window.location.replace('/admin/');
+          } else {
+            window.location.replace('/');
+          }
         }
       }
     } catch (error) { 
@@ -99,4 +103,14 @@ window.location.replace(userEmail === 'lumiere.csproject@gmail.com' ? '/admin/' 
       setBusy(button, false); 
     } 
   })
+  // 4. Admin bypasses 2FA and routes directly to the dashboard
+        alert("Email detected: [" + userEmail + "]");
+        
+        if (userEmail === 'lumiere.csproject@gmail.com') {
+          alert("Match successful! Routing to /admin/");
+          window.location.replace('/admin/');
+        } else {
+          alert("No match. Routing to /");
+          window.location.replace('/');
+        }
 }

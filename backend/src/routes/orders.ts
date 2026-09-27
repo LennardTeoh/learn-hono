@@ -162,11 +162,11 @@ orderRoutes.get('/all', async (c) => {
   
   const result = await c.env.DB
     .prepare(
-      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
-              shipping_name, email, created_at
+      `SELECT orders.id, orders.status, orders.tracking_number, orders.subtotal_cents, orders.shipping_cents, orders.tax_cents, orders.total_cents,
+              orders.shipping_name, user.email, orders.created_at
        FROM orders 
        LEFT JOIN user ON orders.user_id = user.id
-       ORDER BY created_at DESC LIMIT 100`
+       ORDER BY orders.created_at DESC LIMIT 100`
     )
     .all()
 

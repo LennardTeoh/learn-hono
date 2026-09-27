@@ -1,7 +1,7 @@
 import { fallbackProducts } from './catalog-fallback.js'
 
-const cfg = window.APP_CONFIG || {}
-const API_BASE = String(cfg.API_BASE || '').replace(/\/$/, '')
+// Hardcode the live backend API to prevent config dropouts
+const API_BASE = 'https://lumiere-api.p22014454.workers.dev'
 
 function localFallback(path) {
   if (path === '/api/products') return { products: fallbackProducts }
@@ -41,7 +41,6 @@ export async function api(path, options = {}) {
 
 export async function getCurrentUser() {
   try {
-    // Reverted back to the correct better-auth endpoint
     const data = await api('/api/auth/get-session', { method: 'GET' })
     
     if (!data || !data.user) {
@@ -49,6 +48,8 @@ export async function getCurrentUser() {
     }
     return data.user
   } catch (error) {
+    // Reveal the exact reason the session failed in the browser console (F12)
+    console.error("Session Check Failed:", error.message);
     return null
   }
 }
