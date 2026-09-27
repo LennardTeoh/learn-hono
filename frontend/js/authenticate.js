@@ -1,7 +1,6 @@
 import { renderShell, setBusy } from './ui.js';
 
 async function init() {
-  // 1. This line is crucial! It loads your header and footer onto the page.
   await renderShell();
 
   const form = document.getElementById('auth-form');
@@ -18,26 +17,21 @@ async function init() {
       const serialNumber = serialInput.value.trim().toUpperCase();
       if (!serialNumber) return;
 
-      // 2. Trigger your existing UI loading state
       setBusy(submitBtn, true, 'VERIFYING...');
-      successBox.style.display = 'none';
+      successBox.classList.add('hidden');
 
       try {
-          // 3. Simulate API database check (1.2 seconds)
           await new Promise(resolve => setTimeout(resolve, 1200));
 
-          // 4. Populate and reveal success box
           displaySerial.textContent = serialNumber;
-          successBox.style.display = 'block';
+          successBox.classList.remove('hidden');
           
       } catch (error) {
           console.error('Verification failed:', error);
       } finally {
-          // 5. Restore button
           setBusy(submitBtn, false);
       }
   });
 }
 
-// Boot up the page
 init().catch(console.error);
