@@ -12,10 +12,10 @@ export function createAuth(env: Bindings) {
     basePath: '/api/auth',
     trustedOrigins: [env.APP_ORIGIN, 'http://localhost:8788', 'http://localhost:8787'],
     advanced: {
-      useSecureCookies: false, // Force false for local cross-port testing
+      useSecureCookies: isProd, // Automatically true in production
       defaultCookieAttributes: { 
-        sameSite: 'lax', 
-        secure: false 
+        sameSite: isProd ? 'none' : 'lax', // 'none' is strictly required for cross-domain cookies
+        secure: isProd 
       }
     },
     emailAndPassword: {
