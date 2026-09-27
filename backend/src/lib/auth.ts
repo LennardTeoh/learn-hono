@@ -3,19 +3,24 @@ import type { Bindings } from '../types'
 import { sendTransactionalEmail, resetPasswordEmail, verificationEmail } from './email'
 
 export function createAuth(env: Bindings) {
+  const isProd = env.BETTER_AUTH_URL?.startsWith('https://');
+
   return betterAuth({
     database: env.DB,
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
     basePath: '/api/auth',
-    trustedOrigins: [env.APP_ORIGIN],
+    trustedOrigins: [env.APP_ORIGIN, 'http://localhost:8788', 'http://localhost:8787'],
     advanced: {
-      useSecureCookies: true,
-      defaultCookieAttributes: { sameSite: 'none', secure: true }
+      useSecureCookies: false, // Force false for local cross-port testing
+      defaultCookieAttributes: { 
+        sameSite: 'lax', 
+        secure: false 
+      }
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      requireEmailVerification: false,
       minPasswordLength: 12,
       maxPasswordLength: 128,
       revokeSessionsOnPasswordReset: true,
