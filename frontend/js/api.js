@@ -41,9 +41,14 @@ export async function api(path, options = {}) {
 
 export async function getCurrentUser() {
   try {
-    const data = await api('/api/auth/get-session')
-    return data?.user || null
-  } catch {
+    // Reverted back to the correct better-auth endpoint
+    const data = await api('/api/auth/get-session', { method: 'GET' })
+    
+    if (!data || !data.user) {
+      return null
+    }
+    return data.user
+  } catch (error) {
     return null
   }
 }
