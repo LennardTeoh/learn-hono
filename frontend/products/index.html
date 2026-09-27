@@ -3,52 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="/js/config.js"></script>
   <title>Collection · LUMIÈRE</title>
 </head>
-<body class="bg-slate-50 text-slate-900">
-  <header id="site-header" class="sticky top-0 z-40"></header>
+<body class="min-h-screen flex flex-col bg-slate-50">
+  <header id="site-header"></header>
   
-  <main class="pb-main">
-    <section class="pb-section" aria-labelledby="treats-title">
-      
-      <div class="pb-section-head mb-4">
-        <div>
-          <span class="pb-kicker">Curated selection</span>
-          <h1 id="treats-title" class="pb-display">All the pieces</h1>
+  <main class="flex-grow w-full max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <div class="mb-8 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+       HOME / THE COLLECTION
+    </div>
+    <h1 class="text-4xl font-serif text-slate-900 mb-12">The Collection</h1>
+    
+    <div class="grid lg:grid-cols-[240px_1fr] gap-12">
+      <!-- Sidebar Filters -->
+      <aside>
+        <div class="mb-10">
+          <h3 class="text-[10px] font-bold tracking-[0.2em] text-slate-900 uppercase mb-4">Category</h3>
+          <ul class="space-y-4 text-sm">
+            <li><a href="#" class="cat-link font-bold text-slate-900" data-category="">All Categories</a></li>
+            <li><a href="#" class="cat-link text-slate-500 hover:text-slate-900 transition-colors" data-category="Bags">Bags</a></li>
+            <li><a href="#" class="cat-link text-slate-500 hover:text-slate-900 transition-colors" data-category="Bangles">Bangles & Bracelets</a></li>
+            <li><a href="#" class="cat-link text-slate-500 hover:text-slate-900 transition-colors" data-category="Watches">Watches</a></li>
+            <li><a href="#" class="cat-link text-slate-500 hover:text-slate-900 transition-colors" data-category="Necklaces">Necklaces</a></li>
+          </ul>
         </div>
-        <p>Search the catalogue, filter by category, and add a piece to your local cart.</p>
-      </div>
 
-      <!-- New Category Pills -->
-      <div id="category-pills" class="flex flex-wrap gap-2 mb-6">
-        <button class="category-pill active px-5 py-1.5 rounded-full border border-slate-900 bg-slate-900 text-white text-xs font-bold tracking-wider uppercase transition-colors" data-category="">ALL</button>
-        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Bags">BAG</button>
-        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Bangles">BANGLE</button>
-        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Watches">WATCH</button>
-        <button class="category-pill px-5 py-1.5 rounded-full border border-slate-300 bg-transparent text-slate-700 hover:border-slate-900 text-xs font-bold tracking-wider uppercase transition-colors" data-category="Necklaces">NECKLACE</button>
-      </div>
-
-      <div class="pb-toolbar">
-        <input id="search" class="pb-field pb-search" type="search" placeholder="Search bags, bangles…" aria-label="Search pieces">
+        <div class="mb-10">
+          <h3 class="text-[10px] font-bold tracking-[0.2em] text-slate-900 uppercase mb-4">Price Range</h3>
+          <ul class="space-y-4 text-sm">
+            <li><a href="#" class="price-link font-bold text-slate-900" data-price="">All Prices</a></li>
+            <li><a href="#" class="price-link text-slate-500 hover:text-slate-900 transition-colors" data-price="under-5k">Under RM 5,000</a></li>
+            <li><a href="#" class="price-link text-slate-500 hover:text-slate-900 transition-colors" data-price="5k-10k">RM 5,000 - RM 10,000</a></li>
+            <li><a href="#" class="price-link text-slate-500 hover:text-slate-900 transition-colors" data-price="over-10k">Over RM 10,000</a></li>
+          </ul>
+        </div>
         
-        <!-- New Sort Dropdown -->
-        <select id="sort" class="pb-field" aria-label="Sort pieces">
-          <option value="featured">Featured</option>
-          <option value="az">A-Z</option>
-          <option value="za">Z-A</option>
-          <option value="price-asc">Price ↑</option>
-          <option value="price-desc">Price ↓</option>
-        </select>
+        <div>
+          <h3 class="text-[10px] font-bold tracking-[0.2em] text-slate-900 uppercase mb-4">Search</h3>
+          <input id="search" type="text" placeholder="Search collection..." class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none bg-white">
+        </div>
+      </aside>
+      
+      <!-- Product Grid -->
+      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <p class="text-slate-500 font-serif">Loading collection...</p>
       </div>
-
-      <div id="product-grid" class="pb-product-grid" aria-live="polite">
-        <p>Loading pieces…</p>
-      </div>
-    </section>
+    </div>
   </main>
   
   <footer id="site-footer"></footer>
