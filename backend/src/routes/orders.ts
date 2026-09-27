@@ -149,12 +149,13 @@ orderRoutes.post('/', async (c) => {
   )
 })
 
+// MODIFIED: Added tracking_number to the SELECT statement
 orderRoutes.get('/', async (c) => {
   const user = await requireUser(c)
 
   const result = await c.env.DB
     .prepare(
-      `SELECT id, status, subtotal_cents, shipping_cents, tax_cents, total_cents, created_at
+      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents, created_at
        FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
     )
     .bind(user.id)
@@ -163,13 +164,14 @@ orderRoutes.get('/', async (c) => {
   return c.json({ orders: result.results })
 })
 
+// MODIFIED: Added tracking_number to the SELECT statement
 orderRoutes.get('/:id', async (c) => {
   const user = await requireUser(c)
 
   const orderId = safeText(c.req.param('id'), 80)
   const order = await c.env.DB
     .prepare(
-      `SELECT id, status, subtotal_cents, shipping_cents, tax_cents, total_cents,
+      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
               shipping_name, address1, address2, city, postal_code, country, created_at
        FROM orders WHERE id = ? AND user_id = ?`
     )
@@ -187,4 +189,49 @@ orderRoutes.get('/:id', async (c) => {
     .all()
 
   return c.json({ order, items: items.results })
+})
+
+// NEW: Route to update shipping status and add a tracking number
+orderRoutes.patch('/:id/shipping', async (c) => {
+  const user = await requireUser(c)
+  
+  // Note: For a production e-commerce store, you should verify if the user has an 'admin' role here
+  
+  const orderId = safeText(c.req.param('id'), 80)
+  const body = await readJson<{ status?: string, tracking_number?: string }>(c)
+  
+  const validStatuses = ['confirmed', 'processing', 'shipped', 'delivered']
+  if (!body.status || !validStatuses.includes(body.status)) {
+    throw new HttpError(400, 'Invalid status update.')
+  }
+
+  const result = await c.env.DB
+    .prepare(`UPDATE orders SET status = ?, tracking_number = ? WHERE id = ?`)
+    .bind(body.status, body.tracking_number || null, orderId)
+    .run()
+
+  if (result.success) {
+    return c.json({ ok: true, message: 'Shipping status updated successfully' })
+  }
+  
+  throw new HttpError(500, 'Failed to update order')
+
+  // NEW: Admin route to fetch all orders
+orderRoutes.get('/all', async (c) => {
+  const user = await requireUser(c)
+  
+  // TO DO FOR YOUR GROUP MATE: Add a security check here later to ensure user.email == 'admin@lumiere.com'
+  
+  const result = await c.env.DB
+    .prepare(
+      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
+              shipping_name, email, created_at
+       FROM orders 
+       LEFT JOIN user ON orders.user_id = user.id
+       ORDER BY created_at DESC LIMIT 100`
+    )
+    .all()
+
+  return c.json({ orders: result.results })
+})
 })

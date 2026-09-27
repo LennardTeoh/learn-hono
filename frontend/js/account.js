@@ -49,7 +49,6 @@ async function init() {
       }
 
       let amount = parseInt(order.total_cents !== undefined ? order.total_cents : (order.totalCents || order.totalAmount || order.total || 0));
-
       const idShort = order.id ? order.id.split('-')[0].substring(0, 5).toUpperCase() : 'N/A';
       
       // BULLETPROOF CHECK: Check database fulfillment fields AND local storage bridge
@@ -61,17 +60,21 @@ async function init() {
                        localStorage.getItem(localPickupKey) === 'true';
 
       const fulfillment = isPickup ? 'In-Store Collection' : 'Home Delivery';
-      const statusText = isPickup ? 'READY FOR PICKUP' : 'CONFIRMED';
+      
+      // Use the actual database status for shipped items, otherwise use CONFIRMED/READY
+      const dbStatus = (order.status || 'confirmed').toUpperCase();
+      const statusText = isPickup ? 'READY FOR PICKUP' : dbStatus;
       
       // Styling
       const statusClass = isPickup 
           ? 'bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]' 
-          : 'bg-slate-50 text-slate-500 border border-slate-200';
+          : 'bg-white text-slate-600 border border-slate-300';
           
       const btnText = isPickup ? 'VIEW QR PASS' : 'INVOICE';
       
-      return `
-        <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+      // 1. The Main Order Row
+      const mainRow = `
+        <tr class="hover:bg-slate-50 transition-colors ${isPickup ? 'border-b border-slate-200' : ''}">
           <td class="py-5 px-2 text-sm font-medium text-slate-900">${idShort}</td>
           <td class="py-5 px-2 text-sm text-slate-500">${dateStr}</td>
           <td class="py-5 px-2 text-sm text-slate-900">${money(amount)}</td>
@@ -86,6 +89,20 @@ async function init() {
           </td>
         </tr>
       `;
+
+      // 2. The Premium Tracking Timeline (Only renders for Home Delivery)
+      let trackerRow = '';
+      if (!isPickup) {
+        trackerRow = `
+          <tr class="border-b border-slate-200 bg-slate-50/50">
+            <td colspan="6" class="px-2 py-8">
+              ${renderShippingTracker(order.status, order.tracking_number)}
+            </td>
+          </tr>
+        `;
+      }
+
+      return mainRow + trackerRow;
     }).join('') : `<tr><td colspan="6" class="py-16 text-center text-slate-500 font-serif">No orders found.</td></tr>`;
 
     const mainContent = `
@@ -116,6 +133,70 @@ async function init() {
   } catch (error) {
     root.innerHTML = `<div class="col-span-full border border-red-200 bg-red-50 p-6 text-red-600">${escapeHtml(error.message)}</div>`
   }
+}
+
+// --- HELPER FUNCTION: PREMIUM SHIPPING TRACKER ---
+function renderShippingTracker(status, trackingNumber) {
+  const safeStatus = status || 'confirmed';
+  const statuses = ['confirmed', 'processing', 'shipped', 'delivered'];
+  const currentIndex = statuses.indexOf(safeStatus) !== -1 ? statuses.indexOf(safeStatus) : 0;
+
+  const stepsHTML = statuses.map((stepName, index) => {
+    const isActive = index <= currentIndex;
+    const circleClass = isActive 
+      ? "bg-slate-900 border-slate-900 text-white" 
+      : "bg-slate-50 border-slate-300 text-slate-300";
+    const textClass = isActive ? "text-slate-900 font-semibold" : "text-slate-400";
+    
+    return `
+      <div class="flex flex-col items-center relative z-10 px-2 sm:px-4" style="background: inherit;">
+        <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold ${circleClass} transition-colors duration-300">
+          ${index + 1}
+        </div>
+        <p class="text-[9px] uppercase tracking-widest mt-3 ${textClass}">${stepName}</p>
+      </div>
+    `;
+  }).join('');
+
+  // Strict Premium Shipping Carrier Detection
+  let trackingHTML = `<p class="text-sm font-serif mt-8 text-center text-slate-400 italic">Tracking details will be assigned once your items are dispatched.</p>`;
+  
+  if (trackingNumber) {
+    let carrier = 'DHL Express';
+    let trackUrl = `https://www.dhl.com/global-en/home/tracking/tracking-express.html?submit=1&tracking-id=${trackingNumber}`;
+    
+    // Automatically detect FedEx (12 digits) or UPS (starts with 1Z)
+    if (trackingNumber.startsWith('1Z')) {
+        carrier = 'UPS Worldwide Express';
+        trackUrl = `https://www.ups.com/track?tracknum=${trackingNumber}`;
+    } else if (trackingNumber.length === 12 && !isNaN(trackingNumber)) {
+        carrier = 'FedEx Priority';
+        trackUrl = `https://www.fedex.com/fedextrack/?trknbr=${trackingNumber}`;
+    }
+
+    trackingHTML = `
+      <div class="mt-8 text-center bg-white py-4 px-6 border border-slate-200 max-w-sm mx-auto shadow-sm">
+        <p class="text-[9px] uppercase tracking-widest text-slate-500 mb-1">Dispatched via ${carrier}</p>
+        <p class="text-sm font-serif text-slate-700">
+          Waybill: 
+          <a href="${trackUrl}" target="_blank" class="font-bold text-slate-900 hover:text-slate-600 transition-colors underline underline-offset-4 ml-1">
+            ${trackingNumber}
+          </a>
+        </p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="w-full max-w-2xl mx-auto py-2">
+      <h4 class="text-[9px] uppercase tracking-widest text-slate-400 mb-6 text-center">Logistics Journey</h4>
+      <div class="relative flex justify-between items-start w-full mx-auto" style="background: inherit;">
+        <div class="absolute top-4 left-[10%] w-[80%] h-[2px] bg-slate-200 z-0"></div>
+        ${stepsHTML}
+      </div>
+      ${trackingHTML}
+    </div>
+  `;
 }
 
 init().catch(console.error)
