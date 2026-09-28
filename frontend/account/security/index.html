@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Security Settings — LUMIÈRE</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#FBFBF9] text-slate-900">
+  <div id="shell-root"></div>
+  <main class="max-w-4xl mx-auto px-6 py-16">
+    <h1 class="text-3xl font-serif mb-8">Security Settings</h1>
+    
+    <div class="space-y-8">
+      <div class="bg-white p-8 border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-serif mb-4">Change Password</h2>
+        <form id="password-form" class="space-y-4">
+          <input name="currentPassword" type="password" placeholder="Current Password" class="w-full border border-slate-200 p-3 text-sm bg-white focus:outline-none focus:border-slate-900" required>
+          <input name="newPassword" type="password" placeholder="New Password (min 8 characters)" minlength="8" class="w-full border border-slate-200 p-3 text-sm bg-white focus:outline-none focus:border-slate-900" required>
+          <button type="submit" class="lumiere-btn-outline">Update Password</button>
+        </form>
+      </div>
+
+      <div class="bg-white p-8 border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-serif mb-2">Two-Factor Authentication (2FA)</h2>
+        <p class="text-xs text-slate-500 mb-6">Protect your boutique account with email-based OTP verification during sign in.</p>
+        <div id="two-factor-status" class="flex items-center justify-between">
+          <span class="text-sm font-medium text-slate-700">Email OTP 2FA is active</span>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="/js/security.js"></script>
+</body>
+</html>

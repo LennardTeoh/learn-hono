@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Account Details — LUMIÈRE</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#FBFBF9] text-slate-900">
+  <div id="shell-root"></div>
+  <main class="max-w-4xl mx-auto px-6 py-16">
+    <h1 class="text-3xl font-serif mb-8">Account Details</h1>
+    <div id="details-root" class="bg-white p-8 border border-slate-200 shadow-sm">
+      <form id="details-form" class="space-y-6">
+        <div>
+          <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Full Name</label>
+          <input name="name" id="account-name" type="text" class="w-full border border-slate-200 p-3 text-sm focus:outline-none focus:border-slate-900 bg-white" required>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Email Address (Read-Only)</label>
+          <input name="email" id="account-email" type="email" class="w-full border border-slate-200 p-3 text-sm bg-slate-50 text-slate-500 cursor-not-allowed" disabled>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Default Shipping Address</label>
+          <textarea name="address" id="account-address" rows="3" placeholder="Enter your default delivery address..." class="w-full border border-slate-200 p-3 text-sm focus:outline-none focus:border-slate-900 bg-white"></textarea>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Preferred Boutique Notification</label>
+          <select name="notification" class="w-full border border-slate-200 p-3 text-sm bg-white focus:outline-none focus:border-slate-900">
+            <option value="email">Email Notification</option>
+            <option value="sms">SMS / WhatsApp Alert</option>
+          </select>
+        </div>
+        <button type="submit" class="lumiere-btn">Save Changes</button>
+      </form>
+    </div>
+  </main>
+  <script type="module" src="/js/account-details.js"></script>
+</body>
+</html>
