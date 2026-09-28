@@ -14,14 +14,14 @@ app.use('*', secureHeaders())
 app.use('/api/*', async (c, next) => {
   const middleware = cors({
     origin: (origin) => {
-      // Allow local frontend port 8788 and any configured production origin
       if (origin === 'http://localhost:8788' || origin === c.env.CORS_ORIGIN) {
         return origin
       }
       return c.env.CORS_ORIGIN
     },
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'X-Captcha-Response', 'Idempotency-Key'],
+    // CRITICAL: Ensure 'PATCH' is in this array to allow database updates
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'X-Captcha-Response', 'Idempotency-Key', 'Authorization'],
     credentials: true,
     maxAge: 86400
   })

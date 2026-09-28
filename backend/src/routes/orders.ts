@@ -87,14 +87,17 @@ orderRoutes.post('/', async (c) => {
   }
 
   const orderId = crypto.randomUUID()
+  // Generate the unique 6-digit PIN
+  const verificationPin = Math.floor(100000 + Math.random() * 900000).toString()
   const now = Math.floor(Date.now() / 1000)
+  
   const statements: D1PreparedStatement[] = [
     c.env.DB
       .prepare(
         `INSERT INTO orders
          (id, user_id, status, subtotal_cents, shipping_cents, tax_cents, total_cents,
-          shipping_name, address1, address2, city, postal_code, country, idempotency_key, created_at)
-         VALUES (?, ?, 'confirmed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          shipping_name, address1, address2, city, postal_code, country, idempotency_key, created_at, verification_pin)
+         VALUES (?, ?, 'confirmed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         orderId,
@@ -110,7 +113,8 @@ orderRoutes.post('/', async (c) => {
         postalCode,
         country,
         idempotencyKey,
-        now
+        now,
+        verificationPin
       )
   ]
 
@@ -162,7 +166,7 @@ orderRoutes.get('/all', async (c) => {
   const result = await c.env.DB
     .prepare(
       `SELECT orders.id, orders.status, orders.tracking_number, orders.subtotal_cents, orders.shipping_cents, orders.tax_cents, orders.total_cents,
-              orders.shipping_name, user.email, orders.created_at
+              orders.shipping_name, user.email, orders.created_at, orders.verification_pin
        FROM orders 
        LEFT JOIN user ON orders.user_id = user.id
        ORDER BY orders.created_at DESC LIMIT 100`
@@ -177,7 +181,7 @@ orderRoutes.get('/', async (c) => {
 
   const result = await c.env.DB
     .prepare(
-      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents, created_at
+      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents, created_at, verification_pin
        FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
     )
     .bind(user.id)
@@ -195,7 +199,7 @@ orderRoutes.get('/:id', async (c) => {
     order = await c.env.DB
       .prepare(
         `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
-                shipping_name, address1, address2, city, postal_code, country, created_at
+                shipping_name, address1, address2, city, postal_code, country, created_at, verification_pin
          FROM orders WHERE id = ?`
       )
       .bind(orderId)
@@ -204,7 +208,7 @@ orderRoutes.get('/:id', async (c) => {
     order = await c.env.DB
       .prepare(
         `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
-                shipping_name, address1, address2, city, postal_code, country, created_at
+                shipping_name, address1, address2, city, postal_code, country, created_at, verification_pin
          FROM orders WHERE id = ? AND user_id = ?`
       )
       .bind(orderId, user.id)

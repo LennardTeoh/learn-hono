@@ -15,14 +15,14 @@ export function createAuth(env: Bindings) {
     advanced: {
       useSecureCookies: isProd,
       defaultCookieAttributes: { 
-        sameSite: isProd ? 'none' : 'lax',
+        sameSite: 'none',
         secure: isProd 
       }
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
-      minPasswordLength: 12,
+      requireEmailVerification: false, 
+      minPasswordLength: 8,            
       maxPasswordLength: 128,
       revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({ user, url }) => {
@@ -47,22 +47,6 @@ export function createAuth(env: Bindings) {
           }
         }
       })
-    ],
-    // Automatically force 2FA enabled status on every new user registration
-    databaseHooks: {
-      user: {
-        create: {
-          after: async (user) => {
-            try {
-              await env.DB.prepare(
-                `UPDATE user SET two_factor_enabled = 1 WHERE id = ?`
-              ).bind(user.id).run();
-            } catch (e) {
-              console.error('Failed to enforce 2FA:', e);
-            }
-          }
-        }
-      }
-    }
+    ]
   })
 }
