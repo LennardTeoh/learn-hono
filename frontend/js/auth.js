@@ -101,17 +101,20 @@ if (formElement) {
           body: JSON.stringify({ email: userEmail, password: data.password })
         });
 
-        // 5. Returning User: 2FA is officially enabled and working
-        // 5. Returning User: 2FA is officially enabled and working
+      // 5. Returning User: 2FA is officially enabled and working
         if (response && response.twoFactorRedirect) {
           
-          // Initial OTP send
-          await api('/api/auth/two-factor/send-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-          });
-
+          // Explicitly trigger OTP email dispatch on load for returning users
+          try {
+            await api('/api/auth/two-factor/send-otp', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({})
+            });
+          } catch (e) {
+            console.warn('Initial OTP dispatch notice:', e);
+          }
+          
           root.innerHTML = formHeader('Two-Factor Authentication', 'Security Check') + `
             <form id="otp-form" class="text-left">
               <div class="mb-6">
@@ -140,7 +143,6 @@ if (formElement) {
               toast('A new 6-digit code has been sent.', 'success');
               btn.innerText = 'CODE SENT';
               
-              // Reset the button text after 5 seconds
               setTimeout(() => {
                 btn.innerText = originalText;
                 btn.disabled = false;
@@ -160,14 +162,13 @@ if (formElement) {
             const otpData = Object.fromEntries(new FormData(otpEvent.currentTarget));
 
             try {
-              // CHANGE 1: Use the standard sign-in verify endpoint
-              await api('/api/auth/two-factor/verify', {
+              // Include method: 'otp' to prevent the 500 internal server error
+              await api('/api/auth/two-factor/verify-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                   code: otpData.otp,
-                  method: 'otp',       // CHANGE 2: Explicitly declare the method to prevent the 500 crash
-                  trustDevice: false   // CHANGE 3: Tell Better Auth not to bypass future 2FA prompts
+                  method: 'otp'
                 })
               });
               
@@ -189,7 +190,6 @@ if (formElement) {
 
           // Force setup for all other users
           try {
-            // 1. Generate the secure 2FA lock in the database
             await api('/api/auth/two-factor/enable', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -199,7 +199,6 @@ if (formElement) {
               })
             });
 
-            // 2. EXPLICITLY SEND THE EMAIL (This is the missing link!)
             await api('/api/auth/two-factor/send-otp', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -223,7 +222,6 @@ if (formElement) {
               const otpData = Object.fromEntries(new FormData(otpEvent.currentTarget));
 
               try {
-                // Confirm the setup (explicitly declaring the 'otp' method)
                 await api('/api/auth/two-factor/verify-otp', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -233,7 +231,6 @@ if (formElement) {
                   })
                 });
 
-                // Only redirect to homepage when setup fully succeeds
                 window.location.replace('/');
               } catch (error) {
                 toast('Invalid setup code: ' + error.message, 'error');
