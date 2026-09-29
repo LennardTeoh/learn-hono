@@ -3,7 +3,6 @@ import { money, renderShell, escapeHtml } from './ui.js'
 
 const API_URL = 'https://lumiere-api.p22014454.workers.dev';
 
-// Global state to handle live sorting
 let catalogData = [];
 let sortColumn = 'name';
 let sortAscending = true;
@@ -55,7 +54,7 @@ async function init() {
   catalogRoot.innerHTML = '<p class="text-slate-500 font-serif text-center py-12">Loading inventory...</p>';
   try {
     const { products } = await api('/api/products');
-    catalogData = products; // Store in global memory for sorting
+    catalogData = products;
     renderCatalogTable(catalogRoot);
   } catch (error) {
     catalogRoot.innerHTML = `<div class="border border-red-200 bg-red-50 p-6 text-red-600">Failed to load catalog.</div>`;
@@ -90,17 +89,14 @@ function setupTabs() {
   });
 }
 
-
 function renderCatalogTable(root) {
   if (!catalogData || catalogData.length === 0) {
     root.innerHTML = `<p class="text-center py-12 text-slate-500 font-serif">No products found in the database.</p>`;
     return;
   }
 
-  // 1. Sort the array mathematically based on current state
   const sortedProducts = [...catalogData].sort((a, b) => {
     let valA, valB;
-    
     if (sortColumn === 'name') {
       valA = (a.name || '').toLowerCase();
       valB = (b.name || '').toLowerCase();
@@ -120,7 +116,6 @@ function renderCatalogTable(root) {
     return 0;
   });
 
-  // 2. Determine which arrow icon to show on the headers
   const getArrow = (col) => {
     if (sortColumn !== col) return `<span class="text-slate-300 ml-1">↕</span>`;
     return sortAscending 
@@ -182,7 +177,6 @@ function renderCatalogTable(root) {
     </div>
   `;
 
-  // --- NEW: Attach secure click listeners to all sortable headers ---
   root.querySelectorAll('.sort-header').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.getAttribute('data-sort');
@@ -196,7 +190,6 @@ function renderCatalogTable(root) {
     });
   });
 
-  // Attach safe click listeners to all Edit buttons
   root.querySelectorAll('.edit-product-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const product = JSON.parse(btn.getAttribute('data-product'));
@@ -236,7 +229,6 @@ function renderAdminTable(root, orders) {
     return;
   }
   
-  // Status color mapping
   const statusColors = {
     'confirmed': 'bg-amber-100 text-amber-800',
     'processing': 'bg-blue-100 text-blue-800',
@@ -244,7 +236,17 @@ function renderAdminTable(root, orders) {
     'delivered': 'bg-green-100 text-green-800'
   };
 
+  // --- ADMIN STATE BRIDGE ---
+  const localUpdates = JSON.parse(localStorage.getItem('lumiere_admin_updates') || '{}');
+
   const rows = orders.map(order => {
+    
+    // Merge new tracking and status data instantly
+    if (localUpdates[order.id]) {
+        order.status = localUpdates[order.id].status || order.status;
+        order.tracking_number = localUpdates[order.id].tracking_number || order.tracking_number;
+    }
+
     let dateStr = new Date(order.created_at * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const idShort = order.id.split('-')[0].substring(0, 8).toUpperCase();
     const currentStatus = (order.status || 'confirmed').toLowerCase();
@@ -254,10 +256,10 @@ function renderAdminTable(root, orders) {
       <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
         <td class="py-4 px-4 text-sm font-medium text-slate-900">#${idShort}</td>
         <td class="py-4 px-4 text-sm text-slate-500">${dateStr}</td>
-        <td class="py-4 px-4 text-sm text-slate-900">${escapeHtml(order.shipping_name)}</td>
+        <td class="py-4 px-4 text-sm text-slate-900">${escapeHtml(order.shipping_name || 'Client')}</td>
         <td class="py-4 px-4 text-sm text-slate-900">${money(order.total_cents)}</td>
         <td class="py-4 px-4 text-sm"><span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeColor}">${currentStatus}</span></td>
-        <td class="py-4 px-4 text-sm font-serif text-slate-700">${order.tracking_number || '<span class="text-slate-300 italic">Unassigned</span>'}</td>
+        <td class="py-4 px-4 text-sm font-serif text-slate-700">${order.tracking_number ? `<span class="font-bold">${escapeHtml(order.tracking_number)}</span>` : '<span class="text-slate-300 italic">Unassigned</span>'}</td>
         <td class="py-4 px-4 text-right">
           <button data-order-id="${order.id}" class="update-order-btn border border-slate-900 text-slate-900 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-pointer">Update</button>
         </td>
@@ -275,8 +277,6 @@ function renderAdminTable(root, orders) {
   });
 }
 
-
-// --- PRODUCT MODAL LOGIC ---
 const productModal = document.getElementById('product-modal');
 const productForm = document.getElementById('product-form');
 const addProductBtn = document.getElementById('add-product-btn');
@@ -332,7 +332,6 @@ productForm?.addEventListener('submit', async (e) => {
     
     if (!response.ok) throw new Error('Failed to save product.');
     
-    // Hide modal, pull latest database data into global memory, and smoothly redraw the table
     productModal.classList.add('hidden');
     const catalogRoot = document.getElementById('catalog-root');
     catalogRoot.innerHTML = '<p class="text-slate-500 font-serif text-center py-12">Refreshing inventory...</p>';

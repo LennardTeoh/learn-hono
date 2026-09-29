@@ -49,7 +49,8 @@ async function init() {
       <p class="text-slate-600 mb-10 leading-relaxed text-sm">${escapeHtml(product.description || '')} Each piece is logged in our secure database with a unique serial number to guarantee authenticity and provenance.</p>
       
       <div class="text-xs text-slate-500 mb-10 space-y-1">
-        <p>Serial Number: <span class="text-slate-900 font-mono tracking-wide">${escapeHtml(product.id.replace('prod_', '').toUpperCase())}-D</span></p>
+        <!-- THE -D HAS BEEN REMOVED FROM THE LINE BELOW -->
+        <p>Serial Number: <span class="text-slate-900 font-mono tracking-wide">${escapeHtml(product.id.replace('prod_', '').toUpperCase())}</span></p>
         <p>Availability: <span class="text-slate-900">${product.stock > 0 ? 'In Stock (Boutique Collection Available)' : 'Out of Stock'}</span></p>
       </div>
       

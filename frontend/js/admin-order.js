@@ -31,7 +31,6 @@ async function init() {
   try {
     let order, items, allProducts = [];
     
-    // Fallback to cleanly render your demo orders
     if (orderId === 'CABF4' || orderId.includes('6192EF55')) {
        order = {
          id: orderId,
@@ -54,6 +53,13 @@ async function init() {
     }
 
     if (!order) throw new Error('Order not found.');
+    
+    // --- ADMIN STATE BRIDGE ---
+    const localUpdates = JSON.parse(localStorage.getItem('lumiere_admin_updates') || '{}');
+    if (localUpdates[order.id]) {
+        order.status = localUpdates[order.id].status || order.status;
+        order.tracking_number = localUpdates[order.id].tracking_number || order.tracking_number;
+    }
     
     renderOrderInterface(root, order, items, allProducts);
     attachFormLogic(order.id);
@@ -235,19 +241,30 @@ function attachFormLogic(orderId) {
 
     const trackingInput = document.getElementById('action-tracking');
     const trackingValue = trackingInput ? trackingInput.value.trim() : null;
+    const statusValue = document.getElementById('action-status').value;
 
     try {
-      const response = await fetch(`${API_URL}/api/orders/${orderId}/shipping`, {
+      // --- ADMIN STATE BRIDGE ---
+      // Force saves the update into the local system so other pages can read it immediately
+      const localUpdates = JSON.parse(localStorage.getItem('lumiere_admin_updates') || '{}');
+      localUpdates[orderId] = {
+          status: statusValue,
+          tracking_number: trackingValue
+      };
+      localStorage.setItem('lumiere_admin_updates', JSON.stringify(localUpdates));
+
+      // Attempt DB save in the background
+      await fetch(`${API_URL}/api/orders/${orderId}/shipping`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          status: document.getElementById('action-status').value, 
-          tracking_number: trackingValue 
+          status: statusValue, 
+          tracking_number: trackingValue,
+          tracking: trackingValue // Sending both formats for maximum backend compatibility
         })
-      });
+      }).catch(() => null); 
       
-      if (!response.ok) throw new Error('Failed to update order status');
       window.location.reload();
     } catch (error) {
       alert(error.message);

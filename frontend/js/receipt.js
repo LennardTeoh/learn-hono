@@ -53,41 +53,16 @@ async function init() {
     return;
   }
   
+  const root = document.getElementById('receipt-root');
   let id = new URLSearchParams(location.search).get('id');
   
-  if (!id) {
-     id = 'CABF4';
-     window.history.replaceState({}, '', `?id=${id}`);
-  }
-  
-  const root = document.getElementById('receipt-root');
-
   try {
-    let payload;
-    
-    if (id === 'CABF4' || id.includes('6192EF55')) {
-        payload = {
-            order: {
-                id: '6192EF55',
-                date: 'September 28, 2026',
-                uuid: '6192ef55-268e-4c78-b45b-b59e72b68b06',
-                total_cents: 5830000,
-                status: 'READY',
-                fulfillment: 'Boutique Pick-up',
-                location: 'Pavilion KL Boutique',
-                verification_pin: '353116'
-            },
-            // FIX: Added the productId here so your imageForCartItem function can map it correctly
-            items: [{ 
-              name: 'Rolex Datejust 36', 
-              qty: 1, 
-              price_cents: 5830000,
-              productId: 'prod_rolex_datejust' 
-            }]
-        };
-    } else {
-        payload = await api(`/api/orders/${encodeURIComponent(id)}`);
+    if (!id) {
+      throw new Error('Order ID is missing. Please select an order from your Order History.');
     }
+    
+    // STRICT DATABASE FETCH: No more dummy data bypasses
+    const payload = await api(`/api/orders/${encodeURIComponent(id)}`);
     
     const order = payload.order || payload.data || payload;
     const items = payload.items || order.items || [];
@@ -246,9 +221,18 @@ async function init() {
             });
         }
     }
+    // --- PRESENTATION BRIDGE: Save order to account history ---
+    try {
+       let history = JSON.parse(localStorage.getItem('lumiere_order_history') || '[]');
+       if (!history.some(o => (o.id || o.uuid) === (order.id || order.uuid))) {
+           history.unshift(order); 
+           localStorage.setItem('lumiere_order_history', JSON.stringify(history));
+       }
+    } catch (e) { console.error('History save failed', e); }
+    // ----------------------------------------------------------
 
   } catch (error) {
-    root.innerHTML = `<div class="bg-white/60 border border-red-200 p-6 text-red-500 max-w-md mx-auto text-center text-sm font-serif">${escapeHtml(error.message)}</div>`
+    root.innerHTML = `<div class="bg-white border border-red-200 p-6 text-red-500 max-w-md mx-auto text-center text-sm font-serif">${escapeHtml(error.message)}</div>`
   }
 }
 

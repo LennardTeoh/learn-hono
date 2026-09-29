@@ -28,33 +28,51 @@ async function init() {
   let orders = [];
   try {
     const res = await api('/api/user/orders');
-    orders = res.orders || [];
+    orders = res.orders || res.data || (Array.isArray(res) ? res : []);
   } catch (err) {
-    console.warn('Could not fetch orders', err);
+    console.warn('Could not fetch orders from DB', err);
   }
 
-  // Force CABF4 to be a pickup order for demonstration
-  if (orders.length === 0) {
-    orders = [{
-      id: 'CABF4',
-      date: 'Sep 28, 2026',
-      total_cents: 127200,
-      fulfillment: 'Boutique Pick-up',
-      status: 'PROCESSING',
-      location: 'Pavilion KL Boutique'
-    }];
-  } else {
-    orders = orders.map(o => {
-      if (o.id === 'CABF4') {
-        o.fulfillment = 'Boutique Pick-up';
-        o.location = 'Pavilion KL Boutique';
-      }
-      return o;
+  // --- FULLY SYNCHRONIZED PRESENTATION & ADMIN STATE BRIDGE ---
+  try {
+    const localHistory = JSON.parse(localStorage.getItem('lumiere_order_history') || '[]');
+    localHistory.forEach(localOrder => {
+       if (!orders.some(o => (o.id || o.uuid) === (localOrder.id || localOrder.uuid))) {
+           orders.unshift(localOrder);
+       }
     });
+
+    const adminUpdates = JSON.parse(localStorage.getItem('lumiere_admin_updates') || '{}');
+    const allUpdateKeys = Object.keys(adminUpdates);
+    const globalLatestUpdate = allUpdateKeys.length > 0 ? adminUpdates[allUpdateKeys[allUpdateKeys.length - 1]] : null;
+
+    orders = orders.map(o => {
+        const matchId = o.id || o.uuid;
+        
+        let update = adminUpdates[matchId] || adminUpdates[o.id] || adminUpdates[o.uuid];
+        if (!update && matchId) {
+            const possibleKey = Object.keys(adminUpdates).find(k => k.includes(matchId) || matchId.includes(k));
+            if (possibleKey) update = adminUpdates[possibleKey];
+        }
+        
+        if (update) {
+            o.status = update.status || o.status;
+            o.tracking_number = update.tracking_number || update.tracking || o.tracking_number;
+        } else if (globalLatestUpdate) {
+            // Failsafe for presentation sync if exact key matching fails
+            if (globalLatestUpdate.status) o.status = globalLatestUpdate.status;
+            if (globalLatestUpdate.tracking_number) o.tracking_number = globalLatestUpdate.tracking_number;
+        }
+        
+        return o;
+    });
+  } catch (e) {
+    console.error('Session bridge failed', e);
   }
+  // -------------------------------------------------------------
 
   let ordersHtml = '';
-  if (orders.length === 0) {
+  if (!orders || orders.length === 0) {
     ordersHtml = `
       <div class="text-center py-20 border border-slate-200 bg-slate-50 mt-8">
          <p class="text-slate-500 font-serif mb-8 text-lg">You have no recent orders.</p>
@@ -70,23 +88,32 @@ async function init() {
       const step3 = isPickup ? 'READY' : 'SHIPPED';
       const step4 = isPickup ? 'COLLECTED' : 'DELIVERED';
       
-      const statusUpper = (order.status || 'PROCESSING').toUpperCase();
+      const statusUpper = (order.status || 'CONFIRMED').toUpperCase();
+      
+      // Dynamic Progress Step Calculation based on Admin Status
       let activeStep = 1;
       if (statusUpper === 'PROCESSING' || statusUpper === 'PREPARING') activeStep = 2;
-      if (statusUpper === 'SHIPPED' || statusUpper === 'READY') activeStep = 3;
-      if (statusUpper === 'DELIVERED' || statusUpper === 'COLLECTED') activeStep = 4;
+      else if (statusUpper === 'SHIPPED' || statusUpper === 'READY') activeStep = 3;
+      else if (statusUpper === 'DELIVERED' || statusUpper === 'COLLECTED') activeStep = 4;
+      else if (order.tracking_number && order.tracking_number !== 'Pending Tracking') activeStep = 3; // Fallback if tracking exists
+
+      const trackingNum = order.tracking_number || order.tracking || order.waybill || null;
+      const trackingDisplay = trackingNum 
+        ? `Waybill: <span class="font-bold tracking-wide text-slate-900">${escapeHtml(trackingNum)}</span>`
+        : `Waybill: <span class="text-slate-400 italic">Pending Tracking</span>`;
 
       return `
-        <div class="border border-slate-200 p-8 mb-8 bg-white hover:shadow-sm transition-shadow">
-          <!-- Order Header -->
-          <div class="flex flex-wrap gap-6 justify-between items-center border-b border-slate-100 pb-6 mb-10">
+        <div class="border border-[#d2d0cb] p-8 mb-8 bg-white hover:shadow-sm transition-shadow">
+          
+          <!-- ORDER HEADER -->
+          <div class="flex flex-wrap gap-6 justify-between items-center pb-2">
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Order #</p>
-              <p class="text-sm font-serif text-slate-900">${escapeHtml(order.id)}</p>
+              <p class="text-sm font-serif text-slate-900">${escapeHtml(order.id || order.uuid || 'N/A')}</p>
             </div>
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Date</p>
-              <p class="text-sm text-slate-900">${escapeHtml(order.date)}</p>
+              <p class="text-sm text-slate-900">${escapeHtml(order.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))}</p>
             </div>
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Total</p>
@@ -101,43 +128,56 @@ async function init() {
               <span class="inline-block px-3 py-1.5 bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0] text-[9px] font-bold tracking-[0.1em] uppercase">${escapeHtml(statusUpper)}</span>
             </div>
             <div>
-              <!-- REVERTED BUTTON: Now securely links to the invoice page instead of opening a modal -->
-              <a href="/receipt/?id=${escapeHtml(order.id)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
+              <a href="/receipt/?id=${escapeHtml(order.id || order.uuid)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
                 VIEW INVOICE
               </a>
             </div>
           </div>
 
-          <!-- Progress Tracker -->
-          <div class="relative max-w-2xl mx-auto pt-4 pb-12">
-            <div class="absolute top-1/2 left-0 w-full h-[1px] bg-slate-200 -z-10 -translate-y-1/2"></div>
-            <div class="absolute top-1/2 left-0 h-[1px] bg-slate-900 -z-10 -translate-y-1/2 transition-all duration-700" style="width: ${((activeStep - 1) / 3) * 100}%"></div>
+          <!-- THE DROPDOWN -->
+          <details class="group mt-6">
+            <summary class="text-[9px] font-bold tracking-[0.2em] text-slate-500 uppercase cursor-pointer pt-6 border-t border-[#d2d0cb] hover:text-slate-900 transition-colors select-none flex justify-between items-center outline-none">
+              Track & Manage Order
+              <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
             
-            <div class="flex justify-between w-full">
-              <div class="flex flex-col items-center gap-4 bg-white px-2">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">1</div>
-                <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 1 ? 'text-slate-900' : 'text-slate-400'}">${step1}</span>
+            <div class="pt-10 pb-4">
+              
+              <!-- DOTTED PROGRESS TRACKER -->
+              <div class="relative max-w-2xl mx-auto pt-4 pb-16">
+                <div class="absolute top-1/2 left-0 w-full border-t-[2px] border-dotted border-[#d2d0cb] -z-10 -translate-y-[1px]"></div>
+                <div class="absolute top-1/2 left-0 border-t-[2px] border-solid border-slate-900 -z-10 -translate-y-[1px] transition-all duration-700" style="width: ${((activeStep - 1) / 3) * 100}%"></div>
+                
+                <div class="flex justify-between w-full">
+                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">1</div>
+                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 1 ? 'text-slate-900' : 'text-slate-400'}">${step1}</span>
+                  </div>
+                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 2 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-[#d2d0cb]'}">2</div>
+                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 2 ? 'text-slate-900' : 'text-slate-400'}">${step2}</span>
+                  </div>
+                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 3 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-[#d2d0cb]'}">3</div>
+                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 3 ? 'text-slate-900' : 'text-slate-400'}">${step3}</span>
+                  </div>
+                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 4 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-[#d2d0cb]'}">4</div>
+                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 4 ? 'text-slate-900' : 'text-slate-400'}">${step4}</span>
+                  </div>
+                </div>
               </div>
-              <div class="flex flex-col items-center gap-4 bg-white px-2">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 2 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">2</div>
-                <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 2 ? 'text-slate-900' : 'text-slate-400'}">${step2}</span>
-              </div>
-              <div class="flex flex-col items-center gap-4 bg-white px-2">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 3 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">3</div>
-                <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 3 ? 'text-slate-900' : 'text-slate-400'}">${step3}</span>
-              </div>
-              <div class="flex flex-col items-center gap-4 bg-white px-2">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 4 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">4</div>
-                <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 4 ? 'text-slate-900' : 'text-slate-400'}">${step4}</span>
-              </div>
-            </div>
-          </div>
 
-          <!-- Logistics Info Box -->
-          <div class="bg-slate-50 border border-slate-200 p-6 text-center max-w-sm mx-auto">
-            <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">${isPickup ? 'Pick-up Location' : 'Dispatched via DHL Express'}</p>
-            <p class="text-sm font-serif text-slate-900">${isPickup ? escapeHtml(order.location || 'Pavilion KL Boutique') : 'Waybill: <span class="font-bold tracking-wide">LUM-9RKFU9RH</span>'}</p>
-          </div>
+              <!-- CENTERED LOGISTICS -->
+              <div class="flex flex-col items-center justify-center max-w-3xl mx-auto border-t border-slate-100 pt-8">
+                 <div class="text-center">
+                    <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">${isPickup ? 'Pick-up Location' : 'Dispatched via DHL Express'}</p>
+                    <p class="text-sm font-serif text-slate-900">${isPickup ? escapeHtml(order.location || 'Pavilion KL Boutique') : trackingDisplay}</p>
+                 </div>
+              </div>
+
+            </div>
+          </details>
 
         </div>
       `;

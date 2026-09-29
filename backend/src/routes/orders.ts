@@ -238,14 +238,15 @@ orderRoutes.patch('/:id/shipping', async (c) => {
   const orderId = safeText(c.req.param('id'), 80)
   const body = await readJson<{ status?: string, tracking_number?: string }>(c)
   
-  const validStatuses = ['confirmed', 'processing', 'shipped', 'delivered']
-  if (!body.status || !validStatuses.includes(body.status)) {
+  // Expanded valid statuses to handle both delivery and pick-up pipelines smoothly
+  const validStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'ready', 'collected', 'preparing']
+  if (!body.status || !validStatuses.includes(body.status.toLowerCase())) {
     throw new HttpError(400, 'Invalid status update.')
   }
 
   const result = await c.env.DB
     .prepare(`UPDATE orders SET status = ?, tracking_number = ? WHERE id = ?`)
-    .bind(body.status, body.tracking_number || null, orderId)
+    .bind(body.status.toLowerCase(), body.tracking_number || null, orderId)
     .run()
 
   if (result.success) {
