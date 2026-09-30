@@ -86,7 +86,9 @@ orderRoutes.post('/', async (c) => {
     throw new HttpError(400, 'Complete the shipping address.')
   }
 
-  const orderId = crypto.randomUUID()
+  // 🔥 THE FIX: Generate a short, 8-character uppercase hex string for all new orders
+  const orderId = crypto.randomUUID().split('-')[0].toUpperCase()
+  
   // Generate the unique 6-digit PIN
   const verificationPin = Math.floor(100000 + Math.random() * 900000).toString()
   const now = Math.floor(Date.now() / 1000)
@@ -238,7 +240,6 @@ orderRoutes.patch('/:id/shipping', async (c) => {
   const orderId = safeText(c.req.param('id'), 80)
   const body = await readJson<{ status?: string, tracking_number?: string }>(c)
   
-  // Expanded valid statuses to handle both delivery and pick-up pipelines smoothly
   const validStatuses = ['confirmed', 'processing', 'shipped', 'delivered', 'ready', 'collected', 'preparing']
   if (!body.status || !validStatuses.includes(body.status.toLowerCase())) {
     throw new HttpError(400, 'Invalid status update.')

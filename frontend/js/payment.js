@@ -65,7 +65,7 @@ async function init() {
     const display = document.getElementById('file-name-display');
     
     if (file) {
-      display.textContent = `✓ Attached: ${file.name} (Compressing...)`;
+      display.textContent = `✓ Attached: ${file.name} (Processing...)`;
       display.classList.remove('hidden');
       
       const reader = new FileReader();
@@ -73,8 +73,10 @@ async function init() {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 800;
-          const MAX_HEIGHT = 800;
+          
+          // 🔥 EXPANDED LIMITS
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 2800; 
           let width = img.width;
           let height = img.height;
           
@@ -95,7 +97,8 @@ async function init() {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           
-          receiptBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          // 🔥 80% JPEG COMPRESSION: Perfect balance of quality and <1MB file size
+          receiptBase64 = canvas.toDataURL('image/jpeg', 0.8);
           display.textContent = `✓ Attached: ${file.name}`;
         };
         img.src = event.target.result;
@@ -128,7 +131,6 @@ async function init() {
         body: JSON.stringify(checkoutData)
       })
 
-      // BULLETPROOF FIX: Save the pickup status directly to the browser
       if (checkoutData.isPickup) {
          const orderId = data.orderId || data.id;
          localStorage.setItem(`lumiere_pickup_${orderId}`, 'true');

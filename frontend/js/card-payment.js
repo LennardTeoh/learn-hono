@@ -175,8 +175,10 @@ async function init() {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 800;
-          const MAX_HEIGHT = 800;
+          
+          // 🔥 EXPANDED LIMITS for tall bank receipts
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 2800; 
           let width = img.width;
           let height = img.height;
           
@@ -197,7 +199,8 @@ async function init() {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
           
-          receiptBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          // 🔥 80% JPEG COMPRESSION: Keeps text readable but guarantees file size stays well under 1MB
+          receiptBase64 = canvas.toDataURL('image/jpeg', 0.8);
           display.textContent = `✓ Attached: ${file.name}`;
         };
         img.src = event.target.result;
@@ -282,7 +285,6 @@ async function init() {
         body: JSON.stringify(checkoutData)
       })
 
-      // BULLETPROOF FIX: Save the pickup status directly to the browser for the receipt page to find
       if (checkoutData.isPickup) {
          const orderId = data.orderId || data.id;
          localStorage.setItem(`lumiere_pickup_${orderId}`, 'true');

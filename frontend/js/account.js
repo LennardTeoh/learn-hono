@@ -27,49 +27,11 @@ async function init() {
 
   let orders = [];
   try {
-    const res = await api('/api/user/orders');
+    const res = await api(`/api/orders?t=${Date.now()}`);
     orders = res.orders || res.data || (Array.isArray(res) ? res : []);
   } catch (err) {
     console.warn('Could not fetch orders from DB', err);
   }
-
-  // --- FULLY SYNCHRONIZED PRESENTATION & ADMIN STATE BRIDGE ---
-  try {
-    const localHistory = JSON.parse(localStorage.getItem('lumiere_order_history') || '[]');
-    localHistory.forEach(localOrder => {
-       if (!orders.some(o => (o.id || o.uuid) === (localOrder.id || localOrder.uuid))) {
-           orders.unshift(localOrder);
-       }
-    });
-
-    const adminUpdates = JSON.parse(localStorage.getItem('lumiere_admin_updates') || '{}');
-    const allUpdateKeys = Object.keys(adminUpdates);
-    const globalLatestUpdate = allUpdateKeys.length > 0 ? adminUpdates[allUpdateKeys[allUpdateKeys.length - 1]] : null;
-
-    orders = orders.map(o => {
-        const matchId = o.id || o.uuid;
-        
-        let update = adminUpdates[matchId] || adminUpdates[o.id] || adminUpdates[o.uuid];
-        if (!update && matchId) {
-            const possibleKey = Object.keys(adminUpdates).find(k => k.includes(matchId) || matchId.includes(k));
-            if (possibleKey) update = adminUpdates[possibleKey];
-        }
-        
-        if (update) {
-            o.status = update.status || o.status;
-            o.tracking_number = update.tracking_number || update.tracking || o.tracking_number;
-        } else if (globalLatestUpdate) {
-            // Failsafe for presentation sync if exact key matching fails
-            if (globalLatestUpdate.status) o.status = globalLatestUpdate.status;
-            if (globalLatestUpdate.tracking_number) o.tracking_number = globalLatestUpdate.tracking_number;
-        }
-        
-        return o;
-    });
-  } catch (e) {
-    console.error('Session bridge failed', e);
-  }
-  // -------------------------------------------------------------
 
   let ordersHtml = '';
   if (!orders || orders.length === 0) {
@@ -81,21 +43,27 @@ async function init() {
     `;
   } else {
     ordersHtml = orders.map(order => {
-      const isPickup = order.fulfillment && order.fulfillment.toLowerCase().includes('pick');
+      const rawId = order.id || order.uuid || 'N/A';
+      const displayId = rawId !== 'N/A' ? rawId.split('-')[0].toUpperCase() : 'N/A';
       
+      const statusUpper = (order.status || 'CONFIRMED').toUpperCase();
+      
+      const localPickupKey = `lumiere_pickup_${rawId}`;
+      const isPickup = 
+          localStorage.getItem(localPickupKey) === 'true' || 
+          ['PREPARING', 'READY', 'COLLECTED'].includes(statusUpper) ||
+          (order.fulfillment && String(order.fulfillment).toLowerCase().includes('pick'));
+
       const step1 = 'CONFIRMED';
       const step2 = isPickup ? 'PREPARING' : 'PROCESSING';
       const step3 = isPickup ? 'READY' : 'SHIPPED';
       const step4 = isPickup ? 'COLLECTED' : 'DELIVERED';
       
-      const statusUpper = (order.status || 'CONFIRMED').toUpperCase();
-      
-      // Dynamic Progress Step Calculation based on Admin Status
       let activeStep = 1;
       if (statusUpper === 'PROCESSING' || statusUpper === 'PREPARING') activeStep = 2;
       else if (statusUpper === 'SHIPPED' || statusUpper === 'READY') activeStep = 3;
       else if (statusUpper === 'DELIVERED' || statusUpper === 'COLLECTED') activeStep = 4;
-      else if (order.tracking_number && order.tracking_number !== 'Pending Tracking') activeStep = 3; // Fallback if tracking exists
+      else if (!isPickup && order.tracking_number && order.tracking_number !== 'Pending Tracking') activeStep = 3;
 
       const trackingNum = order.tracking_number || order.tracking || order.waybill || null;
       const trackingDisplay = trackingNum 
@@ -105,11 +73,10 @@ async function init() {
       return `
         <div class="border border-[#d2d0cb] p-8 mb-8 bg-white hover:shadow-sm transition-shadow">
           
-          <!-- ORDER HEADER -->
           <div class="flex flex-wrap gap-6 justify-between items-center pb-2">
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Order #</p>
-              <p class="text-sm font-serif text-slate-900">${escapeHtml(order.id || order.uuid || 'N/A')}</p>
+              <p class="text-sm font-serif text-slate-900">#${escapeHtml(displayId)}</p>
             </div>
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Date</p>
@@ -128,13 +95,13 @@ async function init() {
               <span class="inline-block px-3 py-1.5 bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0] text-[9px] font-bold tracking-[0.1em] uppercase">${escapeHtml(statusUpper)}</span>
             </div>
             <div>
-              <a href="/receipt/?id=${escapeHtml(order.id || order.uuid)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
+              <a href="/receipt/?id=${escapeHtml(rawId)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
                 VIEW INVOICE
               </a>
             </div>
           </div>
 
-          <!-- THE DROPDOWN -->
+          <!-- Removed 'open' attribute so it stays closed by default -->
           <details class="group mt-6">
             <summary class="text-[9px] font-bold tracking-[0.2em] text-slate-500 uppercase cursor-pointer pt-6 border-t border-[#d2d0cb] hover:text-slate-900 transition-colors select-none flex justify-between items-center outline-none">
               Track & Manage Order
@@ -143,7 +110,6 @@ async function init() {
             
             <div class="pt-10 pb-4">
               
-              <!-- DOTTED PROGRESS TRACKER -->
               <div class="relative max-w-2xl mx-auto pt-4 pb-16">
                 <div class="absolute top-1/2 left-0 w-full border-t-[2px] border-dotted border-[#d2d0cb] -z-10 -translate-y-[1px]"></div>
                 <div class="absolute top-1/2 left-0 border-t-[2px] border-solid border-slate-900 -z-10 -translate-y-[1px] transition-all duration-700" style="width: ${((activeStep - 1) / 3) * 100}%"></div>
@@ -168,7 +134,6 @@ async function init() {
                 </div>
               </div>
 
-              <!-- CENTERED LOGISTICS -->
               <div class="flex flex-col items-center justify-center max-w-3xl mx-auto border-t border-slate-100 pt-8">
                  <div class="text-center">
                     <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">${isPickup ? 'Pick-up Location' : 'Dispatched via DHL Express'}</p>

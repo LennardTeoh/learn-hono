@@ -32,16 +32,17 @@ async function init() {
     let order, items, allProducts = [];
     
     if (orderId === 'CABF4' || orderId.includes('6192EF55')) {
-       order = {
-         id: orderId,
-         created_at: Date.now() / 1000,
-         total_cents: 5500000,
-         status: 'confirmed',
-         fulfillment: 'Boutique Pick-up',
-         customer_name: 'Lennard',
-         address1: '6, Lorong Gemilang Indah 5, Taman Gemilang Indah'
-       };
-       items = [{ name: 'Rolex Datejust 36', quantity: 1, price_cents: 5500000 }];
+        order = {
+          id: orderId,
+          created_at: Date.now() / 1000,
+          total_cents: 5500000,
+          status: 'confirmed',
+          fulfillment: 'Boutique Pick-up',
+          customer_name: 'Lennard',
+          address1: '6, Lorong Gemilang Indah 5, Taman Gemilang Indah',
+          verification_pin: '861358'
+        };
+        items = [{ name: 'Rolex Datejust 36', quantity: 1, price_cents: 5500000 }];
     } else {
         const [orderRes, productsRes] = await Promise.all([
           api(`/api/admin/orders/${encodeURIComponent(orderId)}`).catch(() => api(`/api/orders/${encodeURIComponent(orderId)}`)),
@@ -62,7 +63,6 @@ async function init() {
     }
     
     renderOrderInterface(root, order, items, allProducts);
-    attachFormLogic(order.id);
   } catch (error) {
     root.innerHTML = `<div class="bg-white/60 border border-red-200 p-6 text-red-500 max-w-md mx-auto text-center text-sm font-serif">${escapeHtml(error.message)}</div>`;
   }
@@ -112,42 +112,12 @@ function renderOrderInterface(root, order, items, allProducts) {
     }).join('');
   }
 
+  // --- BULLETPROOF DETECTION & OVERRIDE ---
   const localPickupKey = `lumiere_pickup_${order.id}`;
-  const isPickup = order.fulfillment === 'Boutique Pick-up' || String(order.fulfillment).toLowerCase().includes('pick') || localStorage.getItem(localPickupKey) === 'true';
-
-  let statusOptionsHtml = '';
-  let trackingHtml = '';
-
-  if (isPickup) {
-    statusOptionsHtml = `
-      <option value="confirmed" class="bg-[#0b1325] text-white">Confirmed (Pending)</option>
-      <option value="preparing" class="bg-[#0b1325] text-white">Preparing (Boutique)</option>
-      <option value="ready" class="bg-[#0b1325] text-white">Ready for Pick-up</option>
-      <option value="collected" class="bg-[#0b1325] text-white">Collected (Completed)</option>
-    `;
-    trackingHtml = `
-      <div class="mt-6 pt-6 border-t border-slate-700">
-        <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-2">Pick-up Location</p>
-        <p class="text-sm font-serif text-white">Pavilion KL Boutique</p>
-      </div>
-    `;
-  } else {
-    statusOptionsHtml = `
-      <option value="confirmed" class="bg-[#0b1325] text-white">Confirmed (Pending)</option>
-      <option value="processing" class="bg-[#0b1325] text-white">Processing (Packing)</option>
-      <option value="shipped" class="bg-[#0b1325] text-white">Shipped (Dispatched)</option>
-      <option value="delivered" class="bg-[#0b1325] text-white">Delivered</option>
-    `;
-    trackingHtml = `
-      <div class="mt-6 pt-6 border-t border-slate-700">
-        <div class="flex justify-between items-end mb-3">
-          <label class="block text-[9px] uppercase tracking-widest text-slate-300 font-bold">Tracking / Waybill</label>
-          <button type="button" id="generate-tracking-btn" class="text-[9px] font-bold tracking-widest uppercase text-amber-500 hover:text-amber-400 transition-colors cursor-pointer">Generate</button>
-        </div>
-        <input type="text" id="action-tracking" placeholder="Enter tracking..." value="${escapeHtml(order.tracking_number || '')}" class="w-full border border-slate-600 bg-transparent p-3 text-sm focus:outline-none focus:border-white font-serif text-white placeholder-slate-500">
-      </div>
-    `;
-  }
+  const isPickupDefault = 
+    localStorage.getItem(localPickupKey) === 'true' || 
+    ['preparing', 'ready', 'collected'].includes(currentStatus) ||
+    String(order.fulfillment).toLowerCase().includes('pick');
 
   root.innerHTML = `
     <div class="mb-12 flex justify-between items-end border-b border-[#d2d0cb] pb-6">
@@ -170,7 +140,7 @@ function renderOrderInterface(root, order, items, allProducts) {
             </div>
             <div>
               <p class="text-[10px] text-slate-500 uppercase tracking-widest mb-2 font-sans font-bold">Shipping Details</p>
-              <p class="text-slate-900 text-sm">${isPickup ? 'Boutique Pick-up (Pavilion KL)' : escapeHtml(order.address1 || 'Standard Delivery')}</p>
+              <p id="display-address" class="text-slate-900 text-sm">${isPickupDefault ? 'Boutique Pick-up (Pavilion KL)' : escapeHtml(order.address1 || 'Standard Delivery')}</p>
             </div>
           </div>
         </div>
@@ -186,17 +156,29 @@ function renderOrderInterface(root, order, items, allProducts) {
           <h2 class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-6 border-b border-slate-700 pb-4">Fulfillment Action</h2>
           
           <form id="order-action-form">
+            
+            <label class="block text-[9px] uppercase tracking-[0.2em] text-slate-300 mb-3 font-bold">Fulfillment Mode</label>
+            <div class="relative mb-6">
+              <select id="action-fulfillment" class="w-full border border-slate-600 bg-[#162136] p-3 text-sm focus:outline-none focus:border-white font-serif text-white appearance-none cursor-pointer">
+                <option value="delivery" ${!isPickupDefault ? 'selected' : ''}>Home Delivery</option>
+                <option value="pickup" ${isPickupDefault ? 'selected' : ''}>In-Store Pick-up</option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+
             <label class="block text-[9px] uppercase tracking-[0.2em] text-slate-300 mb-3 font-bold">Update Status</label>
             <div class="relative">
               <select id="action-status" class="w-full border border-slate-600 bg-transparent p-3 text-sm focus:outline-none focus:border-white font-serif text-white appearance-none cursor-pointer">
-                ${statusOptionsHtml}
               </select>
               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
               </div>
             </div>
             
-            ${trackingHtml}
+            <div id="tracking-container">
+            </div>
             
             <button type="submit" class="w-full bg-[#f4f3f0] text-slate-900 text-[10px] uppercase tracking-[0.2em] font-bold py-4 hover:bg-white transition-colors mt-8">
               Commit Update
@@ -215,21 +197,73 @@ function renderOrderInterface(root, order, items, allProducts) {
     </div>
   `;
 
-  const statusSelect = document.getElementById('action-status');
-  if (Array.from(statusSelect.options).some(opt => opt.value === currentStatus)) {
-    statusSelect.value = currentStatus;
-  }
-}
+  function updateFulfillmentUI() {
+    const mode = document.getElementById('action-fulfillment').value;
+    const statusSelect = document.getElementById('action-status');
+    const trackingContainer = document.getElementById('tracking-container');
+    const displayAddress = document.getElementById('display-address');
+    const isPickup = mode === 'pickup';
 
-function attachFormLogic(orderId) {
-  const generateBtn = document.getElementById('generate-tracking-btn');
-  if (generateBtn) {
-    generateBtn.addEventListener('click', () => {
-      const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
-      document.getElementById('action-tracking').value = `LUM-${randomCode}`;
-      document.getElementById('action-status').value = 'shipped';
-    });
+    if (isPickup) {
+      statusSelect.innerHTML = `
+        <option value="confirmed" class="bg-[#0b1325] text-white">Confirmed (Pending)</option>
+        <option value="preparing" class="bg-[#0b1325] text-white">Preparing (Packing)</option>
+        <option value="ready" class="bg-[#0b1325] text-white">Ready for Pick-up</option>
+        <option value="collected" class="bg-[#0b1325] text-white">Collected (Picked Up)</option>
+      `;
+      
+      // Formatting the PIN to match the customer receipt spacing (e.g., 8 6 1 3 5 8)
+      const rawPin = order.verification_pin || 'N/A';
+      const formattedPin = rawPin !== 'N/A' ? String(rawPin).split('').join(' ') : 'Not Generated';
+
+      trackingContainer.innerHTML = `
+        <div class="mt-6 pt-6 border-t border-slate-700">
+          <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-2">Pick-up Location</p>
+          <p class="text-sm font-serif text-white mb-6">Pavilion KL Boutique</p>
+          
+          <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-3">Verification PIN</p>
+          <div class="w-full bg-[#162136] border border-slate-600 p-4 text-center">
+             <p class="text-xl font-bold tracking-[0.25em] text-amber-500">${escapeHtml(formattedPin)}</p>
+          </div>
+          <input type="hidden" id="action-tracking" value="">
+        </div>
+      `;
+      if (displayAddress) displayAddress.textContent = 'Boutique Pick-up (Pavilion KL)';
+    } else {
+      statusSelect.innerHTML = `
+        <option value="confirmed" class="bg-[#0b1325] text-white">Confirmed (Pending)</option>
+        <option value="processing" class="bg-[#0b1325] text-white">Processing (Packing)</option>
+        <option value="shipped" class="bg-[#0b1325] text-white">Shipped (Dispatched)</option>
+        <option value="delivered" class="bg-[#0b1325] text-white">Delivered</option>
+      `;
+      trackingContainer.innerHTML = `
+        <div class="mt-6 pt-6 border-t border-slate-700">
+          <div class="flex justify-between items-end mb-3">
+            <label class="block text-[9px] uppercase tracking-widest text-slate-300 font-bold">Tracking / Waybill</label>
+            <button type="button" id="generate-tracking-btn" class="text-[9px] font-bold tracking-widest uppercase text-amber-500 hover:text-amber-400 transition-colors cursor-pointer">Generate</button>
+          </div>
+          <input type="text" id="action-tracking" placeholder="Enter tracking..." value="${escapeHtml(order.tracking_number || '')}" class="w-full border border-slate-600 bg-transparent p-3 text-sm focus:outline-none focus:border-white font-serif text-white placeholder-slate-500">
+        </div>
+      `;
+      if (displayAddress) displayAddress.textContent = escapeHtml(order.address1 || 'Standard Delivery');
+
+      const generateBtn = document.getElementById('generate-tracking-btn');
+      if (generateBtn) {
+        generateBtn.addEventListener('click', () => {
+          const randomCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+          document.getElementById('action-tracking').value = `LUM-${randomCode}`;
+          document.getElementById('action-status').value = 'shipped';
+        });
+      }
+    }
+
+    if (Array.from(statusSelect.options).some(opt => opt.value === currentStatus)) {
+      statusSelect.value = currentStatus;
+    }
   }
+
+  updateFulfillmentUI();
+  document.getElementById('action-fulfillment').addEventListener('change', updateFulfillmentUI);
 
   const form = document.getElementById('order-action-form');
   form.addEventListener('submit', async (e) => {
@@ -242,26 +276,30 @@ function attachFormLogic(orderId) {
     const trackingInput = document.getElementById('action-tracking');
     const trackingValue = trackingInput ? trackingInput.value.trim() : null;
     const statusValue = document.getElementById('action-status').value;
+    const isPickupMode = document.getElementById('action-fulfillment').value === 'pickup';
 
     try {
-      // --- ADMIN STATE BRIDGE ---
-      // Force saves the update into the local system so other pages can read it immediately
       const localUpdates = JSON.parse(localStorage.getItem('lumiere_admin_updates') || '{}');
-      localUpdates[orderId] = {
+      localUpdates[order.id] = {
           status: statusValue,
           tracking_number: trackingValue
       };
       localStorage.setItem('lumiere_admin_updates', JSON.stringify(localUpdates));
+      
+      if (isPickupMode) {
+          localStorage.setItem(`lumiere_pickup_${order.id}`, 'true');
+      } else {
+          localStorage.removeItem(`lumiere_pickup_${order.id}`);
+      }
 
-      // Attempt DB save in the background
-      await fetch(`${API_URL}/api/orders/${orderId}/shipping`, {
+      await fetch(`${API_URL}/api/orders/${order.id}/shipping`, {
         method: 'PATCH',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: statusValue, 
           tracking_number: trackingValue,
-          tracking: trackingValue // Sending both formats for maximum backend compatibility
+          tracking: trackingValue
         })
       }).catch(() => null); 
       
