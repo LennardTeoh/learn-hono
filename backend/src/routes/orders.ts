@@ -178,6 +178,11 @@ orderRoutes.post('/', async (c) => {
   try {
     await c.env.DB.batch(statements)
   } catch (error) {
+    const duplicate = await c.env.DB.prepare('SELECT id, subtotal_cents, shipping_cents, tax_cents, total_cents, status FROM orders WHERE user_id = ? AND idempotency_key = ?')
+      .bind(user.id, idempotencyKey).first<{ id: string; subtotal_cents: number; shipping_cents: number; tax_cents: number; total_cents: number; status: string }>()
+    if (duplicate) return c.json({ ok: true, orderId: duplicate.id, duplicate: true, status: duplicate.status,
+      totals: { subtotal: duplicate.subtotal_cents, shipping: duplicate.shipping_cents, tax: duplicate.tax_cents, total: duplicate.total_cents },
+      allowedMethods: allowedMethods(duplicate.subtotal_cents) })
     if (String(error).includes('CHECK constraint failed')) throw new HttpError(409, 'Stock changed. Review your cart and try again.')
     throw error
   }
