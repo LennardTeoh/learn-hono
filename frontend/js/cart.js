@@ -43,7 +43,7 @@ function render() {
       </div>
       
       <div class="text-right text-xl font-serif text-slate-900 mb-8">
-        Total: <span class="lumiere-gold font-sans font-bold text-xl ml-2">${money(subtotal)}</span>
+        Subtotal: <span class="lumiere-gold font-sans font-bold text-xl ml-2">${money(subtotal)}</span>
       </div>
       
       <div class="flex justify-end">

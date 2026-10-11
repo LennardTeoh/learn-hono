@@ -103,7 +103,7 @@ async function init() {
     stateSelect.addEventListener('change', renderSummary)
   }
 
-  // Form Submission Logic - Routes to the demo confirmation screen
+  // Save the details for the demo order review screen.
   const form = document.getElementById('checkout-form')
   form.addEventListener('submit', (event) => {
     event.preventDefault()
