@@ -3,6 +3,8 @@ import { twoFactor } from 'better-auth/plugins'
 import type { Bindings } from '../types'
 import { sendTransactionalEmail, resetPasswordEmail, verificationEmail, otpEmail } from './email'
 
+const ADMIN_EMAIL = 'lumiere.csproject@gmail.com'
+
 export function createAuth(env: Bindings, onOtpDeliveryError?: () => void) {
   const isProd = env.BETTER_AUTH_URL?.startsWith('https://');
 
@@ -45,7 +47,7 @@ export function createAuth(env: Bindings, onOtpDeliveryError?: () => void) {
     databaseHooks: {
       user: {
         create: {
-          before: async (user) => ({ data: { ...user, twoFactorEnabled: true } })
+          before: async (user) => ({ data: { ...user, twoFactorEnabled: user.email.toLowerCase() !== ADMIN_EMAIL } })
         }
       }
     },
