@@ -1,1 +1,1 @@
-location.replace('/payment/')
+import './payment.js'
