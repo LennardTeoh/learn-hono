@@ -137,6 +137,7 @@ async function init() {
                ${isPickup ? '<span class="inline-block px-4 py-1.5 bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0] text-[10px] font-bold tracking-[0.1em] uppercase mt-1">Boutique pickup</span>' : ''}
             </div>
          </div>
+         <p class="mt-6 text-center text-xs leading-5 text-slate-500">Demo checkout — this receipt does not confirm payment. No online payment was processed here.</p>
          
          ${extraSection}
       </div>
