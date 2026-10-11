@@ -47,7 +47,7 @@ function render() {
       </div>
       
       <div class="flex justify-end">
-         <a href="/checkout/" class="lumiere-btn block w-full sm:w-auto text-center">Proceed to Demo Checkout</a>
+         <a href="/checkout/" class="lumiere-btn block w-full sm:w-auto text-center">Proceed to checkout</a>
       </div>
     </div>`
 
