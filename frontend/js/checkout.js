@@ -103,7 +103,7 @@ async function init() {
     stateSelect.addEventListener('change', renderSummary)
   }
 
-  // Save the details for the demo order review screen.
+  // Save the details for the mock payment screen.
   const form = document.getElementById('checkout-form')
   form.addEventListener('submit', (event) => {
     event.preventDefault()
