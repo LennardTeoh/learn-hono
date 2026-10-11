@@ -99,11 +99,11 @@ async function init() {
 
   renderSummary()
   const paymentChoices = document.createElement('fieldset')
-  paymentChoices.className = 'mt-8 border-t border-slate-200 pt-6'
-  paymentChoices.innerHTML = `<legend class="font-serif text-xl">Mock payment method</legend>
-    <label class="mt-4 block"><input type="radio" name="paymentMethod" value="qr" checked> DuitNow QR demo</label>
-    <label class="mt-3 block"><input type="radio" name="paymentMethod" value="card"> Test card</label>
-    <p id="payment-warning" class="mt-3 text-sm text-amber-700"></p>`
+  paymentChoices.className = 'checkout-payment-methods'
+  paymentChoices.innerHTML = `<legend class="font-serif">Payment method</legend>
+    <label class="checkout-payment-option"><input type="radio" name="paymentMethod" value="qr" checked> DuitNow QR</label>
+    <label class="checkout-payment-option"><input type="radio" name="paymentMethod" value="card"> Credit Card / Debit Card</label>
+    <p id="payment-warning" class="checkout-payment-warning" role="status"></p>`
   document.getElementById('checkout-form').querySelector('button[type="submit"]').before(paymentChoices)
   const updateMethods = () => {
     const qr = paymentChoices.querySelector('input[value="qr"]')
@@ -117,7 +117,7 @@ async function init() {
     stateSelect.addEventListener('change', renderSummary)
   }
 
-  // Save the details for the mock payment screen.
+  // Save the order before opening its payment page.
   const form = document.getElementById('checkout-form')
   form.addEventListener('submit', async (event) => {
     event.preventDefault()

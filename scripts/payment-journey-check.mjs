@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import Database from '../backend/node_modules/better-sqlite3/lib/index.js'
+import { cardFormatError } from '../frontend/js/card-format.js'
 
 const read = (path) => readFile(path, 'utf8')
 const [orders, migration, checkout, payment, mock, receipt, account, admin, headers] = await Promise.all([
@@ -38,9 +39,14 @@ assert.match(checkout, /clearCart\(\)/)
 assert.match(checkout, /order\.allowedMethods\.includes/)
 assert.match(payment, /setInterval\(async \(\) => \{/)
 assert.match(payment, /10_000\)/)
-assert.match(payment, /4242424242424242/)
-assert.match(payment, /4000000000000002/)
-assert.match(payment, /cvv !== '123'/)
+assert.equal(cardFormatError('Customer', '4242 4242 4242 4242', '12/29', '123', new Date('2026-10-12')), null)
+assert.equal(cardFormatError('Customer', '4000 0000 0000 0002', '12/29', '123', new Date('2026-10-12')), null)
+assert.equal(cardFormatError('Customer', '1234 5678 9012 3456', '12/29', '1234', new Date('2026-10-12')), null)
+assert.match(cardFormatError('Customer', '123', '12/29', '123', new Date('2026-10-12')), /13 to 19/)
+assert.match(cardFormatError('Customer', '1234567890123456', '09/26', '123', new Date('2026-10-12')), /future expiry/)
+assert.match(cardFormatError('Customer', '1234567890123456', '12/29', '12', new Date('2026-10-12')), /CVV/)
+assert.match(payment, /outcome: 'success'/)
+assert.doesNotMatch(payment, /4242424242424242|4000000000000002/)
 assert.doesNotMatch(payment, /JSON\.stringify\(\{[^}]*\b(?:number|cvv|expiry|name)\s*:/)
 assert.match(mock, /authorize/)
 assert.match(receipt, /Pending Payment/)
@@ -48,6 +54,9 @@ assert.match(account, /Change payment method/)
 assert.match(admin, /order\.status === 'pending_payment' \? 0/)
 assert.match(headers, /\/mock-pay\/\*/)
 assert.doesNotMatch(await read('frontend/mock-pay/index.html'), /cdn\.|https:\/\/.*\.js/)
+for (const path of ['frontend/js/payment.js', 'frontend/js/payment-success.js', 'frontend/js/mock-pay.js', 'frontend/js/checkout.js', 'frontend/checkout/index.html', 'frontend/mock-pay/index.html']) {
+  assert.doesNotMatch(await read(path), /Mock payment|Mock QR payment|Test card|mock QR or card payment/i)
+}
 assert.ok((await read('frontend/checkout/index.html')).indexOf('</form>') < (await read('frontend/checkout/index.html')).indexOf('<aside id="order-summary"'))
 
 // Execute the Worker's confirmation guard against the actual migration schema.

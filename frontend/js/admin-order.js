@@ -101,7 +101,7 @@ function renderOrderInterface(root, order, items, allProducts) {
         <p class="text-sm text-slate-500 font-serif">${dateStr}</p>
       </div>
       <span class="px-4 py-1.5 text-[9px] font-bold tracking-[0.2em] uppercase border ${badgeColor}">${currentStatus === 'pending_payment' ? 'Pending Payment' : currentStatus}</span>
-      ${order.paid_at ? '<span class="ml-2 text-xs text-green-700">Mock payment successful</span>' : ''}
+      ${order.paid_at ? '<span class="ml-2 text-xs text-green-700">Payment successful</span>' : ''}
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">

@@ -54,6 +54,45 @@ button, input, select, textarea { font: inherit; }
 .lumiere-btn-outline:hover:not(:disabled) { background: var(--color-ink); color: #fff; }
 .lumiere-btn:disabled, .lumiere-btn-outline:disabled { opacity: .5; cursor: not-allowed; }
 
+.checkout-payment-methods { min-width: 0; margin: 2rem 0 0; padding: 0; border: 0; }
+.checkout-payment-methods legend { width: 100%; margin-bottom: 1rem; padding: 0; font-size: 1.5rem; }
+.checkout-payment-option { display: flex; align-items: center; gap: .75rem; min-height: 3.5rem; margin-top: .75rem; padding: .875rem 1rem; border: 1px solid var(--color-line); background: var(--color-surface); cursor: pointer; }
+.checkout-payment-option:has(input:checked) { border-color: var(--color-ink); }
+.checkout-payment-option:has(input:disabled) { opacity: .55; cursor: not-allowed; }
+.checkout-payment-option input { width: 1.125rem; height: 1.125rem; margin: 0; accent-color: var(--color-ink); }
+.checkout-payment-warning { margin: 1rem 0 0; padding: .875rem 1rem; border: 1px solid #fcd34d; background: #fffbeb; color: #92400e; font-size: .875rem; line-height: 1.5; }
+.checkout-payment-warning:empty { display: none; }
+
+.payment-page { display: flex; min-height: 100vh; flex-direction: column; }
+.payment-main { box-sizing: border-box; display: flex; flex: 1; align-items: center; justify-content: center; width: 100%; padding: 3rem 1rem; }
+.payment-panel { box-sizing: border-box; width: min(100%, 36rem); margin-inline: auto; padding: clamp(1.5rem, 5vw, 3rem); }
+.payment-panel--wide { width: min(100%, 40rem); }
+.payment-title { margin: .75rem 0 0; font-family: var(--font-display); font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.18; }
+.payment-copy { margin: 1rem 0 0; color: var(--color-muted); font-size: .9375rem; line-height: 1.65; }
+.payment-summary { margin: 2rem 0 0; border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.payment-row { display: flex; justify-content: space-between; gap: 1rem; padding: .875rem 0; font-size: .9375rem; line-height: 1.5; }
+.payment-row + .payment-row { border-top: 1px solid var(--color-line); }
+.payment-row > :last-child { text-align: right; overflow-wrap: anywhere; }
+.payment-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+.payment-actions > * { flex: 1 1 12rem; }
+.payment-link { color: var(--color-ink); font-size: .875rem; text-underline-offset: .2em; }
+.payment-note { margin: 1rem 0 0; color: var(--color-muted); font-size: .875rem; line-height: 1.5; }
+.payment-status { margin: 1.5rem 0 0; color: var(--color-muted); font-size: .875rem; line-height: 1.5; }
+.payment-status strong { color: var(--color-ink); }
+.payment-list { margin: 1.5rem 0 0; padding: .5rem 0; list-style: none; border-top: 1px solid var(--color-line); border-bottom: 1px solid var(--color-line); }
+.payment-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .625rem 0; font-size: .875rem; line-height: 1.5; }
+.payment-list li > :first-child { min-width: 0; overflow-wrap: anywhere; }
+.payment-list li > :last-child { white-space: nowrap; }
+.payment-field { display: block; margin-top: 1rem; font-size: .875rem; font-weight: 600; }
+.payment-field input { box-sizing: border-box; display: block; width: 100%; min-height: 3rem; margin-top: .5rem; padding: .75rem; border: 1px solid var(--color-line); border-radius: 0; background: #fff; }
+.payment-field input:focus { border-color: var(--color-ink); }
+.payment-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.payment-qr { display: block; width: min(100%, 16rem); height: auto; margin: 1.75rem auto 0; }
+.payment-center { text-align: center; }
+.payment-brand { display: block; padding: 1.25rem 1rem; border-bottom: 1px solid var(--color-line); background: var(--color-surface); color: var(--color-ink); font-family: var(--font-display); font-size: 1.375rem; font-weight: 700; letter-spacing: .12em; text-align: center; text-decoration: none; }
+@media (min-width: 640px) { .payment-main { padding: 4rem 1.5rem; } }
+@media (max-width: 400px) { .payment-card-grid { grid-template-columns: 1fr; gap: 0; } }
+
 :where(a, button, input, select, textarea, summary):focus-visible {
   outline: 2px solid var(--color-gold);
   outline-offset: 3px;

@@ -97,7 +97,7 @@ async function init() {
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Status</p>
               <span class="inline-block px-3 py-1.5 ${pendingPayment ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]'} border text-[9px] font-bold tracking-[0.1em] uppercase">${pendingPayment ? 'Pending Payment' : escapeHtml(statusUpper)}</span>
-              ${order.paid_at ? '<p class="mt-1 text-xs text-green-700">Mock payment successful</p>' : ''}
+              ${order.paid_at ? '<p class="mt-1 text-xs text-green-700">Payment successful</p>' : ''}
             </div>
             <div>
               <a href="/receipt/?id=${escapeHtml(rawId)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
