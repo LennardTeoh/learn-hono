@@ -1,7 +1,8 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import type { AppEnv } from '../types'
 import { requireUser } from '../lib/auth-session'
 import { HttpError, readJson, safeText } from '../lib/http'
+import QRCode from 'qrcode-svg'
 
 type CheckoutItem = {
   productId?: string
@@ -9,6 +10,10 @@ type CheckoutItem = {
 }
 
 const ADMIN_EMAIL = 'lumiere.csproject@gmail.com'
+const QR_LIMIT = 1_000_000
+const allowedMethods = (subtotal: number) => subtotal <= QR_LIMIT ? ['qr', 'card'] : ['card']
+const nowSeconds = () => Math.floor(Date.now() / 1000)
+const hashToken = async (token: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))).map((byte) => byte.toString(16).padStart(2, '0')).join('')
 
 export const orderRoutes = new Hono<AppEnv>()
 
@@ -24,12 +29,14 @@ orderRoutes.post('/', async (c) => {
   if (idempotencyKey.length < 8) throw new HttpError(400, 'Idempotency-Key header is required.')
 
   const existing = await c.env.DB
-    .prepare('SELECT id FROM orders WHERE user_id = ? AND idempotency_key = ?')
+    .prepare('SELECT id, subtotal_cents, shipping_cents, tax_cents, total_cents, status FROM orders WHERE user_id = ? AND idempotency_key = ?')
     .bind(user.id, idempotencyKey)
-    .first<{ id: string }>()
+    .first<{ id: string; subtotal_cents: number; shipping_cents: number; tax_cents: number; total_cents: number; status: string }>()
 
   if (existing) {
-    return c.json({ ok: true, orderId: existing.id, duplicate: true })
+    return c.json({ ok: true, orderId: existing.id, duplicate: true, status: existing.status,
+      totals: { subtotal: existing.subtotal_cents, shipping: existing.shipping_cents, tax: existing.tax_cents, total: existing.total_cents },
+      allowedMethods: allowedMethods(existing.subtotal_cents) })
   }
 
   const body = await readJson<{
@@ -44,19 +51,24 @@ orderRoutes.post('/', async (c) => {
     phone?: string
     countryCode?: string
     deliveryMethod?: string
+    paymentMethod?: string
   }>(c)
 
   const items = Array.isArray(body.items) ? body.items.slice(0, 20) : []
   if (items.length === 0) throw new HttpError(400, 'Your cart is empty.')
 
-  const cleanItems = items.map((item) => ({
+  const submittedItems = items.map((item) => ({
     productId: safeText(item.productId, 80),
     quantity: Number(item.quantity)
   }))
 
-  if (cleanItems.some((item) => !item.productId || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)) {
+  if (submittedItems.some((item) => !item.productId || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)) {
     throw new HttpError(400, 'Cart contains an invalid item.')
   }
+  const quantities = new Map<string, number>()
+  for (const item of submittedItems) quantities.set(item.productId, (quantities.get(item.productId) || 0) + item.quantity)
+  const cleanItems = [...quantities].map(([productId, quantity]) => ({ productId, quantity }))
+  if (cleanItems.some((item) => item.quantity > 10)) throw new HttpError(400, 'Maximum quantity is 10 per product.')
 
   const uniqueIds = [...new Set(cleanItems.map((item) => item.productId))]
   const placeholders = uniqueIds.map(() => '?').join(',')
@@ -87,6 +99,8 @@ orderRoutes.post('/', async (c) => {
   const shipping = deliveryMethod === 'pickup' ? 0 : (subtotal >= 8000 ? 0 : 799) + (eastMalaysia ? 3000 : 0)
   const tax = Math.round(subtotal * 0.06)
   const total = subtotal + shipping + tax
+  const paymentMethod = safeText(body.paymentMethod, 8) || 'qr'
+  if (!allowedMethods(subtotal).includes(paymentMethod)) throw new HttpError(400, 'Security Warning: credit card payment only for this order.')
 
   const fullName = safeText(body.fullName, 80)
   const address1 = safeText(body.address1, 120)
@@ -108,20 +122,21 @@ orderRoutes.post('/', async (c) => {
   
   // Generate the unique 6-digit PIN
   const verificationPin = Math.floor(100000 + Math.random() * 900000).toString()
-  const now = Math.floor(Date.now() / 1000)
+  const now = nowSeconds()
   
   const statements: D1PreparedStatement[] = [
     c.env.DB
       .prepare(
         `INSERT INTO orders
-         (id, user_id, status, subtotal_cents, shipping_cents, tax_cents, total_cents,
+         (id, user_id, status, mock_method, subtotal_cents, shipping_cents, tax_cents, total_cents,
           shipping_name, address1, address2, city, postal_code, country, idempotency_key, created_at, verification_pin,
           delivery_method, state, phone)
-         VALUES (?, ?, 'confirmed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, 'pending_payment', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .bind(
         orderId,
         user.id,
+        paymentMethod,
         subtotal,
         shipping,
         tax,
@@ -158,11 +173,6 @@ orderRoutes.post('/', async (c) => {
           item.quantity
         )
     )
-    statements.push(
-      c.env.DB
-        .prepare('UPDATE products SET stock = stock - ? WHERE id = ?')
-        .bind(item.quantity, item.product.id)
-    )
   }
 
   try {
@@ -177,10 +187,121 @@ orderRoutes.post('/', async (c) => {
       ok: true,
       orderId,
       totals: { subtotal, shipping, tax, total },
-      message: 'Dummy checkout complete. No payment was processed.'
+      status: 'pending_payment', allowedMethods: allowedMethods(subtotal)
     },
     201
   )
+})
+
+async function ownedOrder(c: Context<AppEnv>, id: string) {
+  const user = await requireUser(c)
+  const order = await c.env.DB.prepare('SELECT id, status, subtotal_cents, total_cents, active_attempt_id FROM orders WHERE id = ? AND user_id = ?')
+    .bind(id, user.id).first<{ id: string; status: string; subtotal_cents: number; total_cents: number; active_attempt_id: string | null }>()
+  if (!order) throw new HttpError(404, 'Order not found.')
+  return order
+}
+
+async function attemptStatus(c: Context<AppEnv>, orderId: string) {
+  const order = await ownedOrder(c, orderId)
+  const attempt = order.active_attempt_id ? await c.env.DB.prepare('SELECT id, method, status, expires_at FROM payment_attempts WHERE id = ?')
+    .bind(order.active_attempt_id).first<{ id: string; method: string; status: string; expires_at: number }>() : null
+  return { order, attempt: attempt && attempt.status === 'active' && attempt.expires_at <= nowSeconds() ? { ...attempt, status: 'expired' } : attempt }
+}
+
+orderRoutes.post('/:id/attempts', async (c) => {
+  const orderId = safeText(c.req.param('id'), 80)
+  const order = await ownedOrder(c, orderId)
+  if (order.status !== 'pending_payment') throw new HttpError(409, 'This order is already confirmed.')
+  const { method } = await readJson<{ method?: string }>(c)
+  if (!method || !allowedMethods(order.subtotal_cents).includes(method)) throw new HttpError(400, 'This payment method is unavailable.')
+  const id = crypto.randomUUID()
+  const createdAt = nowSeconds()
+  const expiresAt = createdAt + 120
+  const token = method === 'qr' ? crypto.randomUUID() + crypto.randomUUID() : null
+  await c.env.DB.batch([
+    c.env.DB.prepare("UPDATE payment_attempts SET status = 'replaced' WHERE id = ? AND status = 'active'").bind(order.active_attempt_id),
+    c.env.DB.prepare('INSERT INTO payment_attempts (id, order_id, method, status, created_at, expires_at, token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
+      .bind(id, orderId, method, 'active', createdAt, expiresAt, token ? await hashToken(token) : null),
+    c.env.DB.prepare("UPDATE orders SET active_attempt_id = ?, mock_method = ? WHERE id = ? AND status = 'pending_payment'").bind(id, method, orderId)
+  ])
+  const url = token ? new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString() : null
+  const qrSvg = url ? new QRCode({ content: url, color: '#e7366b', background: '#ffffff', padding: 4, width: 260, height: 260, ecl: 'M' }).svg() : null
+  return c.json({ id, method, status: 'active', expiresAt, url, qrSvg })
+})
+
+orderRoutes.get('/:id/attempt', async (c) => {
+  const { order, attempt } = await attemptStatus(c, safeText(c.req.param('id'), 80))
+  return c.json({ orderStatus: order.status, attempt })
+})
+
+async function confirmAttempt(c: Context<AppEnv>, attemptId: string) {
+  const attempt = await c.env.DB.prepare('SELECT order_id, status, expires_at FROM payment_attempts WHERE id = ?').bind(attemptId)
+    .first<{ order_id: string; status: string; expires_at: number }>()
+  if (!attempt) throw new HttpError(404, 'Payment attempt not found.')
+  const items = await c.env.DB.prepare('SELECT product_id, quantity FROM order_items WHERE order_id = ?').bind(attempt.order_id)
+    .all<{ product_id: string; quantity: number }>()
+  const now = nowSeconds()
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare(`INSERT INTO payment_confirmations (attempt_id, valid)
+        VALUES (?, CASE WHEN EXISTS (
+          SELECT 1 FROM payment_attempts a JOIN orders o ON o.id = a.order_id
+          WHERE a.id = ? AND a.status = 'active' AND a.expires_at > unixepoch('now') AND o.status = 'pending_payment' AND o.active_attempt_id = a.id
+        ) AND NOT EXISTS (
+          SELECT 1 FROM order_items i LEFT JOIN products p ON p.id = i.product_id
+          WHERE i.order_id = ? AND (p.id IS NULL OR p.active != 1 OR p.stock < i.quantity)
+        ) THEN 1 ELSE 0 END)`).bind(attemptId, attemptId, attempt.order_id),
+      ...items.results.map((item) => c.env.DB.prepare('UPDATE products SET stock = stock - ? WHERE id = ?').bind(item.quantity, item.product_id)),
+      c.env.DB.prepare("UPDATE orders SET status = 'confirmed', paid_at = ? WHERE id = ? AND status = 'pending_payment' AND active_attempt_id = ?")
+        .bind(now, attempt.order_id, attemptId),
+      c.env.DB.prepare("UPDATE payment_attempts SET status = 'successful' WHERE id = ? AND status = 'active'").bind(attemptId)
+    ])
+  } catch {
+    const unavailable = await c.env.DB.prepare(`SELECT i.product_name FROM order_items i LEFT JOIN products p ON p.id = i.product_id
+      WHERE i.order_id = ? AND (p.id IS NULL OR p.active != 1 OR p.stock < i.quantity) LIMIT 1`).bind(attempt.order_id).first<{ product_name: string }>()
+    if (unavailable) throw new HttpError(409, `${unavailable.product_name} is out of stock. This order remains Pending Payment.`)
+    throw new HttpError(409, 'This payment attempt expired or was already used. Try again from order history.')
+  }
+  return attempt.order_id
+}
+
+orderRoutes.post('/:id/card-complete', async (c) => {
+  const order = await ownedOrder(c, safeText(c.req.param('id'), 80))
+  const { attemptId, outcome } = await readJson<{ attemptId?: string; outcome?: string }>(c)
+  if (!attemptId || attemptId !== order.active_attempt_id || !['success', 'decline'].includes(outcome || '')) throw new HttpError(400, 'Invalid card attempt.')
+  const attempt = await c.env.DB.prepare('SELECT method, status, expires_at FROM payment_attempts WHERE id = ?').bind(attemptId)
+    .first<{ method: string; status: string; expires_at: number }>()
+  if (attempt?.method !== 'card' || attempt.status !== 'active' || attempt.expires_at <= nowSeconds()) throw new HttpError(409, 'This card attempt has expired. Try again.')
+  if (outcome === 'decline') {
+    await c.env.DB.prepare("UPDATE payment_attempts SET status = 'declined' WHERE id = ? AND status = 'active'").bind(attemptId).run()
+    return c.json({ orderStatus: 'pending_payment', attemptStatus: 'declined' })
+  }
+  await confirmAttempt(c, attemptId)
+  return c.json({ orderStatus: 'confirmed' })
+})
+
+async function tokenAttempt(c: Context<AppEnv>, token: string) {
+  if (!/^[0-9a-f-]{72}$/.test(token)) throw new HttpError(404, 'Payment link not found.')
+  const attempt = await c.env.DB.prepare(`SELECT a.id, a.order_id, a.status, a.expires_at, o.total_cents
+    FROM payment_attempts a JOIN orders o ON o.id = a.order_id
+    WHERE a.token_hash = ? AND a.method = 'qr' AND o.active_attempt_id = a.id`).bind(await hashToken(token))
+    .first<{ id: string; order_id: string; status: string; expires_at: number; total_cents: number }>()
+  if (!attempt) throw new HttpError(404, 'Payment link is no longer valid.')
+  return attempt
+}
+
+orderRoutes.get('/mock/:token', async (c) => {
+  const attempt = await tokenAttempt(c, c.req.param('token'))
+  const items = await c.env.DB.prepare('SELECT product_name, unit_price_cents, quantity FROM order_items WHERE order_id = ?').bind(attempt.order_id).all()
+  return c.json({ orderId: attempt.order_id, amount: attempt.total_cents, items: items.results,
+    status: attempt.status === 'active' && attempt.expires_at <= nowSeconds() ? 'expired' : attempt.status, expiresAt: attempt.expires_at })
+})
+
+orderRoutes.post('/mock/:token/authorize', async (c) => {
+  const attempt = await tokenAttempt(c, c.req.param('token'))
+  if (attempt.status !== 'active' || attempt.expires_at <= nowSeconds()) throw new HttpError(409, 'This payment link has expired.')
+  await confirmAttempt(c, attempt.id)
+  return c.json({ ok: true, orderId: attempt.order_id })
 })
 
 // ADMIN ROUTE: Must be placed BEFORE /:id
@@ -193,7 +314,7 @@ orderRoutes.get('/all', async (c) => {
   
   const result = await c.env.DB
     .prepare(
-      `SELECT orders.id, orders.status, orders.tracking_number, orders.subtotal_cents, orders.shipping_cents, orders.tax_cents, orders.total_cents,
+      `SELECT orders.id, orders.status, orders.mock_method, orders.paid_at, orders.tracking_number, orders.subtotal_cents, orders.shipping_cents, orders.tax_cents, orders.total_cents,
               orders.shipping_name, orders.delivery_method, orders.state, orders.phone, user.email, orders.created_at, orders.verification_pin
        FROM orders 
        LEFT JOIN user ON orders.user_id = user.id
@@ -209,7 +330,7 @@ orderRoutes.get('/', async (c) => {
 
   const result = await c.env.DB
     .prepare(
-      `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents, delivery_method, created_at, verification_pin
+      `SELECT id, status, mock_method, paid_at, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents, delivery_method, created_at, verification_pin
        FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
     )
     .bind(user.id)
@@ -226,7 +347,7 @@ orderRoutes.get('/:id', async (c) => {
   if (user.email === ADMIN_EMAIL) {
     order = await c.env.DB
       .prepare(
-        `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
+        `SELECT id, status, mock_method, paid_at, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
                 shipping_name, address1, address2, city, postal_code, country, delivery_method, state, phone, created_at, verification_pin
          FROM orders WHERE id = ?`
       )
@@ -235,7 +356,7 @@ orderRoutes.get('/:id', async (c) => {
   } else {
     order = await c.env.DB
       .prepare(
-        `SELECT id, status, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
+        `SELECT id, status, mock_method, paid_at, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents,
                 shipping_name, address1, address2, city, postal_code, country, delivery_method, state, phone, created_at, verification_pin
          FROM orders WHERE id = ? AND user_id = ?`
       )
@@ -278,11 +399,11 @@ orderRoutes.patch('/:id/shipping', async (c) => {
   if (body.status.toLowerCase() === 'shipped' && !trackingNumber) throw new HttpError(400, 'Tracking number is required for shipped orders.')
 
   const result = await c.env.DB
-    .prepare(`UPDATE orders SET status = ?, tracking_number = ? WHERE id = ?`)
+    .prepare(`UPDATE orders SET status = ?, tracking_number = ? WHERE id = ? AND status != 'pending_payment'`)
     .bind(body.status.toLowerCase(), order.delivery_method === 'pickup' ? null : trackingNumber || null, orderId)
     .run()
 
-  if (result.success) {
+  if (result.success && result.meta.changes) {
     return c.json({ ok: true, message: 'Shipping status updated successfully' })
   }
   

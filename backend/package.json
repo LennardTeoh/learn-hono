@@ -16,10 +16,12 @@
   },
   "dependencies": {
     "better-auth": "^1.6.23",
-    "hono": "^4.13.3"
+    "hono": "^4.13.3",
+    "qrcode-svg": "^1.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260827.1",
+    "@types/qrcode-svg": "^1.1.5",
     "better-sqlite3": "^12.11.1",
     "typescript": "^5.9.2",
     "wrangler": "^4.92.0"
