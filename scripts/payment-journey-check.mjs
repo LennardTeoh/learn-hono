@@ -12,6 +12,16 @@ const [orders, migration, checkout, payment, mock, receipt, account, admin, head
 assert.match(orders, /VALUES \(\?, \?, 'pending_payment'/)
 assert.match(orders, /allowedMethods\(subtotal\)/)
 assert.match(orders, /subtotal <= QR_LIMIT/)
+const methodsExpr = orders.match(/const allowedMethods = \(subtotal: number\) => ([^\n]+)/)?.[1]
+const methods = new Function('subtotal', 'QR_LIMIT', `return ${methodsExpr}`)
+assert.deepEqual(methods(999_999, 1_000_000), ['qr', 'card'])
+assert.deepEqual(methods(1_000_000, 1_000_000), ['qr', 'card'])
+assert.deepEqual(methods(1_000_001, 1_000_000), ['card'])
+const shippingExpr = orders.match(/const shipping = ([^\n]+)/)?.[1]
+const shipping = new Function('deliveryMethod', 'subtotal', 'eastMalaysia', `return ${shippingExpr}`)
+assert.equal(shipping('pickup', 10_000, true), 0)
+assert.equal(shipping('delivery', 10_000, true), 3_000)
+assert.equal(shipping('delivery', 7_999, false), 799)
 assert.match(orders, /createdAt \+ 120/)
 assert.match(orders, /a\.expires_at > unixepoch\('now'\)/)
 assert.match(orders, /c\.env\.DB\.batch\(\[/)
