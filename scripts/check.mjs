@@ -17,6 +17,8 @@ try {
   for (const route of ['', 'products/', 'product/', 'cart/', 'checkout/', 'login/', 'register/', 'account/', 'account/details/', 'account/saved/', 'account/security/', 'admin/', 'admin/order/', 'authenticate/', 'card-payment/', 'contact/', 'faq/', 'forgot-password/', 'payment/', 'privacy/', 'receipt/', 'resend-verification/', 'reset-password/', 'terms/', 'verification/', 'verify/']) {
     await required(`frontend/${route}index.html`, ['LUMIÈRE', '/styles.css', 'site-header'])
   }
+  await required('frontend/mock-pay/index.html', ['LUMIÈRE', '/styles.css', '/js/mock-pay.js'])
+  await required('frontend/payment-success/index.html', ['LUMIÈRE', '/styles.css', '/js/payment-success.js'])
   await required('frontend/assets/images/lumiere-hero-bag.png', [])
   await required('frontend/js/ui.js', ['LUMIÈRE', 'Mobile navigation', 'data-cart-count'])
   await required('frontend/js/product-images.js', ['prod_lv_neverfull', 'prod_bvlgari_bzero1', '/assets/images/products/'])

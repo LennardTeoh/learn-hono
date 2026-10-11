@@ -98,6 +98,20 @@ async function init() {
   })
 
   renderSummary()
+  const paymentChoices = document.createElement('fieldset')
+  paymentChoices.className = 'mt-8 border-t border-slate-200 pt-6'
+  paymentChoices.innerHTML = `<legend class="font-serif text-xl">Mock payment method</legend>
+    <label class="mt-4 block"><input type="radio" name="paymentMethod" value="qr" checked> DuitNow QR demo</label>
+    <label class="mt-3 block"><input type="radio" name="paymentMethod" value="card"> Test card</label>
+    <p id="payment-warning" class="mt-3 text-sm text-amber-700"></p>`
+  document.getElementById('checkout-form').querySelector('button[type="submit"]').before(paymentChoices)
+  const updateMethods = () => {
+    const qr = paymentChoices.querySelector('input[value="qr"]')
+    qr.disabled = cartSubtotal() > 1_000_000
+    if (qr.disabled) paymentChoices.querySelector('input[value="card"]').checked = true
+    paymentChoices.querySelector('#payment-warning').textContent = qr.disabled ? 'Security Warning: credit card payment only for product subtotals above RM10,000.' : ''
+  }
+  updateMethods()
   const stateSelect = document.getElementById('state-select')
   if (stateSelect) {
     stateSelect.addEventListener('change', renderSummary)
@@ -105,17 +119,24 @@ async function init() {
 
   // Save the details for the mock payment screen.
   const form = document.getElementById('checkout-form')
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault()
-    
+    const button = form.querySelector('button[type="submit"]')
     const payload = Object.fromEntries(new FormData(form).entries())
     payload.items = getCart().map((item) => ({ productId: item.productId, quantity: item.quantity }))
-    payload.isPickup = getDeliveryMethod() === 'pickup'
-    payload.idempotencyKey = crypto.randomUUID()
-    
-    sessionStorage.setItem('lumiere_checkout', JSON.stringify(payload))
-    
-    window.location.href = '/payment/'
+    const key = sessionStorage.getItem('lumiere_order_key') || crypto.randomUUID()
+    sessionStorage.setItem('lumiere_order_key', key)
+    setBusy(button, true, 'CREATING ORDER...')
+    try {
+      const order = await api('/api/orders', { method: 'POST', headers: { 'Idempotency-Key': key }, body: JSON.stringify(payload) })
+      if (!order.allowedMethods.includes(payload.paymentMethod)) throw new Error('Selected method unavailable for this order. Choose card payment.')
+      clearCart()
+      sessionStorage.removeItem('lumiere_order_key')
+      location.href = `/${payload.paymentMethod === 'qr' ? 'payment' : 'card-payment'}/?id=${encodeURIComponent(order.orderId)}`
+    } catch (error) {
+      toast(error.message, 'error')
+      setBusy(button, false)
+    }
   })
 }
 

@@ -24,6 +24,7 @@ async function init() {
     
     const order = payload.order || payload.data || payload;
     const items = payload.items || order.items || [];
+    const pendingPayment = order.status === 'pending_payment';
     
     let dateStr = order.date || 'Pending';
     let rawDate = order.created_at || order.createdAt || order.timestamp;
@@ -78,7 +79,7 @@ async function init() {
     }).join('') : '<p class="text-slate-500 py-10 text-base font-serif">No items found.</p>';
 
     let extraSection = '';
-    if (isPickup) {
+    if (isPickup && !pendingPayment) {
         const displayId = displayOrderId.split('-')[0].toUpperCase();
         const pin = order.verification_pin ? String(order.verification_pin).split('').join(' ') : 'Unavailable';
         const ready = ['ready', 'collected'].includes(String(order.status).toLowerCase());
@@ -137,7 +138,8 @@ async function init() {
                ${isPickup ? '<span class="inline-block px-4 py-1.5 bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0] text-[10px] font-bold tracking-[0.1em] uppercase mt-1">Boutique pickup</span>' : ''}
             </div>
          </div>
-         <p class="mt-6 text-center text-xs leading-5 text-slate-500">Demo checkout — this receipt does not confirm payment. No online payment was processed here.</p>
+         <p class="mt-6 text-center text-xs leading-5 text-slate-500">${pendingPayment ? 'Pending Payment — this is an order summary, not a receipt. No mock payment succeeded yet.' : order.paid_at ? 'Mock payment successful. No real money was charged.' : 'Historical confirmed order.'}</p>
+         ${pendingPayment ? `<div class="mt-6 text-center"><a class="lumiere-btn" href="/${order.mock_method === 'card' ? 'card-payment' : 'payment'}/?id=${encodeURIComponent(id)}">Try again</a><a class="ml-4 text-sm underline" href="/${order.mock_method === 'card' ? 'payment' : 'card-payment'}/?id=${encodeURIComponent(id)}">Change payment method</a></div>` : ''}
          
          ${extraSection}
       </div>

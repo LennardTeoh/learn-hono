@@ -1,73 +1,75 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
+import Database from '../backend/node_modules/better-sqlite3/lib/index.js'
 
-const source = (await readFile('frontend/js/payment.js', 'utf8'))
-  .replace(/^import .*\n/gm, '')
-  .replace(/init\(\)\.catch\(.*\)\s*$/, 'return init()')
-const payment = new Function('api', 'getCurrentUser', 'clearCart', 'getCart', 'cartSubtotal', 'money', 'renderShell', 'setBusy', 'toast', 'document', 'location', 'sessionStorage', 'crypto', source)
+const read = (path) => readFile(path, 'utf8')
+const [orders, migration, checkout, payment, mock, receipt, account, admin, headers] = await Promise.all([
+  'backend/src/routes/orders.ts', 'backend/migrations/0011_mock_payments.sql', 'frontend/js/checkout.js',
+  'frontend/js/payment.js', 'frontend/js/mock-pay.js', 'frontend/js/receipt.js', 'frontend/js/account.js',
+  'frontend/js/admin.js', 'frontend/_headers'
+].map(read))
 
-async function visit({ signedIn = true, items = [{ productId: 'bag', priceCents: 10000, quantity: 1 }], checkout = { items: [{ productId: 'bag', quantity: 1 }], deliveryMethod: 'delivery', state: 'Sabah', idempotencyKey: 'checkout-key' }, alias = false, submit }) {
-  const saved = new Map(checkout ? [['lumiere_checkout', JSON.stringify(checkout)]] : [])
-  const calls = []
-  const errors = []
-  const location = { href: '' }
-  const root = { id: alias ? 'card-payment-root' : 'payment-root', innerHTML: '' }
-  const button = { disabled: false, textContent: 'Simulate payment and place demo order' }
-  const form = { addEventListener(_, listener) { this.submit = () => listener({ preventDefault() {} }) } }
-  let cleared = 0
-  const document = { getElementById(id) { return id === 'complete-btn' ? button : id === 'demo-payment-form' ? form : id === root.id ? root : null } }
-  const sessionStorage = { getItem: (key) => saved.get(key) || null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) }
-  await payment(
-    async (path, options) => { calls.push({ path, options }); return submit ? submit() : { orderId: 'order-1' } },
-    async () => signedIn ? { id: 'user-1' } : null,
-    () => { cleared++ }, () => items,
-    () => items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0),
-    (cents) => `RM${(cents / 100).toFixed(2)}`,
-    async () => {},
-    (target, busy) => { target.disabled = busy },
-    (message) => errors.push(message),
-    document, location, sessionStorage, globalThis.crypto
-  )
-  return { root, button, form, calls, errors, location, saved, get cleared() { return cleared } }
-}
+assert.match(orders, /VALUES \(\?, \?, 'pending_payment'/)
+assert.match(orders, /allowedMethods\(subtotal\)/)
+assert.match(orders, /subtotal <= QR_LIMIT/)
+assert.match(orders, /createdAt \+ 120/)
+assert.match(orders, /a\.expires_at > unixepoch\('now'\)/)
+assert.match(orders, /c\.env\.DB\.batch\(\[/)
+assert.match(orders, /UPDATE products SET stock = stock -/)
+assert.match(orders, /UPDATE orders SET status = 'confirmed'/)
+assert.match(orders, /await hashToken\(token\)/)
+assert.match(orders, /tokenAttempt\(c/)
+assert.match(orders, /outcome === 'decline'/)
+assert.match(migration, /CREATE TABLE payment_attempts/)
+assert.match(migration, /token_hash TEXT UNIQUE/)
+assert.match(migration, /CHECK \(valid = 1\)/)
+assert.match(checkout, /sessionStorage\.setItem\('lumiere_order_key'/)
+assert.match(checkout, /clearCart\(\)/)
+assert.match(checkout, /order\.allowedMethods\.includes/)
+assert.match(payment, /setInterval\(async \(\) => \{/)
+assert.match(payment, /10_000\)/)
+assert.match(payment, /4242424242424242/)
+assert.match(payment, /4000000000000002/)
+assert.match(payment, /cvv !== '123'/)
+assert.doesNotMatch(payment, /JSON\.stringify\(\{[^}]*\b(?:number|cvv|expiry|name)\s*:/)
+assert.match(mock, /authorize/)
+assert.match(receipt, /Pending Payment/)
+assert.match(account, /Change payment method/)
+assert.match(admin, /order\.status === 'pending_payment' \? 0/)
+assert.match(headers, /\/mock-pay\/\*/)
+assert.doesNotMatch(await read('frontend/mock-pay/index.html'), /cdn\.|https:\/\/.*\.js/)
+assert.ok((await read('frontend/checkout/index.html')).indexOf('</form>') < (await read('frontend/checkout/index.html')).indexOf('<aside id="order-summary"'))
 
-const delivery = await visit({})
-assert.match(delivery.root.innerHTML, /DuitNow QR/)
-assert.match(delivery.root.innerHTML, /Malaysia QR Demo/)
-assert.match(delivery.root.innerHTML, /href="\/card-payment\/"/)
-assert.match(delivery.root.innerHTML, /Shipping.*RM30\.00/s)
-assert.match(delivery.root.innerHTML, /Tax.*RM6\.00/s)
-assert.match(delivery.root.innerHTML, /Amount Due.*RM136\.00/s)
-assert.match(delivery.root.innerHTML, /Simulate payment and place demo order/)
-await delivery.form.submit()
-assert.equal(delivery.calls[0].path, '/api/orders')
-assert.equal(delivery.calls[0].options.headers['Idempotency-Key'], 'checkout-key')
-assert.equal(delivery.location.href, '/receipt/?id=order-1')
-assert.equal(delivery.cleared, 1)
-assert.equal(delivery.saved.has('lumiere_checkout'), false)
+// Execute the Worker's confirmation guard against the actual migration schema.
+const guard = orders.match(/c\.env\.DB\.prepare\(`(INSERT INTO payment_confirmations[\s\S]*?)`\)\.bind\(attemptId, attemptId, attempt\.order_id\)/)?.[1]
+assert.ok(guard, 'Confirmation SQL guard is present')
+const db = new Database(':memory:')
+db.exec(`CREATE TABLE orders (id TEXT PRIMARY KEY, status TEXT, subtotal_cents INTEGER);
+  CREATE TABLE products (id TEXT PRIMARY KEY, stock INTEGER CHECK(stock >= 0), active INTEGER);
+  CREATE TABLE order_items (order_id TEXT, product_id TEXT, product_name TEXT, quantity INTEGER);
+  ${migration}`)
+db.prepare("INSERT INTO products VALUES ('p', 1, 1)").run()
+db.prepare("INSERT INTO orders (id,status,subtotal_cents,active_attempt_id) VALUES ('o','pending_payment',100,'a')").run()
+db.prepare("INSERT INTO order_items VALUES ('o','p','Piece',1)").run()
+const future = Math.floor(Date.now() / 1000) + 120
+db.prepare("INSERT INTO payment_attempts (id,order_id,method,status,created_at,expires_at) VALUES ('a','o','card','active',?,?)").run(future - 120, future)
+const confirm = db.transaction((attemptId) => {
+  db.prepare(guard).run(attemptId, attemptId, 'o')
+  db.prepare("UPDATE products SET stock = stock - 1 WHERE id = 'p'").run()
+  db.prepare("UPDATE orders SET status = 'confirmed' WHERE id = 'o'").run()
+  db.prepare("UPDATE payment_attempts SET status = 'successful' WHERE id = ?").run(attemptId)
+})
+confirm('a')
+assert.equal(db.prepare("SELECT stock FROM products WHERE id = 'p'").get().stock, 0)
+assert.throws(() => confirm('a'))
+assert.equal(db.prepare("SELECT stock FROM products WHERE id = 'p'").get().stock, 0)
+db.prepare("UPDATE orders SET status = 'pending_payment', active_attempt_id = 'b' WHERE id = 'o'").run()
+db.prepare("INSERT INTO payment_attempts (id,order_id,method,status,created_at,expires_at) VALUES ('b','o','card','active',?,?)").run(future - 120, future)
+assert.throws(() => confirm('b'), /CHECK constraint failed/)
+assert.equal(db.prepare("SELECT status FROM orders WHERE id = 'o'").get().status, 'pending_payment')
+db.prepare("UPDATE products SET stock = 1 WHERE id = 'p'").run()
+db.prepare("UPDATE payment_attempts SET expires_at = 1 WHERE id = 'b'").run()
+assert.throws(() => confirm('b'), /CHECK constraint failed/)
+db.close()
 
-const pickup = await visit({ alias: true, checkout: { items: [{ productId: 'bag', quantity: 1 }], deliveryMethod: 'pickup', state: 'Sabah', idempotencyKey: 'pickup-key' } })
-assert.match(pickup.root.innerHTML, /Card Payment/)
-assert.match(pickup.root.innerHTML, /Card Number/)
-assert.match(pickup.root.innerHTML, /href="\/payment\/"/)
-assert.match(pickup.root.innerHTML, /Pickup.*Free/s)
-assert.match(pickup.root.innerHTML, /Amount Due.*RM106\.00/s)
-await pickup.form.submit()
-assert.equal(pickup.calls[0].options.headers['Idempotency-Key'], 'pickup-key')
-
-assert.equal((await visit({ signedIn: false })).location.href, '/login/?next=/checkout/')
-assert.equal((await visit({ items: [] })).location.href, '/checkout/')
-
-let attempts = 0
-const retry = await visit({ submit: () => ++attempts === 1 ? Promise.reject(new Error('Try again')) : { orderId: 'order-2' } })
-await retry.form.submit()
-assert.deepEqual(retry.errors, ['Try again'])
-assert.equal(retry.button.disabled, false)
-assert.equal(retry.saved.has('lumiere_checkout'), true)
-await retry.form.submit()
-assert.equal(retry.calls[0].options.headers['Idempotency-Key'], retry.calls[1].options.headers['Idempotency-Key'])
-assert.equal(retry.location.href, '/receipt/?id=order-2')
-
-const checkoutHtml = await readFile('frontend/checkout/index.html', 'utf8')
-assert.ok(checkoutHtml.indexOf('</form>') < checkoutHtml.indexOf('<aside id="order-summary"'))
 console.log('Payment journey check passed.')

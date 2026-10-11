@@ -247,7 +247,7 @@ function renderCatalogTable(root) {
 function renderMetrics(orders) {
   if (!orders) return;
   const totalOrders = orders.length;
-  const totalRevenueCents = orders.reduce((sum, order) => sum + order.total_cents, 0);
+  const totalRevenueCents = orders.reduce((sum, order) => sum + (order.status === 'pending_payment' ? 0 : order.total_cents), 0);
   const pendingOrders = orders.filter(o => ['confirmed', 'processing', 'preparing'].includes(o.status)).length;
   
   const metricsRoot = document.getElementById('admin-metrics');
@@ -276,6 +276,7 @@ function renderAdminTable(root, orders) {
   }
   
   const statusColors = {
+    'pending_payment': 'bg-amber-50 text-amber-800',
     'confirmed': 'bg-amber-100 text-amber-800',
     'processing': 'bg-blue-100 text-blue-800',
     'shipped': 'bg-indigo-100 text-indigo-800',
@@ -298,7 +299,7 @@ function renderAdminTable(root, orders) {
         <td class="py-4 px-4 text-sm text-slate-500">${dateStr}</td>
         <td class="py-4 px-4 text-sm text-slate-900">${escapeHtml(order.shipping_name || 'Client')}</td>
         <td class="py-4 px-4 text-sm text-slate-900">${money(order.total_cents)}</td>
-        <td class="py-4 px-4 text-sm"><span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeColor}">${currentStatus}</span></td>
+        <td class="py-4 px-4 text-sm"><span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeColor}">${currentStatus === 'pending_payment' ? 'Pending Payment' : currentStatus}</span>${order.paid_at ? '<p class="mt-1 text-xs text-green-700">Mock payment successful</p>' : ''}</td>
         <td class="py-4 px-4 text-sm font-serif text-slate-700">${order.tracking_number ? `<span class="font-bold">${escapeHtml(order.tracking_number)}</span>` : '<span class="text-slate-300 italic">Unassigned</span>'}</td>
         <td class="py-4 px-4 text-right">
           <button data-order-id="${order.id}" class="update-order-btn border border-slate-900 text-slate-900 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-pointer">Update</button>

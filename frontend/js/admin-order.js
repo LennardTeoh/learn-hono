@@ -54,6 +54,7 @@ function renderOrderInterface(root, order, items, allProducts) {
   });
   
   const statusColors = {
+    'pending_payment': 'bg-amber-50 text-amber-800 border-amber-200',
     'confirmed': 'bg-[#fefce8] text-[#ca8a04] border-[#fef08a]',
     'preparing': 'bg-[#f0f9ff] text-[#0369a1] border-[#e0f2fe]',
     'processing': 'bg-[#f0f9ff] text-[#0369a1] border-[#e0f2fe]',
@@ -229,6 +230,11 @@ function renderOrderInterface(root, order, items, allProducts) {
   }
 
   updateFulfillmentUI();
+  if (currentStatus === 'pending_payment') {
+    document.getElementById('action-status').innerHTML = '<option value="pending_payment">Pending Payment</option>';
+    document.getElementById('action-status').disabled = true;
+    document.querySelector('#order-action-form button[type="submit"]').disabled = true;
+  }
 
   const form = document.getElementById('order-action-form');
   form.addEventListener('submit', async (e) => {

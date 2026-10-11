@@ -50,6 +50,7 @@ async function init() {
       const displayId = rawId !== 'N/A' ? rawId.split('-')[0].toUpperCase() : 'N/A';
       
       const statusUpper = (order.status || 'CONFIRMED').toUpperCase();
+      const pendingPayment = statusUpper === 'PENDING_PAYMENT';
       
       const localPickupKey = `lumiere_pickup_${rawId}`;
       const isPickup = 
@@ -95,17 +96,19 @@ async function init() {
             </div>
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Status</p>
-              <span class="inline-block px-3 py-1.5 bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0] text-[9px] font-bold tracking-[0.1em] uppercase">${escapeHtml(statusUpper)}</span>
+              <span class="inline-block px-3 py-1.5 ${pendingPayment ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]'} border text-[9px] font-bold tracking-[0.1em] uppercase">${pendingPayment ? 'Pending Payment' : escapeHtml(statusUpper)}</span>
+              ${order.paid_at ? '<p class="mt-1 text-xs text-green-700">Mock payment successful</p>' : ''}
             </div>
             <div>
               <a href="/receipt/?id=${escapeHtml(rawId)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
                 VIEW ORDER
               </a>
+              ${pendingPayment ? `<a href="/${order.mock_method === 'card' ? 'card-payment' : 'payment'}/?id=${encodeURIComponent(rawId)}" class="ml-2 text-sm underline">Try again</a><a href="/${order.mock_method === 'card' ? 'payment' : 'card-payment'}/?id=${encodeURIComponent(rawId)}" class="ml-2 text-sm underline">Change payment method</a>` : ''}
             </div>
           </div>
 
           <!-- Removed 'open' attribute so it stays closed by default -->
-          <details class="group mt-6">
+          ${pendingPayment ? '' : `<details class="group mt-6">
             <summary class="text-[9px] font-bold tracking-[0.2em] text-slate-500 uppercase cursor-pointer pt-6 border-t border-slate-200 hover:text-slate-900 transition-colors select-none flex justify-between items-center outline-none">
               Track & Manage Order
               <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -145,7 +148,7 @@ async function init() {
               </div>
 
             </div>
-          </details>
+          </details>`}
 
         </div>
       `;
