@@ -210,6 +210,9 @@ if (formElement) {
             }
           });
         }
+        else if (response?.user?.email?.toLowerCase() === 'lumiere.csproject@gmail.com') {
+          window.location.replace('/admin/');
+        }
         else throw new Error('Login could not start email PIN verification. Please try again.');
       }
     } catch (error) {
