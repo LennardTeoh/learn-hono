@@ -133,7 +133,7 @@ function renderOrderInterface(root, order, items, allProducts) {
           
           <form id="order-action-form">
             
-            <label class="block text-[9px] uppercase tracking-[0.2em] text-slate-300 mb-3 font-bold">Fulfillment Mode</label>
+            <label for="action-fulfillment" class="block text-[9px] uppercase tracking-[0.2em] text-slate-300 mb-3 font-bold">Fulfillment Mode</label>
             <div class="relative mb-6">
               <select id="action-fulfillment" disabled class="w-full border border-slate-600 bg-slate-800 p-3 text-sm font-serif text-white">
                 <option value="delivery" ${!isPickupDefault ? 'selected' : ''}>Home Delivery</option>
@@ -144,7 +144,7 @@ function renderOrderInterface(root, order, items, allProducts) {
               </div>
             </div>
 
-            <label class="block text-[9px] uppercase tracking-[0.2em] text-slate-300 mb-3 font-bold">Update Status</label>
+            <label for="action-status" class="block text-[9px] uppercase tracking-[0.2em] text-slate-300 mb-3 font-bold">Update Status</label>
             <div class="relative">
               <select id="action-status" class="w-full border border-slate-600 bg-transparent p-3 text-sm focus:outline-none focus:border-white font-serif text-white appearance-none cursor-pointer">
               </select>
@@ -216,7 +216,7 @@ function renderOrderInterface(root, order, items, allProducts) {
       trackingContainer.innerHTML = `
         <div class="mt-6 pt-6 border-t border-slate-700">
           <div class="flex justify-between items-end mb-3">
-            <label class="block text-[9px] uppercase tracking-widest text-slate-300 font-bold">Tracking / Waybill</label>
+            <label for="action-tracking" class="block text-[9px] uppercase tracking-widest text-slate-300 font-bold">Tracking / Waybill</label>
           </div>
           <input type="text" id="action-tracking" placeholder="Enter tracking..." value="${escapeHtml(order.tracking_number || '')}" class="w-full border border-slate-600 bg-transparent p-3 text-sm focus:outline-none focus:border-white font-serif text-white placeholder-slate-500">
         </div>

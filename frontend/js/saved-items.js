@@ -16,8 +16,8 @@ async function init() {
 
   const sidebar = `
     <aside class="pr-8">
-      <h2 class="text-3xl font-serif text-slate-900 mb-8">Welcome, ${escapeHtml(firstName)}</h2>
-      <ul class="space-y-5 text-sm">
+      <h2 class="text-3xl font-serif text-slate-900 mb-6 lg:mb-8">Welcome, ${escapeHtml(firstName)}</h2>
+      <ul class="space-y-2 lg:space-y-5 text-sm">
         <li><a href="/account/" class="text-slate-500 hover:text-slate-900 transition-colors">My Orders</a></li>
         <li><a href="/account/details/" class="text-slate-500 hover:text-slate-900 transition-colors">Account Details</a></li>
         <li><a href="/account/saved/" class="font-bold text-slate-900">Saved Items</a></li>

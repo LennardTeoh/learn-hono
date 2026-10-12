@@ -42,9 +42,9 @@ async function init() {
   const firstName = user.name ? user.name.split(' ')[0] : 'Client';
 
   const sidebar = `
-    <aside class="pr-8 md:border-r md:border-slate-200 min-h-[60vh]">
-      <h2 class="text-3xl font-serif text-slate-900 mb-10">Welcome, ${escapeHtml(firstName)}</h2>
-      <ul class="space-y-6 text-sm">
+    <aside class="pr-8 lg:border-r lg:border-slate-200 lg:min-h-[60vh]">
+      <h2 class="text-3xl font-serif text-slate-900 mb-6 lg:mb-10">Welcome, ${escapeHtml(firstName)}</h2>
+      <ul class="space-y-2 lg:space-y-6 text-sm">
         <li><a href="/account/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">My Orders</a></li>
         <li><a href="/account/details/" class="text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Account Details</a></li>
         <li><a href="/account/saved/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Saved Items</a></li>
@@ -68,17 +68,17 @@ async function init() {
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <div class="md:col-span-2">
-              <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Full Name</label>
+              <label for="account-name" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Full Name</label>
               <input name="name" id="account-name" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Your full name" required>
             </div>
 
             <div>
-              <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Email Address (Read-Only)</label>
+              <label for="account-email" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Email Address (Read-Only)</label>
               <input name="email" id="account-email" type="email" class="w-full border-b border-slate-200 py-3 bg-transparent text-sm text-slate-400 cursor-not-allowed" disabled>
             </div>
 
             <div>
-              <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Mobile Number</label>
+              <label for="account-phone" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Mobile Number</label>
               <input name="phone" id="account-phone" type="tel" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="+60 1X XXX XXXX">
             </div>
           </div>
@@ -95,29 +95,29 @@ async function init() {
               <h4 class="text-[9px] font-bold tracking-[0.2em] text-slate-900 uppercase mb-4">Shipping Address</h4>
               
               <div>
-                <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Street Address</label>
+                <label for="shipping-street1" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Street Address</label>
                 <input name="shipping_street1" id="shipping-street1" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300 mb-4" placeholder="Line 1 (Street name and number)">
-                <input name="shipping_street2" id="shipping-street2" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Line 2 (Apartment, suite, etc.)">
+                <input name="shipping_street2" id="shipping-street2" type="text" aria-label="Shipping address line 2" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Line 2 (Apartment, suite, etc.)">
               </div>
 
               <div class="grid grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">City</label>
+                  <label for="shipping-city" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">City</label>
                   <input name="shipping_city" id="shipping-city" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="City">
                 </div>
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Postal Code</label>
+                  <label for="shipping-postal" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Postal Code</label>
                   <input name="shipping_postal" id="shipping-postal" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Postal Code">
                 </div>
               </div>
 
               <div class="grid grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">State / Province</label>
+                  <label for="shipping-state" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">State / Province</label>
                   <input name="shipping_state" id="shipping-state" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="State">
                 </div>
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Country</label>
+                  <label for="shipping-country" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Country</label>
                   <input name="shipping_country" id="shipping-country" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Country">
                 </div>
               </div>
@@ -128,29 +128,29 @@ async function init() {
               <h4 class="text-[9px] font-bold tracking-[0.2em] text-slate-900 uppercase mb-4">Billing Address</h4>
               
               <div>
-                <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Street Address</label>
+                <label for="billing-street1" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Street Address</label>
                 <input name="billing_street1" id="billing-street1" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300 mb-4" placeholder="Line 1 (Street name and number)">
-                <input name="billing_street2" id="billing-street2" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Line 2 (Apartment, suite, etc.)">
+                <input name="billing_street2" id="billing-street2" type="text" aria-label="Billing address line 2" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Line 2 (Apartment, suite, etc.)">
               </div>
 
               <div class="grid grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">City</label>
+                  <label for="billing-city" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">City</label>
                   <input name="billing_city" id="billing-city" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="City">
                 </div>
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Postal Code</label>
+                  <label for="billing-postal" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Postal Code</label>
                   <input name="billing_postal" id="billing-postal" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Postal Code">
                 </div>
               </div>
 
               <div class="grid grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">State / Province</label>
+                  <label for="billing-state" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">State / Province</label>
                   <input name="billing_state" id="billing-state" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="State">
                 </div>
                 <div>
-                  <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Country</label>
+                  <label for="billing-country" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Country</label>
                   <input name="billing_country" id="billing-country" type="text" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Country">
                 </div>
               </div>

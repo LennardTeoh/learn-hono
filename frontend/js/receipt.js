@@ -62,18 +62,18 @@ async function init() {
        }
        
        return `
-         <div class="flex items-center justify-between py-8">
-           <div class="flex items-center gap-8">
-             <div class="w-20 h-20 bg-slate-50 border border-slate-200 p-2 shrink-0 flex items-center justify-center relative">
+         <div class="grid grid-cols-[4rem_minmax(0,1fr)] gap-4 sm:flex sm:items-center sm:justify-between py-8">
+           <div class="contents sm:flex sm:items-center sm:gap-8">
+             <div class="w-16 h-16 sm:w-20 sm:h-20 bg-slate-50 border border-slate-200 p-2 shrink-0 flex items-center justify-center relative">
                 <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(name)}" data-image-fallback class="w-full h-full object-contain mix-blend-multiply z-10 relative">
                 <span class="absolute inset-0 hidden items-center justify-center text-slate-400 text-[9px] font-bold uppercase tracking-widest text-center leading-tight">NO<br>IMG</span>
              </div>
-             <div>
+             <div class="min-w-0">
                 <p class="font-serif text-slate-900 text-base mb-1">${escapeHtml(name)}</p>
                 <p class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">QTY: ${qty}</p>
              </div>
            </div>
-           <p class="text-base font-bold text-slate-900">${money(itemPrice * qty)}</p>
+           <p class="col-span-2 justify-self-end text-base font-bold text-slate-900 sm:whitespace-nowrap">${money(itemPrice * qty)}</p>
          </div>
        `
     }).join('') : '<p class="text-slate-500 py-10 text-base font-serif">No items found.</p>';
@@ -107,7 +107,7 @@ async function init() {
     }
 
     root.innerHTML = `
-      <div class="border border-slate-200 bg-transparent p-10 sm:p-16 max-w-4xl mx-auto mb-20">
+      <div class="border border-slate-200 bg-transparent p-6 sm:p-10 lg:p-16 max-w-4xl mx-auto mb-20">
          <!-- Header -->
          <div class="flex flex-col md:flex-row justify-between md:items-start gap-8 border-b border-slate-200 pb-10 mb-8">
             <div>
@@ -131,7 +131,7 @@ async function init() {
            <div class="flex justify-between"><span>Shipping</span><span>${money(order.shipping_cents)}</span></div>
            <div class="flex justify-between"><span>Tax</span><span>${money(order.tax_cents)}</span></div>
          </div>
-         <div class="flex justify-between items-center border-b border-slate-200 pb-10">
+         <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-200 pb-10">
             <h2 class="text-3xl font-serif text-slate-900">Total</h2>
             <div class="text-right">
                <p class="text-3xl font-bold lumiere-gold tracking-wide mb-3">${money(amount)}</p>

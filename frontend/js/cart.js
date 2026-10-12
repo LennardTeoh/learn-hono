@@ -7,25 +7,25 @@ function render() {
   const host = document.getElementById('cart-items')
 
   if (!items.length) {
-    host.innerHTML = '<div class="border border-slate-200 bg-white p-16 text-center"><h2 class="text-3xl font-serif mb-4">Your cart is empty</h2><a href="/products/" class="lumiere-btn mt-6">Return to Collection</a></div>'
+    host.innerHTML = '<div class="border border-slate-200 bg-white px-6 py-12 sm:p-16 text-center max-w-xl mx-auto"><h2 class="text-3xl font-serif mb-4">Your cart is empty</h2><a href="/products/" class="lumiere-btn mt-6">Return to Collection</a></div>'
     return
   }
 
   const subtotal = cartSubtotal()
   
   const itemsHtml = items.map((item) => `
-    <div class="flex gap-6 pb-6 mb-6 border-b border-slate-100">
-      <div class="h-24 w-24 bg-slate-100 flex items-center justify-center shrink-0">
+    <div class="grid grid-cols-[5rem_minmax(0,1fr)] sm:flex gap-4 sm:gap-6 pb-6 mb-6 border-b border-slate-100">
+      <div class="h-20 w-20 sm:h-24 sm:w-24 bg-slate-100 flex items-center justify-center shrink-0">
          <img src="${escapeHtml(imageForCartItem(item))}" alt="${escapeHtml(item.name)}" data-image-fallback class="h-full w-full object-contain mix-blend-multiply">
          <span class="hidden text-slate-300 text-[9px] font-bold tracking-widest">IMG</span>
       </div>
-      <div class="flex-1 flex flex-col justify-center">
+      <div class="min-w-0 flex-1 flex flex-col justify-center">
         <h3 class="font-serif text-lg text-slate-900">${escapeHtml(item.name)}</h3>
         <p class="text-xs text-slate-500 font-mono mt-1">SKU: ${escapeHtml(item.productId.replace('prod_', '').toUpperCase())}-D</p>
         <p class="text-xs text-slate-500 mt-1">Qty: ${item.quantity}</p>
-        <button data-remove="${escapeHtml(item.productId)}" class="text-[10px] font-bold tracking-widest text-slate-400 hover:text-red-600 uppercase mt-2 text-left w-fit">Remove</button>
+        <button data-remove="${escapeHtml(item.productId)}" class="text-xs font-bold tracking-widest text-slate-500 hover:text-red-600 uppercase mt-2 -ml-2 px-2 min-h-11 text-left w-fit">Remove</button>
       </div>
-      <div class="flex items-center">
+      <div class="col-span-2 flex items-center justify-end sm:ml-auto">
         <span class="lumiere-gold font-bold">${money(item.priceCents * item.quantity)}</span>
       </div>
     </div>`).join('')

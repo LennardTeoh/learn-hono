@@ -18,15 +18,15 @@ const formHeader = (title, subtitle) => `
 
 const emailInput = `
   <div class="mb-4">
-    <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Email</label>
-    <input name="email" type="email" required placeholder="Enter your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
+    <label for="auth-email" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Email</label>
+    <input id="auth-email" name="email" type="email" required placeholder="Enter your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
   </div>
 `;
 
 const passwordInput = `
   <div class="mb-6">
-    <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Password</label>
-    <input name="password" type="password" required minlength="8" placeholder="Enter your password" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
+    <label for="auth-password" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Password</label>
+    <input id="auth-password" name="password" type="password" required minlength="8" placeholder="Enter your password" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
   </div>
 `;
 
@@ -54,7 +54,7 @@ else if (state === 'reset') {
     ? formHeader('Choose a new password', 'Recovery') + `
       <form id="auth-form" class="text-left">
         ${passwordInput}
-        <div class="mb-6"><label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Confirm password</label><input name="confirmPassword" type="password" required minlength="8" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900"></div>
+        <div class="mb-6"><label for="auth-confirm-password" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Confirm password</label><input id="auth-confirm-password" name="confirmPassword" type="password" required minlength="8" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900"></div>
         <button type="submit" class="w-full lumiere-btn">Update password</button>
       </form>`
     : formHeader('Reset link invalid', 'Recovery') + '<p class="mb-6 text-slate-500 text-center text-sm">Request a new password reset link.</p><a class="block w-full lumiere-btn text-center" href="/forgot-password/">Request reset</a>';
@@ -63,8 +63,8 @@ else if (state === 'signup') {
   root.innerHTML = formHeader('Create Account', 'Welcome') + `
     <form id="auth-form" class="text-left">
       <div class="mb-4">
-        <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Full Name</label>
-        <input name="name" required minlength="2" placeholder="Enter your name" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
+        <label for="auth-name" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Full Name</label>
+        <input id="auth-name" name="name" required minlength="2" placeholder="Enter your name" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
       </div>
       ${emailInput}
       ${passwordInput}
@@ -150,8 +150,8 @@ if (formElement) {
           root.innerHTML = formHeader('Two-Factor Authentication', 'Security Check') + `
             <form id="otp-form" class="text-left">
               <div class="mb-6">
-                <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">6-Digit Code</label>
-                <input name="otp" type="text" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="Enter the code sent to your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
+                <label for="auth-otp" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">6-Digit Code</label>
+                <input id="auth-otp" name="otp" type="text" required inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="Enter the code sent to your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 rounded-none bg-white">
               </div>
               <button type="submit" class="w-full lumiere-btn mb-4">Verify & Log In</button>
               <button type="button" id="resend-otp-btn" class="w-full text-[10px] font-bold tracking-[0.2em] text-slate-400 hover:text-slate-900 uppercase transition-colors py-2 text-center block">Resend Code</button>

@@ -24,6 +24,7 @@ export function toast(message, type = 'info') {
   const el = document.createElement('div')
   const tone = type === 'error' ? 'bg-red-700' : type === 'success' ? 'bg-green-700' : 'bg-slate-900'
   el.className = `toast ${tone} max-w-sm rounded-none px-6 py-4 text-sm font-medium text-white shadow-xl tracking-wide`
+  el.setAttribute('role', type === 'error' ? 'alert' : 'status')
   el.textContent = message
   host.appendChild(el)
   setTimeout(() => el.remove(), 3200)
@@ -61,20 +62,20 @@ export async function renderShell() {
   if (header) {
     const accountLinks = (user && !isAuthPage)
       ? `<a href="/account/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Profile</a>
-         <button data-logout class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors bg-transparent border-none p-0 cursor-pointer">Logout</button>`
+         <button data-logout aria-label="Log out" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors bg-transparent border-none p-0 cursor-pointer">Logout</button>`
       : `<a href="/login/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Account</a>`
     header.className = 'sticky top-0 z-40 bg-white border-b border-slate-200 shrink-0';
     header.innerHTML = `
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-24">
+        <div class="flex justify-between items-center h-20 lg:h-24">
           <a href="/" class="text-2xl font-serif font-bold tracking-[0.2em] text-slate-950 uppercase">LUMIÈRE</a>
-          <nav class="hidden md:flex gap-8 items-center" aria-label="Main navigation">
+          <nav class="hidden lg:flex gap-8 items-center" aria-label="Main navigation">
             <a href="/products/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">The Collection</a>
             <a href="/authenticate/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Catalog Lookup</a>
             <a href="/cart/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Cart (<span data-cart-count>0</span>)</a>
             ${accountLinks}
           </nav>
-          <details class="relative md:hidden">
+          <details class="relative lg:hidden">
             <summary class="lumiere-btn-outline list-none">Menu</summary>
             <nav class="absolute right-0 top-full mt-2 flex min-w-48 flex-col gap-5 border border-slate-200 bg-white p-5 shadow-sm" aria-label="Mobile navigation">
               <a href="/products/">The Collection</a>

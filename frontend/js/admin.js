@@ -141,7 +141,8 @@ function renderCatalogTable(root) {
     return;
   }
 
-  const sortedProducts = [...catalogData].sort((a, b) => {
+  const query = document.getElementById('catalog-search')?.value.trim().toLowerCase() || '';
+  const sortedProducts = catalogData.filter(product => `${product.name} ${product.category} ${product.id}`.toLowerCase().includes(query)).sort((a, b) => {
     let valA, valB;
     if (sortColumn === 'name') {
       valA = (a.name || '').toLowerCase();
@@ -189,7 +190,7 @@ function renderCatalogTable(root) {
         <td class="py-4 px-4 text-sm text-slate-900">${product.stock} units</td>
         <td class="py-4 px-4">${status}</td>
         <td class="py-4 px-4 text-right">
-          <button class="edit-product-btn border border-slate-300 text-slate-500 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors mr-2" 
+          <button class="edit-product-btn border border-slate-300 text-slate-500 px-4 py-2 min-h-11 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors mr-2"
                   data-product='${JSON.stringify(product).replace(/'/g, "&apos;")}'>Edit</button>
         </td>
       </tr>
@@ -197,7 +198,8 @@ function renderCatalogTable(root) {
   }).join('');
 
   root.innerHTML = `
-    <div class="overflow-x-auto shadow-sm border border-slate-200">
+    <p class="mb-2 text-xs text-slate-500 lg:hidden">Scroll the table to view price, stock, status, and actions.</p>
+    <div class="overflow-x-auto shadow-sm border border-slate-200" role="region" aria-label="Inventory table" tabindex="0">
       <table class="w-full text-left border-collapse min-w-[900px]">
         <thead>
           <tr class="bg-slate-100 border-b border-slate-200">
@@ -216,16 +218,20 @@ function renderCatalogTable(root) {
             <th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Actions</th>
           </tr>
         </thead>
-        <tbody>
-          ${rows}
-        </tbody>
+        <tbody>${rows || '<tr><td colspan="5" class="p-8 text-center text-slate-500">No listings match your search.</td></tr>'}</tbody>
       </table>
     </div>
   `;
 
   root.querySelectorAll('.sort-header').forEach(th => {
+    th.tabIndex = 0;
+    th.setAttribute('aria-sort', sortColumn === th.dataset.sort ? (sortAscending ? 'ascending' : 'descending') : 'none');
+    th.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); th.click(); }
+    });
     th.addEventListener('click', () => {
       const col = th.getAttribute('data-sort');
+      const hadFocus = document.activeElement === th;
       if (sortColumn === col) {
         sortAscending = !sortAscending;
       } else {
@@ -233,6 +239,7 @@ function renderCatalogTable(root) {
         sortAscending = true;
       }
       renderCatalogTable(root);
+      if (hadFocus) root.querySelector(`.sort-header[data-sort="${col}"]`)?.focus();
     });
   });
 
@@ -302,13 +309,13 @@ function renderAdminTable(root, orders) {
         <td class="py-4 px-4 text-sm"><span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeColor}">${currentStatus === 'pending_payment' ? 'Pending Payment' : currentStatus}</span>${order.paid_at ? '<p class="mt-1 text-xs text-green-700">Payment successful</p>' : ''}</td>
         <td class="py-4 px-4 text-sm font-serif text-slate-700">${order.tracking_number ? `<span class="font-bold">${escapeHtml(order.tracking_number)}</span>` : '<span class="text-slate-300 italic">Unassigned</span>'}</td>
         <td class="py-4 px-4 text-right">
-          <button data-order-id="${order.id}" class="update-order-btn border border-slate-900 text-slate-900 px-4 py-2 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-pointer">Update</button>
+          <button data-order-id="${order.id}" class="update-order-btn border border-slate-900 text-slate-900 px-4 py-2 min-h-11 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-pointer">Update</button>
         </td>
       </tr>
     `;
   }).join('');
   
-  root.innerHTML = `<div class="overflow-x-auto shadow-sm border border-slate-200"><table class="w-full text-left border-collapse min-w-[900px]"><thead><tr class="bg-slate-100 border-b border-slate-200"><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Order ID</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Date</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Customer</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Revenue</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Status</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Tracking</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  root.innerHTML = `<p class="mb-2 text-xs text-slate-500 lg:hidden">Scroll the table to view status and actions.</p><div class="overflow-x-auto shadow-sm border border-slate-200" role="region" aria-label="Orders table" tabindex="0"><table class="w-full text-left border-collapse min-w-[900px]"><thead><tr class="bg-slate-100 border-b border-slate-200"><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Order ID</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Date</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Customer</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Revenue</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Status</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Tracking</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 
   root.querySelectorAll('.update-order-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -321,6 +328,17 @@ function renderAdminTable(root, orders) {
 const productModal = document.getElementById('product-modal');
 const productForm = document.getElementById('product-form');
 const addProductBtn = document.getElementById('add-product-btn');
+let modalReturnFocus;
+const showProductModal = () => {
+  modalReturnFocus = document.activeElement;
+  productModal.classList.remove('hidden');
+  document.getElementById('modal-product-name').focus();
+};
+const hideProductModal = () => {
+  productModal.classList.add('hidden');
+  modalReturnFocus?.focus();
+};
+document.getElementById('catalog-search')?.addEventListener('input', () => renderCatalogTable(document.getElementById('catalog-root')));
 
 window.openProductModal = (product) => {
   document.getElementById('product-modal-title').textContent = 'Edit Product';
@@ -332,7 +350,7 @@ window.openProductModal = (product) => {
   document.getElementById('modal-product-stock').value = product.stock;
   document.getElementById('modal-product-image').value = product.image_url;
   document.getElementById('modal-product-status').value = product.active ? 1 : 0;
-  productModal.classList.remove('hidden');
+  showProductModal();
 };
 
 addProductBtn?.addEventListener('click', () => {
@@ -345,11 +363,19 @@ addProductBtn?.addEventListener('click', () => {
   document.getElementById('modal-product-stock').value = '1';
   document.getElementById('modal-product-image').value = '';
   document.getElementById('modal-product-status').value = '1';
-  productModal.classList.remove('hidden');
+  showProductModal();
 });
 
-document.getElementById('close-product-btn')?.addEventListener('click', () => productModal.classList.add('hidden'));
-productModal?.addEventListener('click', (e) => { if (e.target === productModal) productModal.classList.add('hidden'); });
+document.getElementById('close-product-btn')?.addEventListener('click', hideProductModal);
+productModal?.addEventListener('click', (e) => { if (e.target === productModal) hideProductModal(); });
+productModal?.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') hideProductModal();
+  if (event.key !== 'Tab') return;
+  const focusable = [...productModal.querySelectorAll('button, input:not([type="hidden"]), textarea, select')].filter(el => !el.disabled);
+  const first = focusable[0], last = focusable.at(-1);
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});
 
 productForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -379,7 +405,7 @@ productForm?.addEventListener('submit', async (e) => {
     
     if (!response.ok) throw new Error('Failed to save product.');
     
-    productModal.classList.add('hidden');
+    hideProductModal();
     const catalogRoot = document.getElementById('catalog-root');
     catalogRoot.innerHTML = '<p class="text-slate-500 font-serif text-center py-12">Refreshing inventory...</p>';
     

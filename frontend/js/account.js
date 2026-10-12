@@ -14,9 +14,9 @@ async function init() {
   const firstName = user.name ? user.name.split(' ')[0] : 'Client';
 
   const sidebar = `
-    <aside class="pr-8 md:border-r md:border-slate-200 min-h-[60vh]">
-      <h2 class="text-3xl font-serif text-slate-900 mb-10">Welcome, ${escapeHtml(firstName)}</h2>
-      <ul class="space-y-6 text-sm">
+    <aside class="pr-8 lg:border-r lg:border-slate-200 lg:min-h-[60vh]">
+      <h2 class="text-3xl font-serif text-slate-900 mb-6 lg:mb-10">Welcome, ${escapeHtml(firstName)}</h2>
+      <ul class="space-y-2 lg:space-y-6 text-sm">
         <li><a href="/account/" class="text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">My Orders</a></li>
         <li><a href="/account/details/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Account Details</a></li>
         <li><a href="/account/saved/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Saved Items</a></li>

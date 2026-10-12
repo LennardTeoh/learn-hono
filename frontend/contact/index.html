@@ -37,20 +37,21 @@
       
       <!-- Right: Contact Form -->
       <div class="p-10 sm:p-16 flex flex-col justify-center">
-        <form class="space-y-6" onsubmit="event.preventDefault(); alert('Inquiry submitted. Our concierge will contact you shortly.');">
+        <form id="contact-form" class="space-y-6">
           <div>
-            <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Name</label>
-            <input type="text" required placeholder="Enter your name" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white">
+            <label for="contact-name" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Name</label>
+            <input id="contact-name" type="text" required placeholder="Enter your name" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white">
           </div>
           <div>
-            <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Email</label>
-            <input type="email" required placeholder="Enter your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white">
+            <label for="contact-email" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Email</label>
+            <input id="contact-email" type="email" required placeholder="Enter your email" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white">
           </div>
           <div>
-            <label class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Message</label>
-            <textarea required rows="4" placeholder="How can we assist you?" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white resize-none"></textarea>
+            <label for="contact-message" class="block text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Message</label>
+            <textarea id="contact-message" required rows="4" placeholder="How can we assist you?" class="w-full border border-slate-200 p-3 text-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white resize-none"></textarea>
           </div>
-          <button type="submit" class="w-full lumiere-btn">Send Inquiry</button>
+          <button type="submit" class="w-full lumiere-btn">Open Email Draft</button>
+          <p class="text-sm text-slate-500">Review and send the inquiry in your email app.</p>
         </form>
       </div>
     </div>

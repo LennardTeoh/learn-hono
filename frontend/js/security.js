@@ -15,9 +15,9 @@ async function init() {
 
   // Upgraded luxury sidebar matching the details page
   const sidebar = `
-    <aside class="pr-8 md:border-r md:border-slate-200 min-h-[60vh]">
-      <h2 class="text-3xl font-serif text-slate-900 mb-10">Welcome, ${escapeHtml(firstName)}</h2>
-      <ul class="space-y-6 text-sm">
+    <aside class="pr-8 lg:border-r lg:border-slate-200 lg:min-h-[60vh]">
+      <h2 class="text-3xl font-serif text-slate-900 mb-6 lg:mb-10">Welcome, ${escapeHtml(firstName)}</h2>
+      <ul class="space-y-2 lg:space-y-6 text-sm">
         <li><a href="/account/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">My Orders</a></li>
         <li><a href="/account/details/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Account Details</a></li>
         <li><a href="/account/saved/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Saved Items</a></li>
@@ -41,13 +41,13 @@ async function init() {
           
           <form id="password-form" class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <div class="md:col-span-2">
-              <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Current Password</label>
-              <input name="currentPassword" type="password" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Enter current password" required>
+              <label for="current-password" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">Current Password</label>
+              <input id="current-password" name="currentPassword" type="password" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Enter current password" required>
             </div>
             
             <div class="md:col-span-2">
-              <label class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">New Password</label>
-              <input name="newPassword" type="password" minlength="8" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Enter new password (min 8 characters)" required>
+              <label for="new-password" class="block text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-3">New Password</label>
+              <input id="new-password" name="newPassword" type="password" minlength="8" class="w-full border-b border-slate-300 py-3 bg-transparent text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors placeholder-slate-300" placeholder="Enter new password (min 8 characters)" required>
             </div>
 
             <div class="md:col-span-2 pt-4">
