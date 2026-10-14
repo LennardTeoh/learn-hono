@@ -81,47 +81,51 @@ async function init() {
       const trackingDisplay = trackingNum 
         ? `Waybill: <span class="font-bold tracking-wide text-slate-900">${escapeHtml(trackingNum)}</span>`
         : `Waybill: <span class="text-slate-400 italic">Pending Tracking</span>`;
+      const totalCents = order.total_cents ?? order.total ?? 0;
+      const shippingCents = order.shipping_cents ?? 0;
+      const taxCents = order.tax_cents ?? 0;
+      const subtotalCents = order.subtotal_cents ?? Math.max(0, totalCents - shippingCents - taxCents);
+      const paymentRoute = order.mock_method === 'card' ? 'card-payment' : 'payment';
+      const changeRoute = order.mock_method === 'card' ? 'payment' : 'card-payment';
 
       return `
-        <div data-order-group="${orderGroup(order)}" class="border border-slate-200 p-8 mb-8 bg-white hover:shadow-sm transition-shadow">
-          
-          <div class="flex flex-wrap gap-6 justify-between items-center pb-2">
-            <div>
-              <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Order #</p>
-              <p class="text-sm font-serif text-slate-900">#${escapeHtml(displayId)}</p>
+        <div data-order-group="${orderGroup(order)}" class="border border-slate-200 bg-white px-6 py-6 sm:px-8 sm:py-7 mb-8">
+          <div class="account-order-grid grid gap-8 md:gap-6 lg:gap-10">
+            <div class="min-w-0">
+              <p class="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-3">Order number</p>
+              <h2 class="font-serif text-4xl sm:text-5xl text-slate-950 break-all">#${escapeHtml(displayId)}</h2>
+              <div class="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-sm text-slate-700">
+                <span>${new Date(order.created_at * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <span class="border-l border-slate-300 pl-4">${isPickup ? 'Boutique Pick-up' : 'Home Delivery'}</span>
+              </div>
+              <dl class="mt-6 border-t border-slate-200 text-sm">
+                <div class="flex justify-between gap-4 border-b border-slate-200 py-2"><dt class="text-slate-500 uppercase tracking-widest">Subtotal</dt><dd>${money(subtotalCents)}</dd></div>
+                <div class="flex justify-between gap-4 border-b border-slate-200 py-2"><dt class="text-slate-500 uppercase tracking-widest">Shipping</dt><dd>${money(shippingCents)}</dd></div>
+                ${taxCents ? `<div class="flex justify-between gap-4 border-b border-slate-200 py-2"><dt class="text-slate-500 uppercase tracking-widest">Tax</dt><dd>${money(taxCents)}</dd></div>` : ''}
+                <div class="flex justify-between gap-4 pt-3 font-bold"><dt class="lumiere-gold uppercase tracking-widest">Total</dt><dd class="lumiere-gold text-lg">${money(totalCents)}</dd></div>
+              </dl>
             </div>
-            <div>
-              <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Date</p>
-              <p class="text-sm text-slate-900">${new Date(order.created_at * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-            </div>
-            <div>
-              <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Total</p>
-              <p class="text-sm text-slate-900 lumiere-gold font-bold">${money(order.total_cents || order.total || 0)}</p>
-            </div>
-            <div>
-              <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Fulfillment</p>
-              <p class="text-sm text-slate-900">${isPickup ? 'Boutique Pick-up' : 'Home Delivery'}</p>
-            </div>
-            <div>
-              <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Status</p>
-              <span class="inline-block px-3 py-1.5 ${pendingPayment ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]'} border text-[9px] font-bold tracking-[0.1em] uppercase">${pendingPayment ? 'Pending Payment' : escapeHtml(statusUpper)}</span>
-            </div>
-            <div>
-              <a href="/receipt/?id=${escapeHtml(rawId)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
-                VIEW ORDER
-              </a>
-              ${pendingPayment ? `<a href="/${order.mock_method === 'card' ? 'card-payment' : 'payment'}/?id=${encodeURIComponent(rawId)}" class="ml-2 text-sm underline">Try again</a><a href="/${order.mock_method === 'card' ? 'payment' : 'card-payment'}/?id=${encodeURIComponent(rawId)}" class="ml-2 text-sm underline">Change payment method</a>` : ''}
+            <div class="min-w-0 border-t border-slate-200 pt-6 md:border-t-0 md:border-l md:pt-0 md:pl-6 lg:pl-8">
+              <p class="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-4">Status</p>
+              <span class="inline-block border px-4 py-2 text-xs font-bold tracking-widest uppercase ${pendingPayment ? 'border-amber-300 bg-amber-50 text-amber-700' : 'border-green-200 bg-green-50 text-green-700'}">${pendingPayment ? 'Pending Payment' : escapeHtml(statusUpper)}</span>
+              <div class="mt-5 grid gap-3">
+                ${pendingPayment ? `<a href="/${paymentRoute}/?id=${encodeURIComponent(rawId)}" class="lumiere-btn account-order-action">Complete payment</a>
+                <a href="/${changeRoute}/?id=${encodeURIComponent(rawId)}" class="lumiere-btn-outline account-order-action">Change payment method</a>` : ''}
+                <a href="/receipt/?id=${encodeURIComponent(rawId)}" class="lumiere-btn-outline account-order-action">View order</a>
+              </div>
             </div>
           </div>
 
-          <details class="group mt-6">
+          ${pendingPayment ? `<div class="mt-6 border-t border-slate-200 pt-5">
+            <p class="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-3">Next step</p>
+            <p class="text-sm text-slate-900">Complete payment to begin fulfillment.</p>
+          </div>` : `<details class="group mt-8">
             <summary class="text-[9px] font-bold tracking-[0.2em] text-slate-500 uppercase cursor-pointer pt-6 border-t border-slate-200 hover:text-slate-900 transition-colors select-none flex justify-between items-center outline-none">
               Track & Manage Order
               <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </summary>
             
             <div class="pt-10 pb-4">
-              ${pendingPayment ? '<p class="text-sm text-slate-500 text-center">Complete payment to begin fulfillment.</p>' : `
               
               <div class="relative max-w-2xl mx-auto pt-4 pb-16">
                 <div class="hidden sm:block absolute top-1/2 left-0 w-full border-t-[2px] border-dotted border-slate-200 -z-10 -translate-y-[1px]"></div>
@@ -153,10 +157,8 @@ async function init() {
                     <p class="text-sm font-serif text-slate-900">${isPickup ? escapeHtml(order.location || 'Pavilion KL Boutique') : trackingDisplay}</p>
                  </div>
               </div>
-              `}
-
             </div>
-          </details>
+          </details>`}
 
         </div>
       `;
@@ -169,7 +171,7 @@ async function init() {
         <h1 class="text-4xl font-serif text-slate-900 mb-4">Order History</h1>
         <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Track and manage your boutique purchases</p>
       </div>
-      ${orders.length && !ordersError ? `<nav class="flex gap-6 overflow-x-auto border-b border-slate-200 mb-8" aria-label="Order status">
+      ${orders.length && !ordersError ? `<nav class="flex gap-6 overflow-x-auto border-b border-slate-200 mb-6" aria-label="Order status">
         <button type="button" data-order-tab="pay" class="min-h-11 shrink-0 border-b-2 border-transparent text-sm text-slate-500">To Pay</button>
         <button type="button" data-order-tab="ship" class="min-h-11 shrink-0 border-b-2 border-transparent text-sm text-slate-500">To Ship</button>
         <button type="button" data-order-tab="receive" class="min-h-11 shrink-0 border-b-2 border-transparent text-sm text-slate-500">To Receive</button>
@@ -201,7 +203,10 @@ async function init() {
       return match;
     });
     root.querySelector('#orders-empty').classList.toggle('hidden', visible.length > 0);
-    if (visible.length) visible[0].querySelector('details').open = true;
+    if (visible.length) {
+      const details = visible[0].querySelector('details');
+      if (details) details.open = true;
+    }
   };
   tabs.forEach(tab => tab.addEventListener('click', () => showGroup(tab.dataset.orderTab)));
   if (tabs.length) showGroup(orderGroup(orders[0]));

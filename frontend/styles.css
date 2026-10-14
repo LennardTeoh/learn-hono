@@ -54,6 +54,8 @@ button, input, select, textarea { font: inherit; }
 .lumiere-btn-outline { background: transparent; color: var(--color-ink); }
 .lumiere-btn-outline:hover:not(:disabled) { background: var(--color-ink); color: #fff; }
 .lumiere-btn:disabled, .lumiere-btn-outline:disabled { opacity: .5; cursor: not-allowed; }
+.account-order-action { width: 100%; min-width: 0; min-height: 3rem; padding-inline: .75rem; letter-spacing: .04em; }
+@media (min-width: 768px) { .account-order-grid { grid-template-columns: minmax(0, 1.7fr) minmax(17rem, 1fr); } }
 
 /* Keep the editorial lettering while giving essential labels a readable floor. */
 body .text-\[9px\], body .text-\[10px\] { font-size: .75rem; }
