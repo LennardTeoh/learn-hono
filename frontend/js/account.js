@@ -1,6 +1,14 @@
 import { api, getCurrentUser } from './api.js';
 import { renderShell, escapeHtml, money, toast } from './ui.js';
 
+const orderGroup = (order) => {
+  const status = (order.status || 'confirmed').toLowerCase();
+  if (status === 'pending_payment') return 'pay';
+  if (status === 'shipped' || status === 'ready') return 'receive';
+  if (status === 'delivered' || status === 'collected') return 'completed';
+  return 'ship';
+};
+
 async function init() {
   await renderShell();
 
@@ -75,7 +83,7 @@ async function init() {
         : `Waybill: <span class="text-slate-400 italic">Pending Tracking</span>`;
 
       return `
-        <div class="border border-slate-200 p-8 mb-8 bg-white hover:shadow-sm transition-shadow">
+        <div data-order-group="${orderGroup(order)}" class="border border-slate-200 p-8 mb-8 bg-white hover:shadow-sm transition-shadow">
           
           <div class="flex flex-wrap gap-6 justify-between items-center pb-2">
             <div>
@@ -97,7 +105,6 @@ async function init() {
             <div>
               <p class="text-[9px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-2">Status</p>
               <span class="inline-block px-3 py-1.5 ${pendingPayment ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-[#f0fdf4] text-[#16a34a] border-[#bbf7d0]'} border text-[9px] font-bold tracking-[0.1em] uppercase">${pendingPayment ? 'Pending Payment' : escapeHtml(statusUpper)}</span>
-              ${order.paid_at ? '<p class="mt-1 text-xs text-green-700">Payment successful</p>' : ''}
             </div>
             <div>
               <a href="/receipt/?id=${escapeHtml(rawId)}" class="inline-block border border-slate-900 text-slate-900 text-[9px] font-bold tracking-[0.2em] uppercase px-8 py-3 hover:bg-slate-900 hover:text-white transition-colors text-center w-full sm:w-auto">
@@ -107,35 +114,35 @@ async function init() {
             </div>
           </div>
 
-          <!-- Removed 'open' attribute so it stays closed by default -->
-          ${pendingPayment ? '' : `<details class="group mt-6">
+          <details class="group mt-6">
             <summary class="text-[9px] font-bold tracking-[0.2em] text-slate-500 uppercase cursor-pointer pt-6 border-t border-slate-200 hover:text-slate-900 transition-colors select-none flex justify-between items-center outline-none">
               Track & Manage Order
               <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </summary>
             
             <div class="pt-10 pb-4">
+              ${pendingPayment ? '<p class="text-sm text-slate-500 text-center">Complete payment to begin fulfillment.</p>' : `
               
               <div class="relative max-w-2xl mx-auto pt-4 pb-16">
-                <div class="absolute top-1/2 left-0 w-full border-t-[2px] border-dotted border-slate-200 -z-10 -translate-y-[1px]"></div>
-                <div class="absolute top-1/2 left-0 border-t-[2px] border-solid border-slate-900 -z-10 -translate-y-[1px] transition-all duration-700" style="width: ${((activeStep - 1) / 3) * 100}%"></div>
+                <div class="hidden sm:block absolute top-1/2 left-0 w-full border-t-[2px] border-dotted border-slate-200 -z-10 -translate-y-[1px]"></div>
+                <div class="hidden sm:block absolute top-1/2 left-0 border-t-[2px] border-solid border-slate-900 -z-10 -translate-y-[1px] transition-all duration-700" style="width: ${((activeStep - 1) / 3) * 100}%"></div>
                 
-                <div class="flex justify-between w-full">
-                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-1 gap-y-8 w-full">
+                  <div class="min-w-0 flex flex-col items-center gap-4 bg-white px-1 sm:px-2">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 1 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">1</div>
-                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 1 ? 'text-slate-900' : 'text-slate-400'}">${step1}</span>
+                    <span class="max-w-full break-words text-center text-xs font-bold tracking-normal sm:tracking-[0.15em] uppercase ${activeStep >= 1 ? 'text-slate-900' : 'text-slate-400'}">${step1}</span>
                   </div>
-                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                  <div class="min-w-0 flex flex-col items-center gap-4 bg-white px-1 sm:px-2">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 2 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">2</div>
-                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 2 ? 'text-slate-900' : 'text-slate-400'}">${step2}</span>
+                    <span class="max-w-full break-words text-center text-xs font-bold tracking-normal sm:tracking-[0.15em] uppercase ${activeStep >= 2 ? 'text-slate-900' : 'text-slate-400'}">${step2}</span>
                   </div>
-                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                  <div class="min-w-0 flex flex-col items-center gap-4 bg-white px-1 sm:px-2">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 3 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">3</div>
-                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 3 ? 'text-slate-900' : 'text-slate-400'}">${step3}</span>
+                    <span class="max-w-full break-words text-center text-xs font-bold tracking-normal sm:tracking-[0.15em] uppercase ${activeStep >= 3 ? 'text-slate-900' : 'text-slate-400'}">${step3}</span>
                   </div>
-                  <div class="flex flex-col items-center gap-4 bg-white px-2">
+                  <div class="min-w-0 flex flex-col items-center gap-4 bg-white px-1 sm:px-2">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${activeStep >= 4 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 border border-slate-200'}">4</div>
-                    <span class="text-[9px] font-bold tracking-[0.15em] uppercase ${activeStep >= 4 ? 'text-slate-900' : 'text-slate-400'}">${step4}</span>
+                    <span class="max-w-full break-words text-center text-xs font-bold tracking-normal sm:tracking-[0.15em] uppercase ${activeStep >= 4 ? 'text-slate-900' : 'text-slate-400'}">${step4}</span>
                   </div>
                 </div>
               </div>
@@ -146,9 +153,10 @@ async function init() {
                     <p class="text-sm font-serif text-slate-900">${isPickup ? escapeHtml(order.location || 'Pavilion KL Boutique') : trackingDisplay}</p>
                  </div>
               </div>
+              `}
 
             </div>
-          </details>`}
+          </details>
 
         </div>
       `;
@@ -156,19 +164,47 @@ async function init() {
   }
 
   const mainContent = `
-    <div class="w-full max-w-4xl pl-0 lg:pl-12">
+    <div class="w-full min-w-0 max-w-4xl pl-0 lg:pl-12">
       <div class="mb-12 border-b border-slate-200 pb-6">
         <h1 class="text-4xl font-serif text-slate-900 mb-4">Order History</h1>
         <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Track and manage your boutique purchases</p>
       </div>
+      ${orders.length && !ordersError ? `<nav class="flex gap-6 overflow-x-auto border-b border-slate-200 mb-8" aria-label="Order status">
+        <button type="button" data-order-tab="pay" class="min-h-11 shrink-0 border-b-2 border-transparent text-sm text-slate-500">To Pay</button>
+        <button type="button" data-order-tab="ship" class="min-h-11 shrink-0 border-b-2 border-transparent text-sm text-slate-500">To Ship</button>
+        <button type="button" data-order-tab="receive" class="min-h-11 shrink-0 border-b-2 border-transparent text-sm text-slate-500">To Receive</button>
+        <button type="button" data-order-tab="completed" class="min-h-11 shrink-0 border-b-2 border-transparent text-sm text-slate-500">Completed</button>
+      </nav>` : ''}
       
       <div class="space-y-8">
         ${ordersHtml}
+        <p id="orders-empty" class="hidden py-12 text-center text-slate-500">No orders in this stage.</p>
       </div>
     </div>
   `;
 
   root.innerHTML = sidebar + mainContent;
+  const tabs = [...root.querySelectorAll('[data-order-tab]')];
+  const cards = [...root.querySelectorAll('[data-order-group]')];
+  const showGroup = (group) => {
+    tabs.forEach(tab => {
+      const active = tab.dataset.orderTab === group;
+      tab.setAttribute('aria-pressed', String(active));
+      tab.classList.toggle('border-slate-900', active);
+      tab.classList.toggle('border-transparent', !active);
+      tab.classList.toggle('text-slate-900', active);
+      tab.classList.toggle('text-slate-500', !active);
+    });
+    const visible = cards.filter(card => {
+      const match = card.dataset.orderGroup === group;
+      card.classList.toggle('hidden', !match);
+      return match;
+    });
+    root.querySelector('#orders-empty').classList.toggle('hidden', visible.length > 0);
+    if (visible.length) visible[0].querySelector('details').open = true;
+  };
+  tabs.forEach(tab => tab.addEventListener('click', () => showGroup(tab.dataset.orderTab)));
+  if (tabs.length) showGroup(orderGroup(orders[0]));
 }
 
 init().catch(console.error);
