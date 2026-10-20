@@ -6,10 +6,12 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "vars": {
-    // This allows your frontend to talk to your backend
-    "CORS_ORIGIN": "https://lumiere-bpk.pages.dev"
-  },
+"vars": {
+  "CORS_ORIGIN": "https://lumiere-bpk.pages.dev",
+  "APP_ORIGIN": "https://lumiere-bpk.pages.dev",
+  "BETTER_AUTH_URL": "https://lumiere-api.p22014454.workers.dev",
+  "EMAIL_FROM": "lumiere.csproject@gmail.com"
+},
   "d1_databases": [
     {
       // This matches the c.env.DB binding in your orders.ts file
