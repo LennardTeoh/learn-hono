@@ -1,4 +1,7 @@
-const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8787'
+// Strict URL enforcement: completely ignores window.APP_CONFIG
+const API_BASE = window.location.hostname.includes('pages.dev') 
+  ? 'https://lumiere-api.p22014454.workers.dev' 
+  : 'http://127.0.0.1:8787';
 
 export async function api(path, options = {}) {
   const headers = new Headers(options.headers || {})
@@ -9,7 +12,7 @@ export async function api(path, options = {}) {
     headers,
     credentials: 'include'
   })
-
+  
   let data = null
   try { data = await response.json() } catch { data = null }
 
@@ -32,7 +35,6 @@ export async function getCurrentUser() {
     }
     return data.user
   } catch (error) {
-    // Reveal the exact reason the session failed in the browser console (F12)
     console.error("Session Check Failed:", error.message);
     return null
   }

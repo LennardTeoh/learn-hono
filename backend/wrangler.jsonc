@@ -2,23 +2,20 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lumiere-api",
   "main": "src/index.ts",
-  "compatibility_date": "2026-08-20",
-  "observability": {
-    "enabled": true
-  },
+  "compatibility_date": "2024-03-20",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "vars": {
-    "APP_ORIGIN": "https://lumiere-bpk-cba.pages.dev",
-    "CORS_ORIGIN": "https://lumiere-bpk-cba.pages.dev",
-    "BETTER_AUTH_URL": "https://lumiere-api.velozz.workers.dev/api/auth",
-    "EMAIL_FROM": "dehoulworker@gmail.com"
+    // This allows your frontend to talk to your backend
+    "CORS_ORIGIN": "https://lumiere-bpk.pages.dev"
   },
   "d1_databases": [
     {
+      // This matches the c.env.DB binding in your orders.ts file
       "binding": "DB",
       "database_name": "lumiere-db",
-      "database_id": "aa518f92-aebf-4dcd-868b-ec7d78072fc8"
+      "database_id": "eae92745-8c51-42eb-bdd5-af055ada0710" // Replace this with your actual Cloudflare D1 ID if it was lost
     }
   ]
-  
-  
 }
