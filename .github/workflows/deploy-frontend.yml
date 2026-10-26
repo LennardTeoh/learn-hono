@@ -24,7 +24,6 @@ jobs:
       - run: npm test
 
   deploy-frontend:
-    if: github.event_name != 'pull_request' && vars.ENABLE_LUMIERE_DEPLOY == 'true'
     needs: test-frontend
     runs-on: ubuntu-latest
     env:
