@@ -349,11 +349,9 @@ The two workflows run independently:
 1. `deploy-backend.yml` runs `test-backend`, then validates secrets, applies D1 migrations and deploys `backend/` to Workers.
 2. `deploy-frontend.yml` runs `test-frontend`, then deploys only `frontend/` to Cloudflare Pages.
 
-Pull requests from this repository and pushes to `main` deploy after their test
-jobs pass. Forked pull requests run tests only because GitHub does not provide
-repository secrets to them. Deployment jobs remain disabled until the repository
-variable `ENABLE_LUMIERE_DEPLOY` is set to `true`.
-Before enabling it, verify the Cloudflare token/account, `lumiere-db` ID,
+Pull requests and pushes to `main` deploy after their test jobs pass. GitHub
+does not provide repository secrets to forked pull requests, so those deploy
+jobs cannot succeed. Before deploying, verify the Cloudflare token/account, `lumiere-db` ID,
 `lumiere-bpk` Pages project, Worker URL, Brevo sender and egress IP policy, and
 add the `BETTER_AUTH_SECRET` and `BREVO_API_KEY` repository secrets.
 
