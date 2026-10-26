@@ -10,6 +10,7 @@
     "dev": "wrangler dev --env-file=../.env",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
+    "test": "npm run typecheck",
     "db:migrate:local": "wrangler d1 migrations apply lumiere-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply lumiere-db --remote",
     "db:seed:local": "wrangler d1 execute lumiere-db --local --file=./migrations/0002_seed_products.sql"

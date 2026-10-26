@@ -21,7 +21,7 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci --prefix backend
-      - run: npm run check
+      - run: npm test --prefix backend
 
   deploy-backend:
     if: github.event_name != 'pull_request' && vars.ENABLE_LUMIERE_DEPLOY == 'true'

@@ -9,7 +9,7 @@ The Lumière frontend design rules are in [Design.md](Design.md).
 ```bash
 node -e "require('node:fs').copyFileSync('.env.example', '.env')"
 npm install --prefix backend
-npm run check
+npm test
 npm run start
 ```
 
@@ -18,7 +18,7 @@ From PowerShell, use:
 ```powershell
 Copy-Item .env.example .env
 npm install --prefix backend
-npm run check
+npm test
 npm run start
 ```
 
@@ -38,16 +38,11 @@ node -e "const fs=require('node:fs'),crypto=require('node:crypto'),p='.env'; let
 Open `http://localhost:8788` in your browser and stop both servers with
 `Ctrl-C`.
 
-## Rebuild in four milestones
-
-Run the check after each milestone. The checks are intentionally small and
-dependency-free so students can read them.
+## Tests
 
 ```bash
-npm run check:stage1  # HTML, CSS, responsive storefront
-npm run check:stage2  # D1 product seed, catalogue and cart
-npm run check:stage3  # Hono API, auth and trusted checkout
-npm run check:stage4  # Pages, Worker, D1 and security configuration
+npm test
+npm test --prefix backend
 ```
 
 The architecture notes in `ARCHITECTURE.md` explain the browser, Pages, Worker and D1 boundaries.
