@@ -342,15 +342,17 @@ PUBLIC_API_BASE=https://api.example.com
 
 Then replace the broad `https://*.workers.dev` entry in `frontend/_headers` with your exact API origin.
 
-## 8. Push to `main`
+## 8. Open a pull request or push to `main`
 
 The two workflows run independently:
 
 1. `deploy-backend.yml` runs `test-backend`, then validates secrets, applies D1 migrations and deploys `backend/` to Workers.
 2. `deploy-frontend.yml` runs `test-frontend`, then deploys only `frontend/` to Cloudflare Pages.
 
-Pull requests run the relevant test job only. Deployment jobs on `main` remain
-disabled until the repository variable `ENABLE_LUMIERE_DEPLOY` is set to `true`.
+Pull requests from this repository and pushes to `main` deploy after their test
+jobs pass. Forked pull requests run tests only because GitHub does not provide
+repository secrets to them. Deployment jobs remain disabled until the repository
+variable `ENABLE_LUMIERE_DEPLOY` is set to `true`.
 Before enabling it, verify the Cloudflare token/account, `lumiere-db` ID,
 `lumiere-bpk` Pages project, Worker URL, Brevo sender and egress IP policy, and
 add the `BETTER_AUTH_SECRET` and `BREVO_API_KEY` repository secrets.

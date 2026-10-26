@@ -56,8 +56,9 @@ The backend therefore validates/bounds all values and reloads current prices fro
 - The backend workflow runs `test-backend`, then `deploy-backend` validates runtime secrets, applies remote D1 migrations and deploys the Hono Worker.
 - The frontend workflow runs `test-frontend`, then `deploy-frontend` uploads only `frontend/` to the Cloudflare Pages project.
 
-Each deploy job requires its workflow's test job and `ENABLE_LUMIERE_DEPLOY=true`;
-pull requests stop after validation.
+Each deploy job requires its workflow's test job and `ENABLE_LUMIERE_DEPLOY=true`.
+Same-repository pull requests and pushes to `main` deploy to the shared Cloudflare
+targets; forked pull requests run tests only because GitHub withholds secrets.
 
 Only GitHub Secrets contain:
 
