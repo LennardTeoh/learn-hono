@@ -64,6 +64,7 @@ export async function renderShell() {
       ? `<a href="/account/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Profile</a>
          <button data-logout aria-label="Log out" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors bg-transparent border-none p-0 cursor-pointer">Logout</button>`
       : `<a href="/login/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Account</a>`
+    
     header.className = 'sticky top-0 z-40 bg-white border-b border-slate-200 shrink-0';
     header.innerHTML = `
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,6 +73,7 @@ export async function renderShell() {
           <nav class="hidden lg:flex gap-8 items-center" aria-label="Main navigation">
             <a href="/products/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">The Collection</a>
             <a href="/authenticate/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Catalog Lookup</a>
+            <a href="/reviews/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Reviews</a>
             <a href="/cart/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Cart (<span data-cart-count>0</span>)</a>
             ${accountLinks}
           </nav>
@@ -80,6 +82,7 @@ export async function renderShell() {
             <nav class="absolute right-0 top-full mt-2 flex min-w-48 flex-col gap-5 border border-slate-200 bg-white p-5 shadow-sm" aria-label="Mobile navigation">
               <a href="/products/">The Collection</a>
               <a href="/authenticate/">Catalog Lookup</a>
+              <a href="/reviews/">Reviews</a>
               <a href="/cart/">Cart (<span data-cart-count>0</span>)</a>
               ${accountLinks}
             </nav>
