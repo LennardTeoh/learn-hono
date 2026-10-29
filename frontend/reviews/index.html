@@ -1,61 +1,76 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <script src="/js/config.js"></script>
-  <title>Client Reviews · LUMIÈRE</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="/js/config.js"></script>
+    <title>Client Reviews · LUMIÈRE</title>
 </head>
+
 <body class="min-h-screen flex flex-col bg-slate-50">
-  <!-- This empty header tag is waiting for ui.js to inject the navbar -->
-  <header id="site-header"></header>
-  
-  <main class="flex-grow w-full max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-    <h1 class="text-4xl font-serif text-center mb-3 text-slate-900">Client Feedback</h1>
-    <p class="text-slate-500 text-center mb-12">Discover experiences from our valued collectors or leave your own review.</p>
+    <!-- This empty header tag is waiting for ui.js to inject the navbar -->
+    <header id="site-header"></header>
 
-    <!-- Review Form -->
-    <div class="bg-white p-8 border border-slate-200 shadow-sm mb-16">
-      <h3 class="text-2xl font-serif mb-6 text-slate-900">Leave a Review</h3>
-      <form id="review-form" class="space-y-5">
-        <div>
-          <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Rating</label>
-          <select id="review-rating" class="w-full border border-slate-200 p-3 bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors">
-            <option value="5">★★★★★ — Exceptional (5/5)</option>
-            <option value="4">★★★★☆ — Very Satisfied (4/5)</option>
-            <option value="3">★★★☆☆ — Average (3/5)</option>
-            <option value="2">★★☆☆☆ — Below Expectations (2/5)</option>
-            <option value="1">★☆☆☆☆ — Poor (1/5)</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Review Title</label>
-          <input type="text" id="review-title" required class="w-full border border-slate-200 p-3 focus:border-slate-400 focus:outline-none transition-colors" />
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Your Experience</label>
-          <textarea id="review-comment" required rows="4" class="w-full border border-slate-200 p-3 focus:border-slate-400 focus:outline-none transition-colors"></textarea>
-        </div>
-        <!-- Using your custom lumiere-btn class -->
-        <button type="submit" class="lumiere-btn w-full">PUBLISH REVIEW</button>
-      </form>
-    </div>
+    <main class="flex-grow w-full max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <h1 class="text-4xl font-serif text-center mb-3 text-slate-900">Client Feedback</h1>
+        <p class="text-slate-500 text-center mb-12">Discover experiences from our valued collectors or leave your own
+            review.</p>
 
-    <!-- Feed -->
-    <div class="space-y-6">
-      <h3 class="text-2xl font-serif mb-6 text-slate-900">Community Reviews</h3>
-      <div id="reviews-list" class="space-y-6">
-        <p class="text-slate-400 text-center py-8">Loading reviews...</p>
-      </div>
-    </div>
-  </main>
+        <!-- Review Form -->
+        <div class="bg-white p-8 border border-slate-200 shadow-sm mb-16">
+            <h3 class="text-2xl font-serif mb-6 text-slate-900">Leave a Review</h3>
+            <form id="review-form" class="space-y-5">
+                <div>
+                    <label
+                        class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Rating</label>
+                    <select id="review-rating"
+                        class="w-full border border-slate-200 p-3 bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors">
+                        <option value="5">★★★★★ — Exceptional (5/5)</option>
+                        <option value="4">★★★★☆ — Very Satisfied (4/5)</option>
+                        <option value="3">★★★☆☆ — Average (3/5)</option>
+                        <option value="2">★★☆☆☆ — Below Expectations (2/5)</option>
+                        <option value="1">★☆☆☆☆ — Poor (1/5)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Review
+                        Title</label>
+                    <input type="text" id="review-title" required
+                        class="w-full border border-slate-200 p-3 focus:border-slate-400 focus:outline-none transition-colors" />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Your
+                        Experience</label>
+                    <textarea id="review-comment" required rows="4"
+                        class="w-full border border-slate-200 p-3 focus:border-slate-400 focus:outline-none transition-colors"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Attach
+                        Photo (Optional)</label>
+                    <input type="file" id="review-image" accept="image/*"
+                        class="w-full border border-slate-200 p-2 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:border-0 file:text-[10px] file:font-bold file:tracking-widest file:uppercase file:bg-slate-900 file:text-white hover:file:bg-slate-800 transition-colors cursor-pointer" />
+                </div>
+                <button type="submit" class="lumiere-btn w-full">PUBLISH REVIEW</button>
+            </form>
+        </div>
 
-  <!-- This empty footer tag is waiting for ui.js to inject the footer -->
-  <footer id="site-footer"></footer>
-  
-  <!-- IMPORTANT: type="module" allows importing from ui.js -->
-  <script type="module" src="/js/reviews.js"></script>
+        <!-- Feed -->
+        <div class="space-y-6">
+            <h3 class="text-2xl font-serif mb-6 text-slate-900">Community Reviews</h3>
+            <div id="reviews-list" class="space-y-6">
+                <p class="text-slate-400 text-center py-8">Loading reviews...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- This empty footer tag is waiting for ui.js to inject the footer -->
+    <footer id="site-footer"></footer>
+
+    <!-- IMPORTANT: type="module" allows importing from ui.js -->
+    <script type="module" src="/js/reviews.js"></script>
 </body>
+
 </html>

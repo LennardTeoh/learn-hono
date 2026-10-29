@@ -3,7 +3,6 @@ import type { Bindings } from '../types'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
-// Fetch all reviews and include the user's name
 app.get('/', async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT reviews.*, "user".name as user_name 
@@ -14,10 +13,9 @@ app.get('/', async (c) => {
   return c.json(results)
 })
 
-// Submit a new review
 app.post('/', async (c) => {
   const body = await c.req.json()
-  const { userId, rating, title, comment } = body
+  const { userId, rating, title, comment, imageUrl } = body
 
   if (!userId || !rating || !title || !comment) {
     return c.json({ error: 'Missing required fields' }, 400)
@@ -25,8 +23,8 @@ app.post('/', async (c) => {
 
   const id = crypto.randomUUID()
   await c.env.DB.prepare(
-    `INSERT INTO reviews (id, user_id, rating, title, comment) VALUES (?, ?, ?, ?, ?)`
-  ).bind(id, userId, rating, title, comment).run()
+    `INSERT INTO reviews (id, user_id, rating, title, comment, image_url) VALUES (?, ?, ?, ?, ?, ?)`
+  ).bind(id, userId, rating, title, comment, imageUrl || null).run()
 
   return c.json({ success: true, id })
 })

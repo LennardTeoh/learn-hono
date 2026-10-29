@@ -4,5 +4,6 @@ CREATE TABLE reviews (
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   title TEXT NOT NULL,
   comment TEXT NOT NULL,
+  image_url TEXT, 
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
