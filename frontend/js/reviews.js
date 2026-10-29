@@ -1,8 +1,11 @@
 import { renderShell, escapeHtml, toast } from './ui.js';
-import { api } from './api.js';
+import { api, getCurrentUser } from './api.js'; // <-- Added getCurrentUser here
 
 async function init() {
   await renderShell();
+  
+  // Fetch the actual logged-in user properly using your API
+  const currentUser = await getCurrentUser();
 
   const reviewsList = document.getElementById('reviews-list');
   const reviewForm = document.getElementById('review-form');
@@ -26,7 +29,6 @@ async function init() {
       }
 
       reviewsList.innerHTML = reviews.map(r => {
-        // Parse the JSON array of images safely
         let imagesHtml = '';
         if (r.image_url) {
           try {
@@ -37,7 +39,6 @@ async function init() {
                 `</div>`;
             }
           } catch(e) {
-             // Fallback for single images just in case
              imagesHtml = `<img src="${r.image_url}" alt="Review Photo" class="mb-4 mt-2 h-24 w-24 object-cover border border-slate-200 shadow-sm rounded">`;
           }
         }
@@ -67,20 +68,25 @@ async function init() {
     reviewForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const sessionData = JSON.parse(localStorage.getItem('better-auth_session') || '{}');
-      const userId = sessionData?.user?.id;
-
-      if (!userId) {
+      // Ensure the user is actually logged in and retrieve their ID safely
+      if (!currentUser) {
         toast('Please log in to submit a review.', 'error');
         setTimeout(() => window.location.href = '/login/', 1500);
         return;
+      }
+      
+      // Handle nested user object if better-auth returns { user: { id: ... } }
+      const userId = currentUser.id || currentUser.user?.id;
+
+      if (!userId) {
+         toast('User ID not found. Please log in again.', 'error');
+         return;
       }
 
       const submitBtn = reviewForm.querySelector('button[type="submit"]');
       submitBtn.textContent = 'PUBLISHING...';
       submitBtn.disabled = true;
 
-      // Handle multiple image files
       const fileInput = document.getElementById('review-images');
       let base64Images = [];
       
@@ -102,7 +108,7 @@ async function init() {
         rating: parseInt(document.getElementById('review-rating').value),
         title: document.getElementById('review-title').value,
         comment: document.getElementById('review-comment').value,
-        imageUrls: base64Images // Send the array of images
+        imageUrls: base64Images
       };
 
       try {
