@@ -32,5 +32,4 @@ app.post('/', async (c) => {
 
   return c.json({ success: true, id })
 })
-
-export default app
+export { app as reviewRoutes }

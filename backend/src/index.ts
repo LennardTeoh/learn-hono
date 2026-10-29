@@ -7,6 +7,7 @@ import { productRoutes } from './routes/products'
 import { orderRoutes } from './routes/orders'
 import { wishlistRoutes } from './routes/wishlist'
 import { HttpError } from './lib/http'
+import { reviewRoutes } from './routes/reviews'
 
 const app = new Hono<AppEnv>()
 
@@ -63,6 +64,7 @@ app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
 app.route('/api/products', productRoutes)
 app.route('/api/orders', orderRoutes)
 app.route('/api/user/wishlist', wishlistRoutes)
+app.route('/api/reviews', reviewRoutes)
 
 app.notFound((c) => c.json({ error: 'Not found.' }, 404))
 
