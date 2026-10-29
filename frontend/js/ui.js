@@ -73,6 +73,7 @@ export async function renderShell() {
           <nav class="hidden lg:flex gap-8 items-center" aria-label="Main navigation">
             <a href="/products/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">The Collection</a>
             <a href="/authenticate/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Catalog Lookup</a>
+            <a href="/care/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">The Atelier</a>
             <a href="/reviews/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Reviews</a>
             <a href="/cart/" class="text-[10px] font-bold tracking-widest text-slate-900 uppercase hover:text-slate-500 transition-colors">Cart (<span data-cart-count>0</span>)</a>
             ${accountLinks}
@@ -82,6 +83,7 @@ export async function renderShell() {
             <nav class="absolute right-0 top-full mt-2 flex min-w-48 flex-col gap-5 border border-slate-200 bg-white p-5 shadow-sm" aria-label="Mobile navigation">
               <a href="/products/">The Collection</a>
               <a href="/authenticate/">Catalog Lookup</a>
+              <a href="/care/">The Atelier</a>
               <a href="/reviews/">Reviews</a>
               <a href="/cart/">Cart (<span data-cart-count>0</span>)</a>
               ${accountLinks}
@@ -113,6 +115,7 @@ export async function renderShell() {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
         <p class="text-[10px] text-slate-400 font-bold tracking-[0.2em] uppercase">© 2026 LUMIÈRE. All Rights Reserved.</p>
         <div class="flex gap-6 text-[10px] text-slate-400 font-bold tracking-[0.1em] uppercase">
+          <a href="/care/" class="hover:text-slate-900 transition-colors">L'Atelier Privé</a>
           <a href="/privacy/index.html" class="hover:text-slate-900 transition-colors">Privacy</a>
           <a href="/terms/index.html" class="hover:text-slate-900 transition-colors">Terms</a>
           <a href="/contact/index.html" class="hover:text-slate-900 transition-colors">Contact</a>
