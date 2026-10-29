@@ -1,38 +1,44 @@
-document.addEventListener('DOMContentLoaded', () => {
+import { renderShell, escapeHtml, toast } from './ui.js';
+import { api } from './api.js';
+
+async function init() {
+  // 1. Build the Navbar and Footer using your existing system
+  await renderShell();
+
   const reviewsList = document.getElementById('reviews-list');
   const reviewForm = document.getElementById('review-form');
-  // Use your existing API URL from the previous logs
-  const API_BASE = 'https://lumiere-api.p22014454.workers.dev/api/reviews';
 
+  // 2. Load Reviews
   async function loadReviews() {
     try {
-      const response = await fetch(API_BASE);
-      const reviews = await response.json();
+      // Use your built-in api.js fetcher
+      const reviews = await api('/api/reviews', { method: 'GET' });
 
       if (!reviews || reviews.length === 0) {
-        reviewsList.innerHTML = '<p class="text-gray-500 text-center bg-white p-8 rounded-xl border border-gray-200">No reviews yet. Be the first!</p>';
+        reviewsList.innerHTML = '<p class="text-slate-500 text-center bg-white p-8 border border-slate-200 shadow-sm">No reviews yet. Be the first to share your thoughts!</p>';
         return;
       }
 
       reviewsList.innerHTML = reviews.map(r => `
-        <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+        <div class="bg-white p-6 border border-slate-200 shadow-sm">
           <div class="flex justify-between items-start mb-3">
-            <h4 class="font-serif font-semibold text-lg text-gray-900">${escapeHtml(r.title)}</h4>
+            <h4 class="font-serif font-semibold text-lg text-slate-900">${escapeHtml(r.title)}</h4>
             <span class="text-amber-500 text-lg tracking-widest">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
           </div>
-          <p class="text-gray-600 leading-relaxed mb-4">${escapeHtml(r.comment)}</p>
-          <div class="text-xs text-gray-400 flex justify-between border-t border-gray-100 pt-3">
-            <span class="font-medium text-gray-700">Verified Collector: ${escapeHtml(r.user_name || 'Anonymous')}</span>
+          <p class="text-slate-600 leading-relaxed mb-4">${escapeHtml(r.comment)}</p>
+          <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase flex justify-between border-t border-slate-100 pt-3 mt-3">
+            <span>Verified Collector: ${escapeHtml(r.user_name || 'Anonymous')}</span>
             <span>${new Date(r.created_at).toLocaleDateString()}</span>
           </div>
         </div>
       `).join('');
     } catch (err) {
       console.error('Failed to load reviews:', err);
-      reviewsList.innerHTML = '<p class="text-red-500 text-center">Unable to load reviews.</p>';
+      reviewsList.innerHTML = '<p class="text-red-500 text-center text-sm py-4">Unable to load reviews. Ensure backend is deployed.</p>';
     }
   }
 
+  // 3. Handle Form Submissions
   if (reviewForm) {
     reviewForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -41,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const userId = sessionData?.user?.id;
 
       if (!userId) {
-        alert('Please log in to submit a review.');
-        window.location.href = '/login';
+        toast('Please log in to submit a review.', 'error');
+        setTimeout(() => window.location.href = '/login/', 1500);
         return;
       }
 
@@ -54,31 +60,23 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       try {
-        const res = await fetch(API_BASE, {
+        await api('/api/reviews', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        if (res.ok) {
-          reviewForm.reset();
-          loadReviews();
-          alert('Review published successfully!');
-        } else {
-          alert('Failed to publish review.');
-        }
+        
+        reviewForm.reset();
+        toast('Review published successfully!', 'success');
+        loadReviews();
       } catch (err) {
         console.error('Error submitting review:', err);
+        toast('Failed to publish review.', 'error');
       }
     });
   }
 
   loadReviews();
-});
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/[&<>"']/g, (m) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-  }[m]));
 }
+
+// Start the page setup
+init().catch(console.error);
