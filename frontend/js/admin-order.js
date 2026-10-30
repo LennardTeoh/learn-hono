@@ -189,7 +189,6 @@ function renderOrderInterface(root, order, items, allProducts) {
         <option value="collected" class="bg-slate-900 text-white">Collected (Picked Up)</option>
       `;
       
-      // Formatting the PIN to match the customer receipt spacing (e.g., 8 6 1 3 5 8)
       const rawPin = order.verification_pin || 'N/A';
       const formattedPin = rawPin !== 'N/A' ? String(rawPin).split('').join(' ') : 'Not Generated';
 
@@ -217,12 +216,35 @@ function renderOrderInterface(root, order, items, allProducts) {
         <div class="mt-6 pt-6 border-t border-slate-700">
           <div class="flex justify-between items-end mb-3">
             <label for="action-tracking" class="block text-[9px] uppercase tracking-widest text-slate-300 font-bold">Tracking / Waybill</label>
+            <button type="button" id="generate-waybill-btn" class="text-[9px] uppercase tracking-widest text-amber-400 hover:text-white font-bold underline cursor-pointer bg-transparent border-none p-0 transition-colors">
+              Click to generate
+            </button>
           </div>
-          <input type="text" id="action-tracking" placeholder="Enter tracking..." value="${escapeHtml(order.tracking_number || '')}" class="w-full border border-slate-600 bg-transparent p-3 text-sm focus:outline-none focus:border-white font-serif text-white placeholder-slate-500">
+          <input type="text" id="action-tracking" placeholder="Click to generate..." value="${escapeHtml(order.tracking_number || '')}" class="w-full border border-slate-600 bg-transparent p-3 text-sm focus:outline-none focus:border-white font-serif text-white placeholder-slate-400 cursor-pointer">
         </div>
       `;
       if (displayAddress) displayAddress.textContent = order.address1 || 'Standard Delivery';
 
+      const trackingInput = document.getElementById('action-tracking');
+      const generateBtn = document.getElementById('generate-waybill-btn');
+
+      const generateWaybillCode = () => {
+        const shortId = String(order.id || 'ORD').split('-')[0].toUpperCase();
+        const randDigits = Math.floor(100000 + Math.random() * 900000);
+        trackingInput.value = `LUM-WB-${shortId}-${randDigits}`;
+      };
+
+      if (generateBtn) {
+        generateBtn.addEventListener('click', generateWaybillCode);
+      }
+
+      if (trackingInput) {
+        trackingInput.addEventListener('click', () => {
+          if (!trackingInput.value.trim()) {
+            generateWaybillCode();
+          }
+        });
+      }
     }
 
     if (Array.from(statusSelect.options).some(opt => opt.value === currentStatus)) {
@@ -256,7 +278,7 @@ function renderOrderInterface(root, order, items, allProducts) {
           status: statusValue, 
           tracking_number: trackingValue
         })
-      })
+      });
       
       window.location.reload();
     } catch (error) {
