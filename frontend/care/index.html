@@ -13,17 +13,17 @@
   <header id="site-header"></header>
 
   <main class="flex-grow w-full max-w-5xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-    <!-- Clean Page Title (Matches Reviews Page Style) -->
+    <!-- Clean Page Title -->
     <h1 class="text-4xl font-serif text-center mb-3 text-slate-900">Bespoke Care &amp; Services</h1>
-    <p class="text-slate-500 text-center mb-12 max-w-2xl mx-auto">
-      Enjoy complimentary lifetime cleaning and specialist maintenance by our in-house artisans to keep your LUMIÈRE pieces in pristine condition.
+    <p class="text-slate-500 text-center mb-10 max-w-2xl mx-auto text-sm">
+      Enjoy complimentary lifetime cleaning and specialist maintenance by our in-house artisans. Click any service below to select it instantly for your appointment.
     </p>
 
-    <!-- 4 Service Categories Grid -->
+    <!-- 4 Service Categories Grid (Now Interactive) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
       
       <!-- 1. Necklace Cleaning Service -->
-      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between transition-all hover:border-slate-400" data-service-card="Necklace Cleaning & Care">
         <div>
           <span class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-1">Fine Jewelry</span>
           <h3 class="text-2xl font-serif mb-4 text-slate-900">Necklace Cleaning &amp; Care</h3>
@@ -31,43 +31,56 @@
             Delicate chains and diamond pendants receive gentle deep-cleaning and structural checks to maintain their shine and security.
           </p>
           <ul class="space-y-4 text-sm mb-6">
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Ultrasonic Deep Cleaning</span>
-                <span class="text-xs text-slate-500">Removes lotion and dust buildup from chain links and settings.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Ultrasonic Deep Cleaning" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Ultrasonic Deep Cleaning</span>
+                  <span class="text-xs text-slate-500">Removes lotion and dust buildup from chain links and settings.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Clasp &amp; Setting Inspection</span>
-                <span class="text-xs text-slate-500">Tightening of loose clasps and checking stone security.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Clasp & Setting Inspection" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Clasp &amp; Setting Inspection</span>
+                  <span class="text-xs text-slate-500">Tightening of loose clasps and checking stone security.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Professional Chain Detangling</span>
-                <span class="text-xs text-slate-500">Safe knot removal without stretching or damaging fine links.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Professional Chain Detangling" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Professional Chain Detangling</span>
+                  <span class="text-xs text-slate-500">Safe knot removal without stretching or damaging fine links.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start">
-              <div>
-                <span class="font-medium text-slate-900 block">Chain Soldering &amp; Repair</span>
-                <span class="text-xs text-slate-500">Seamless laser welding for snapped or broken links.</span>
+            <li class="flex items-start justify-between cursor-pointer select-none group" data-service-item="Chain Soldering & Repair" data-price="25000">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Chain Soldering &amp; Repair</span>
+                  <span class="text-xs text-slate-500">Seamless laser welding for snapped or broken links.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase text-slate-500 shrink-0 ml-4">From RM 250</span>
             </li>
           </ul>
         </div>
-        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4">
-          Turnaround: Same-Day (Cleaning) · 5 Days (Repair)
+        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4 flex justify-between items-center">
+          <span>Turnaround: Same-Day / 5 Days</span>
+          <span class="text-amber-700 font-semibold lowercase italic">Click items to select</span>
         </div>
       </div>
 
       <!-- 2. Watch Battery & Normal Services -->
-      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between transition-all hover:border-slate-400" data-service-card="Watch Battery & Servicing">
         <div>
           <span class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-1">Timepieces</span>
           <h3 class="text-2xl font-serif mb-4 text-slate-900">Watch Battery &amp; Servicing</h3>
@@ -75,43 +88,56 @@
             From quick battery replacements to complete movement servicing, our watchmakers keep your timepiece running accurately.
           </p>
           <ul class="space-y-4 text-sm mb-6">
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Battery &amp; Seal Replacement</span>
-                <span class="text-xs text-slate-500">Fresh Swiss battery and water-resistance pressure testing.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Battery & Seal Replacement" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Battery &amp; Seal Replacement</span>
+                  <span class="text-xs text-slate-500">Fresh Swiss battery and water-resistance pressure testing.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Strap Sizing &amp; Case Cleaning</span>
-                <span class="text-xs text-slate-500">Link adjustment for a perfect fit and exterior ultrasonic wash.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Strap Sizing & Case Cleaning" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Strap Sizing &amp; Case Cleaning</span>
+                  <span class="text-xs text-slate-500">Link adjustment for a perfect fit and exterior ultrasonic wash.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Accuracy &amp; Demagnetization Check</span>
-                <span class="text-xs text-slate-500">Fixes fast or slow timekeeping caused by everyday electronics.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Accuracy & Demagnetization Check" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Accuracy &amp; Demagnetization Check</span>
+                  <span class="text-xs text-slate-500">Fixes fast or slow timekeeping caused by everyday electronics.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start">
-              <div>
-                <span class="font-medium text-slate-900 block">Full Movement Overhaul</span>
-                <span class="text-xs text-slate-500">Complete internal cleaning, lubrication, and calibration.</span>
+            <li class="flex items-start justify-between cursor-pointer select-none group" data-service-item="Full Movement Overhaul" data-price="120000">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Full Movement Overhaul</span>
+                  <span class="text-xs text-slate-500">Complete internal cleaning, lubrication, and calibration.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase text-slate-500 shrink-0 ml-4">From RM 1,200</span>
             </li>
           </ul>
         </div>
-        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4">
-          Turnaround: 24 Hours (Battery) · 2–3 Weeks (Full Service)
+        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4 flex justify-between items-center">
+          <span>Turnaround: 24 Hours / 3 Weeks</span>
+          <span class="text-amber-700 font-semibold lowercase italic">Click items to select</span>
         </div>
       </div>
 
       <!-- 3. Bag Cleaning -->
-      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between transition-all hover:border-slate-400" data-service-card="Bag Cleaning & Leather Spa">
         <div>
           <span class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-1">Leather Goods</span>
           <h3 class="text-2xl font-serif mb-4 text-slate-900">Bag Cleaning &amp; Leather Spa</h3>
@@ -119,43 +145,56 @@
             Protect and refresh your handbags with specialized leather conditioning, stain care, and hardware polishing.
           </p>
           <ul class="space-y-4 text-sm mb-6">
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Exterior Leather Conditioning</span>
-                <span class="text-xs text-slate-500">Gentle surface cleaning and moisturizing cream treatment.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Exterior Leather Conditioning" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Exterior Leather Conditioning</span>
+                  <span class="text-xs text-slate-500">Gentle surface cleaning and moisturizing cream treatment.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Interior Lining Refresh</span>
-                <span class="text-xs text-slate-500">Dust removal and gentle deodorizing of inner compartments.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Interior Lining Refresh" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Interior Lining Refresh</span>
+                  <span class="text-xs text-slate-500">Dust removal and gentle deodorizing of inner compartments.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Corner Scuff &amp; Edge Touch-Up</span>
-                <span class="text-xs text-slate-500">Color-matched repair for worn corners and strap edges.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Corner Scuff & Edge Touch-Up" data-price="45000">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Corner Scuff &amp; Edge Touch-Up</span>
+                  <span class="text-xs text-slate-500">Color-matched repair for worn corners and strap edges.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase text-slate-500 shrink-0 ml-4">From RM 450</span>
             </li>
-            <li class="flex justify-between items-start">
-              <div>
-                <span class="font-medium text-slate-900 block">Hardware &amp; Zipper Repair</span>
-                <span class="text-xs text-slate-500">Polishing of tarnished locks and replacing worn zippers.</span>
+            <li class="flex items-start justify-between cursor-pointer select-none group" data-service-item="Hardware & Zipper Repair" data-price="35000">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Hardware &amp; Zipper Repair</span>
+                  <span class="text-xs text-slate-500">Polishing of tarnished locks and replacing worn zippers.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase text-slate-500 shrink-0 ml-4">From RM 350</span>
             </li>
           </ul>
         </div>
-        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4">
-          Turnaround: 3–5 Days (Cleaning) · 2 Weeks (Repair)
+        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4 flex justify-between items-center">
+          <span>Turnaround: 3 Days / 2 Weeks</span>
+          <span class="text-amber-700 font-semibold lowercase italic">Click items to select</span>
         </div>
       </div>
 
       <!-- 4. Bangles and Bracelet Cleaning / Polishing -->
-      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between">
+      <div class="bg-white p-8 border border-slate-200 shadow-sm flex flex-col justify-between transition-all hover:border-slate-400" data-service-card="Bangles & Bracelet Polishing">
         <div>
           <span class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-1">Wristwear</span>
           <h3 class="text-2xl font-serif mb-4 text-slate-900">Bangles &amp; Bracelet Polishing</h3>
@@ -163,64 +202,85 @@
             Restore the mirror shine of your gold, platinum, or silver cuffs and bracelets while keeping clasps and hinges secure.
           </p>
           <ul class="space-y-4 text-sm mb-6">
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Surface Cleaning &amp; Soft Buffing</span>
-                <span class="text-xs text-slate-500">Removes everyday tarnish and restores natural metal shine.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Surface Cleaning & Soft Buffing" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Surface Cleaning &amp; Soft Buffing</span>
+                  <span class="text-xs text-slate-500">Removes everyday tarnish and restores natural metal shine.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Hinge &amp; Lock Tightening</span>
-                <span class="text-xs text-slate-500">Adjusts loose bangle hinges, safety chains, and screw locks.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Hinge & Lock Tightening" data-price="0">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Hinge &amp; Lock Tightening</span>
+                  <span class="text-xs text-slate-500">Adjusts loose bangle hinges, safety chains, and screw locks.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-800 px-2.5 py-1 shrink-0 ml-4">Complimentary</span>
             </li>
-            <li class="flex justify-between items-start border-b border-slate-100 pb-3">
-              <div>
-                <span class="font-medium text-slate-900 block">Scratch Removal &amp; Deep Polishing</span>
-                <span class="text-xs text-slate-500">Smooths out surface scratches to restore a like-new finish.</span>
+            <li class="flex items-start justify-between border-b border-slate-100 pb-3 cursor-pointer select-none group" data-service-item="Scratch Removal & Deep Polishing" data-price="20000">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">Scratch Removal &amp; Deep Polishing</span>
+                  <span class="text-xs text-slate-500">Smooths out surface scratches to restore a like-new finish.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase text-slate-500 shrink-0 ml-4">From RM 200</span>
             </li>
-            <li class="flex justify-between items-start">
-              <div>
-                <span class="font-medium text-slate-900 block">White Gold Rhodium Plating</span>
-                <span class="text-xs text-slate-500">Re-plates faded white gold bangles for a bright mirror finish.</span>
+            <li class="flex items-start justify-between cursor-pointer select-none group" data-service-item="White Gold Rhodium Plating" data-price="30000">
+              <div class="flex items-start gap-3">
+                <input type="checkbox" class="mt-1 accent-slate-900 cursor-pointer pointer-events-none" />
+                <div>
+                  <span class="font-medium text-slate-900 group-hover:text-amber-700 transition-colors block">White Gold Rhodium Plating</span>
+                  <span class="text-xs text-slate-500">Re-plates faded white gold bangles for a bright mirror finish.</span>
+                </div>
               </div>
               <span class="text-[10px] font-bold tracking-widest uppercase text-slate-500 shrink-0 ml-4">From RM 300</span>
             </li>
           </ul>
         </div>
-        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4">
-          Turnaround: Same-Day (Buffing) · 5–7 Days (Polishing/Plating)
+        <div class="text-[10px] font-bold tracking-widest text-slate-400 uppercase border-t border-slate-100 pt-4 flex justify-between items-center">
+          <span>Turnaround: Same-Day / 7 Days</span>
+          <span class="text-amber-700 font-semibold lowercase italic">Click items to select</span>
         </div>
       </div>
 
     </div>
 
-    <!-- Booking Form (Matches Review Form Card Style) -->
-    <div class="bg-white p-8 border border-slate-200 shadow-sm max-w-3xl mx-auto">
-      <h3 class="text-2xl font-serif mb-2 text-slate-900">Book a Care Appointment</h3>
-      <p class="text-sm text-slate-500 mb-6">Schedule a boutique drop-off or request a secure pickup for your item.</p>
+    <!-- Booking Form with Live Selected Services Preview -->
+    <div id="booking-section" class="bg-white p-8 border border-slate-200 shadow-sm max-w-3xl mx-auto">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-2xl font-serif text-slate-900">Book a Care Appointment</h3>
+        <span id="selected-count-badge" class="text-[10px] font-bold tracking-widest uppercase bg-slate-100 text-slate-700 px-3 py-1">0 Services Selected</span>
+      </div>
+      <p class="text-sm text-slate-500 mb-6">Select services above or choose your category below to schedule your appointment.</p>
+
+      <!-- Selected Services Tag Cloud -->
+      <div id="selected-services-preview" class="hidden mb-6 p-4 bg-slate-50 border border-slate-200 flex flex-wrap gap-2 items-center">
+        <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mr-2">Selected:</span>
+      </div>
 
       <form id="care-booking-form" class="space-y-5">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Full Name</label>
-            <input type="text" id="care-name" required class="w-full border border-slate-200 p-3 focus:border-slate-400 focus:outline-none transition-colors" />
+            <input type="text" id="care-name" required class="w-full border border-slate-200 p-3 text-sm focus:border-slate-400 focus:outline-none transition-colors" />
           </div>
           <div>
             <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Email Address</label>
-            <input type="email" id="care-email" required class="w-full border border-slate-200 p-3 focus:border-slate-400 focus:outline-none transition-colors" />
+            <input type="email" id="care-email" required class="w-full border border-slate-200 p-3 text-sm focus:border-slate-400 focus:outline-none transition-colors" />
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Service Category</label>
-            <select id="care-division" required class="w-full border border-slate-200 p-3 bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors">
+            <select id="care-division" required class="w-full border border-slate-200 p-3 text-sm bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors">
               <option value="Necklace Cleaning & Care">Necklace Cleaning &amp; Care</option>
               <option value="Watch Battery & Servicing">Watch Battery &amp; Servicing</option>
               <option value="Bag Cleaning & Leather Spa">Bag Cleaning &amp; Leather Spa</option>
@@ -229,14 +289,14 @@
           </div>
           <div>
             <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Serial Number (Optional)</label>
-            <input type="text" id="care-serial" placeholder="e.g. LUM-2026-XXXX" class="w-full border border-slate-200 p-3 uppercase focus:border-slate-400 focus:outline-none transition-colors" />
+            <input type="text" id="care-serial" placeholder="e.g. LUM-2026-XXXX" class="w-full border border-slate-200 p-3 text-sm uppercase focus:border-slate-400 focus:outline-none transition-colors" />
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Drop-Off Method</label>
-            <select id="care-method" required class="w-full border border-slate-200 p-3 bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors">
+            <select id="care-method" required class="w-full border border-slate-200 p-3 text-sm bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors">
               <option value="Boutique Drop-Off (Kuala Lumpur)">Boutique Drop-Off (Kuala Lumpur)</option>
               <option value="Boutique Drop-Off (Penang)">Boutique Drop-Off (Penang)</option>
               <option value="Insured Courier Pickup">Insured Courier Pickup</option>
@@ -244,13 +304,13 @@
           </div>
           <div>
             <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Preferred Date</label>
-            <input type="date" id="care-date" required class="w-full border border-slate-200 p-3 bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors" />
+            <input type="date" id="care-date" required class="w-full border border-slate-200 p-3 text-sm bg-white text-slate-900 focus:border-slate-400 focus:outline-none transition-colors" />
           </div>
         </div>
 
         <div>
           <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-2">Additional Notes</label>
-          <textarea id="care-notes" rows="3" placeholder="Let us know which specific cleaning or repair service your item needs..." class="w-full border border-slate-200 p-3 focus:border-slate-400 focus:outline-none transition-colors"></textarea>
+          <textarea id="care-notes" rows="3" placeholder="Let us know which specific cleaning or repair service your item needs..." class="w-full border border-slate-200 p-3 text-sm focus:border-slate-400 focus:outline-none transition-colors"></textarea>
         </div>
 
         <button type="submit" class="lumiere-btn w-full">BOOK APPOINTMENT</button>
