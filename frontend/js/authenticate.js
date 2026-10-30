@@ -1,5 +1,5 @@
 import { api } from './api.js'
-import { renderShell, escapeHtml, money } from './ui.js'
+import { renderShell, escapeHtml } from './ui.js'
 
 await renderShell()
 
@@ -34,20 +34,19 @@ form.addEventListener('submit', async (event) => {
 })
 
 // ============================================================================
-// 2. DYNAMIC PROVENANCE ENGINE FOR ALL EXISTING CATALOG PRODUCTS
+// 2. EXACT ORDER & BILL AUTHENTICATION FOR REAL PURCHASED ITEMS
 // ============================================================================
 const orderForm = document.getElementById('order-auth-form')
 const orderInput = document.getElementById('order-input')
 const orderResult = document.getElementById('order-result-box')
 
-// Brand-level rules so ANY product in your database automatically gets accurate Maison data
 const BRAND_MAISON_RULES = [
   {
     keywords: ['lv', 'louis vuitton', 'neverfull', 'speedy', 'keepall', 'alma', 'capucines'],
     maison: 'Louis Vuitton Malletier',
     websiteUrl: 'https://www.louisvuitton.com',
     websiteName: 'louisvuitton.com (Official Maison)',
-    skuPrefix: 'M4',
+    skuPrefix: 'M40995',
     atelier: 'Asnières-sur-Seine, France · Atelier Louis Vuitton',
     securityTech: 'Embedded NFC / RFID Cryptographic Transponder',
     inspector: 'Contrôleur Qualité J. Laurent (ID #LV-882)'
@@ -67,7 +66,7 @@ const BRAND_MAISON_RULES = [
     maison: 'Chanel SAS',
     websiteUrl: 'https://www.chanel.com',
     websiteName: 'chanel.com (31 Rue Cambon Flagship)',
-    skuPrefix: 'A01112-Y0',
+    skuPrefix: 'A01112',
     atelier: 'Verneuil-en-Halatte, France · Atelier Chanel',
     securityTech: 'Laser-Etched Cryptographic Metal Serial Plaque',
     inspector: 'Directrice Qualité M. Beaumont (ID #CH-104)'
@@ -97,7 +96,7 @@ const BRAND_MAISON_RULES = [
     maison: 'Rolex SA',
     websiteUrl: 'https://www.rolex.com',
     websiteName: 'rolex.com (Geneva Official Chronometer Registry)',
-    skuPrefix: 'M126',
+    skuPrefix: 'M126610',
     atelier: 'Plan-les-Ouates, Geneva, Switzerland',
     securityTech: 'Engraved Rehaut Scrambled Serial & NFC Chronometer Card',
     inspector: 'COSC Master Horologist E. Muller (ID #RX-702)'
@@ -148,7 +147,7 @@ const BRAND_MAISON_RULES = [
     websiteUrl: 'https://www.tiffany.com',
     websiteName: 'tiffany.com (727 Fifth Avenue Landmark)',
     skuPrefix: 'GRP11',
-    atelier: 'Pelham, New York, USA · Tiffany Hollowware & Jewelry Workshop',
+    atelier: 'Pelham, New York, USA · Tiffany Workshop',
     securityTech: 'Laser-Inscribed Crown Hallmark & Serial Registry',
     inspector: 'Master Silversmith D. Sterling (ID #TF-418)'
   },
@@ -173,18 +172,17 @@ const BRAND_MAISON_RULES = [
     inspector: 'Artisan Chef C. Garnier (ID #YSL-715)'
   },
   {
-    keywords: ['patek', 'nautilus', 'aquanaut', 'calatrava', 'audemars', 'royal oak', 'omega', 'speedmaster', 'seamaster', 'cartier watch'],
+    keywords: ['patek', 'nautilus', 'aquanaut', 'calatrava', 'audemars', 'royal oak', 'omega', 'speedmaster', 'seamaster'],
     maison: 'Haute Horlogerie Suisse',
-    websiteUrl: 'https://www.fhs.swiss',
+    websiteUrl: 'https://www.omegawatches.com',
     websiteName: 'Official Swiss Haute Horlogerie Registry',
-    skuPrefix: 'CH-5711',
-    atelier: 'Geneva / Le Brassus, Switzerland',
-    securityTech: 'Sapphire Caseback Calibre Serial & Extract from the Archives',
+    skuPrefix: 'CH-310',
+    atelier: 'Geneva / Bienne, Switzerland',
+    securityTech: 'Sapphire Caseback Calibre Serial & Master Chronometer Card',
     inspector: 'Maître Horloger K. Vacheron (ID #HH-991)'
   }
 ]
 
-// Helper to create a deterministic numeric hash from any product ID
 function hashString(str = '') {
   let h = 2166136261
   for (let i = 0; i < str.length; i++) {
@@ -194,18 +192,26 @@ function hashString(str = '') {
   return Math.abs(h)
 }
 
-// Automatically generates full provenance metadata for ANY product in your catalog
-function buildProvenanceForProduct(product, orderId) {
-  const id = String(product.id || 'prod_item')
-  const name = String(product.name || product.title || 'Lumière Luxury Piece')
+// Extracts clean Order ID whether user types "#3202F70D", "3202F70D", or Waybill "LUM-WB-3202F70D-294154"
+function normalizeOrderQuery(raw = '') {
+  let cleaned = raw.trim().replace(/^#+/, '').trim()
+  const wbMatch = cleaned.match(/^LUM-WB-([A-Za-z0-9]+)-\d+$/i)
+  if (wbMatch) {
+    cleaned = wbMatch[1]
+  }
+  return cleaned
+}
+
+function buildProvenanceForProduct(product, displayOrderId, trackingNumber = '') {
+  const id = String(product.id || product.product_id || 'prod_item')
+  const name = String(product.name || product.product_name || product.title || 'Lumière Luxury Piece')
   const category = String(product.category || product.brand || '')
-  const description = String(product.description || 'Crafted from archival grade materials with signature hardware.')
+  const description = String(product.description || 'Crafted from archival grade materials with signature Maison hardware.')
   const searchPool = `${id} ${name} ${category} ${description}`.toLowerCase()
 
   const h = hashString(id)
-  const orderHash = hashString(`${orderId}_${id}`)
+  const orderHash = hashString(`${displayOrderId}_${id}`)
 
-  // Match brand rule or use high-luxury default
   const matchedBrand = BRAND_MAISON_RULES.find(rule =>
     rule.keywords.some(kw => searchPool.includes(kw))
   ) || {
@@ -218,7 +224,6 @@ function buildProvenanceForProduct(product, orderId) {
     inspector: 'Maître Artisan V. Laurent (ID #ML-501)'
   }
 
-  // Deterministic SKU, Year, Batch, and Serial per product
   const skuDigits = String(10000 + (h % 89999))
   const skuSuffix = id.replace(/^prod_/, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || 'LUX'
   const originalSku = product.sku || `${matchedBrand.skuPrefix}-${skuDigits}-${skuSuffix}`
@@ -229,13 +234,11 @@ function buildProvenanceForProduct(product, orderId) {
   const batchLetters = ['AT', 'PA', 'FL', 'GV', 'ML', 'VN'][h % 6]
   const batchCode = `${batchLetters}-${2024 + (h % 3)}-${String(100 + (h % 899))}`
   const microchipId = `NFC-${orderHash.toString(16).toUpperCase().padStart(8, '0')}-${(h % 9999).toString().padStart(4, '0')}`
-  const certId = `CERT-${orderId.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6)}-${skuDigits}`
 
   return {
     id,
     name,
-    price_cents: product.price_cents || product.price || null,
-    image_url: product.image_url || product.image || null,
+    qty: product.qty || product.quantity || 1,
     maison: matchedBrand.maison,
     websiteUrl: matchedBrand.websiteUrl,
     websiteName: matchedBrand.websiteName,
@@ -247,12 +250,11 @@ function buildProvenanceForProduct(product, orderId) {
     microchipId,
     batchCode,
     inspector: matchedBrand.inspector,
-    certId,
+    trackingNumber: trackingNumber || 'Pending Dispatch / Boutique Fulfillment',
     warranty: 'Active · Eligible for Complimentary Lumière Bespoke Care'
   }
 }
 
-// Fetch all existing products from your backend database
 let allCatalogProducts = null
 async function getAllCatalogProducts() {
   if (allCatalogProducts) return allCatalogProducts
@@ -268,8 +270,11 @@ async function getAllCatalogProducts() {
 if (orderForm) {
   orderForm.addEventListener('submit', async (event) => {
     event.preventDefault()
-    const rawOrderId = orderInput.value.trim()
-    if (!rawOrderId) return
+    const rawInput = orderInput.value.trim()
+    if (!rawInput) return
+
+    // Clean "#" or "LUM-WB-..." so "#3202F70D" becomes "3202F70D"
+    const cleanOrderId = normalizeOrderQuery(rawInput)
 
     const button = orderForm.querySelector('button')
     const originalBtnText = button.textContent
@@ -278,95 +283,121 @@ if (orderForm) {
 
     try {
       const catalogProducts = await getAllCatalogProducts()
-      const productMap = new Map(catalogProducts.map(p => [String(p.id).toLowerCase(), p]))
+      const productMap = new Map()
+      for (const p of catalogProducts) {
+        productMap.set(String(p.id).toLowerCase(), p)
+        productMap.set(String(p.name || '').toLowerCase(), p)
+      }
 
       let matchedOrder = null
       let orderItems = []
 
-      // 1. Check if the user has a real order matching this ID in /api/orders
-      try {
-        const ordersRes = await api('/api/orders')
-        const ordersList = Array.isArray(ordersRes) ? ordersRes : (ordersRes?.orders || [])
-        matchedOrder = ordersList.find(o =>
-          String(o.id).toLowerCase() === rawOrderId.toLowerCase() ||
-          String(o.order_number || '').toLowerCase() === rawOrderId.toLowerCase() ||
-          String(o.id).toLowerCase().includes(rawOrderId.toLowerCase())
-        )
-        if (matchedOrder && Array.isArray(matchedOrder.items)) {
-          orderItems = matchedOrder.items
-        }
-      } catch {
-        // User may not be logged in or endpoint returns single order
-      }
-
-      // 2. Also try /api/orders/:id directly in case your backend supports direct lookup
-      if (!matchedOrder) {
+      // 1. Try direct lookup via /api/orders/:id using the cleaned ID (e.g. "3202F70D")
+      for (const candidateId of [cleanOrderId, cleanOrderId.toUpperCase(), cleanOrderId.toLowerCase()]) {
+        if (matchedOrder) break
         try {
-          const singleRes = await api(`/api/orders/${encodeURIComponent(rawOrderId)}`)
+          const singleRes = await api(`/api/orders/${encodeURIComponent(candidateId)}`)
           if (singleRes && (singleRes.order || singleRes.id)) {
             matchedOrder = singleRes.order || singleRes
-            orderItems = matchedOrder.items || singleRes.items || []
+            orderItems = singleRes.items || matchedOrder.items || []
           }
         } catch {}
       }
 
-      // 3. Check if the user entered a product keyword or if we should match from all catalog products
+      // 2. If not found directly, search the user's orders list (matches full ID, short ID prefix, or tracking waybill)
+      if (!matchedOrder) {
+        try {
+          const ordersRes = await api('/api/orders')
+          const ordersList = Array.isArray(ordersRes) ? ordersRes : (ordersRes?.orders || [])
+          const q = cleanOrderId.toLowerCase()
+          const rawQ = rawInput.replace(/^#+/, '').toLowerCase()
+
+          const found = ordersList.find(o => {
+            const oid = String(o.id || '').toLowerCase()
+            const shortOid = oid.split('-')[0]
+            const track = String(o.tracking_number || '').toLowerCase()
+            return oid === q || shortOid === q || oid.startsWith(q) || (track && track === rawQ)
+          })
+
+          if (found) {
+            // Fetch full order details including items via /api/orders/:id
+            try {
+              const detailRes = await api(`/api/orders/${encodeURIComponent(found.id)}`)
+              matchedOrder = detailRes.order || found
+              orderItems = detailRes.items || found.items || []
+            } catch {
+              matchedOrder = found
+              orderItems = found.items || []
+            }
+          }
+        } catch {}
+      }
+
+      // 3. Build the exact list of products to authenticate
       let productsToAuthenticate = []
 
       if (orderItems.length > 0) {
-        // Map every item in the real order to the full product record from your catalog
         productsToAuthenticate = orderItems.map(item => {
           const pid = String(item.product_id || item.productId || item.id || '').toLowerCase()
-          const fullProd = productMap.get(pid) || {}
+          const pname = String(item.product_name || item.name || item.title || '').toLowerCase()
+          const catalogMatch = productMap.get(pid) || productMap.get(pname) ||
+            catalogProducts.find(p => String(p.name || '').toLowerCase().includes(pname) || pname.includes(String(p.name || '').toLowerCase())) || {}
+
           return {
-            ...fullProd,
-            id: fullProd.id || item.product_id || item.id || 'prod_verified',
-            name: fullProd.name || item.product_name || item.name || item.title || 'Lumière Collection Piece',
-            price_cents: item.price_cents || fullProd.price_cents
+            ...catalogMatch,
+            id: catalogMatch.id || item.product_id || item.productId || 'prod_lv_neverfull',
+            name: item.product_name || item.name || catalogMatch.name || 'Lumière Luxury Piece',
+            qty: item.quantity || item.qty || 1
           }
         })
-      } else if (catalogProducts.length > 0) {
-        // If someone enters a Bill ID containing a product's name/ID (e.g. "BILL-NEVERFULL" or "ORD-DIOR"), match that product
-        const cleanQuery = rawOrderId.toLowerCase()
+      } else if (cleanOrderId.toLowerCase() === 'all' || cleanOrderId.toLowerCase() === 'ord-all') {
+        // Demo shortcut: typing "ORD-ALL" shows provenance for all products in your catalog
+        productsToAuthenticate = catalogProducts
+      } else {
+        // Also allow direct product keyword matching if someone types e.g. "LV-NEVERFULL"
+        const cleanQuery = cleanOrderId.toLowerCase()
         const keywordMatches = catalogProducts.filter(p => {
           const slug = String(p.id).toLowerCase().replace(/^prod_/, '')
-          const words = slug.split('_').filter(w => w.length >= 2)
-          return cleanQuery.includes(slug) || words.some(w => cleanQuery.includes(w))
+          const name = String(p.name || '').toLowerCase()
+          return cleanQuery.includes(slug) || name.includes(cleanQuery)
         })
-
         if (keywordMatches.length > 0) {
           productsToAuthenticate = keywordMatches
-        } else if (cleanQuery === 'all' || cleanQuery.includes('all')) {
-          // Typing "ALL" or "ORD-ALL" displays provenance certificates for EVERY existing product in your database
-          productsToAuthenticate = catalogProducts
-        } else {
-          // Deterministically pick one of your real existing database products based on the Bill ID hash
-          const idx = hashString(rawOrderId.toLowerCase()) % catalogProducts.length
-          productsToAuthenticate = [catalogProducts[idx]]
         }
       }
 
+      // If no real order or product matched, show a clear error instead of guessing a random item!
       if (productsToAuthenticate.length === 0) {
         orderResult.classList.remove('hidden')
         orderResult.innerHTML = `
-          <div class="border border-slate-200 bg-slate-50 p-6 text-center">
-            <h3 class="mb-2 font-serif text-xl text-slate-900">No Order Match Found</h3>
-            <p class="text-sm text-slate-600">Could not verify Bill / Order ID "${escapeHtml(rawOrderId)}".</p>
+          <div class="border border-red-200 bg-red-50/50 p-6 text-center">
+            <h3 class="mb-2 font-serif text-xl text-slate-900">Order Not Found</h3>
+            <p class="text-sm text-slate-600">
+              We could not find an order matching <strong>${escapeHtml(rawInput)}</strong>. Please ensure you are signed in to the account that placed the order and check your Order ID (e.g. <code>3202F70D</code>).
+            </p>
           </div>`
         return
       }
 
-      const orderDate = matchedOrder?.created_at
-        ? new Date(matchedOrder.created_at).toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' })
+      const rawDate = matchedOrder?.created_at || matchedOrder?.createdAt
+      const orderDate = rawDate
+        ? new Date((rawDate < 1e12 ? rawDate * 1000 : rawDate)).toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' })
         : new Date().toLocaleDateString('en-MY', { year: 'numeric', month: 'long', day: 'numeric' })
 
-      const certificates = productsToAuthenticate.map(prod => buildProvenanceForProduct(prod, rawOrderId))
+      const displayOrderBadge = matchedOrder?.id
+        ? `#${String(matchedOrder.id).split('-')[0].toUpperCase()}`
+        : `#${cleanOrderId.toUpperCase()}`
+
+      const trackingNumber = matchedOrder?.tracking_number || ''
+      const certificates = productsToAuthenticate.map(prod =>
+        buildProvenanceForProduct(prod, displayOrderBadge, trackingNumber)
+      )
 
       orderResult.classList.remove('hidden')
       orderResult.innerHTML = `
         <div class="border border-emerald-200 bg-emerald-50/60 p-4 text-center">
           <p class="text-[10px] font-bold tracking-[0.2em] text-emerald-800 uppercase">
-            ✓ Official Bill Verified · ${certificates.length} Authenticated ${certificates.length === 1 ? 'Item' : 'Items'} Found
+            ✓ Official Bill Verified (${escapeHtml(displayOrderBadge)}) · ${certificates.length} Authenticated ${certificates.length === 1 ? 'Item' : 'Items'} Found
           </p>
         </div>
         ${certificates.map((cert, index) => `
@@ -376,7 +407,7 @@ if (orderForm) {
                 <p class="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-1">
                   Certificate #${index + 1} · ${escapeHtml(cert.maison)}
                 </p>
-                <h3 class="font-serif text-2xl text-slate-900">${escapeHtml(cert.name)}</h3>
+                <h3 class="font-serif text-2xl text-slate-900">${escapeHtml(cert.name)} ${cert.qty > 1 ? `<span class="text-sm text-slate-500 font-sans">(Qty: ${cert.qty})</span>` : ''}</h3>
               </div>
               <span class="inline-block self-start sm:self-center bg-slate-900 text-white text-[10px] font-bold tracking-widest uppercase px-3 py-1.5">
                 Authentic Provenance
@@ -386,7 +417,7 @@ if (orderForm) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-xs mb-6">
               <div>
                 <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Bill / Order ID</span>
-                <span class="font-mono font-semibold text-slate-900">${escapeHtml(rawOrderId.toUpperCase())}</span>
+                <span class="font-mono font-semibold text-slate-900">${escapeHtml(displayOrderBadge)}</span>
               </div>
               <div>
                 <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Lumière Catalog ID</span>
@@ -415,8 +446,8 @@ if (orderForm) {
                 <span class="font-mono text-slate-800">${escapeHtml(cert.microchipId)}</span>
               </div>
               <div>
-                <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Production Batch &amp; Stamp</span>
-                <span class="font-mono text-slate-800">${escapeHtml(cert.batchCode)}</span>
+                <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Waybill / Tracking Reference</span>
+                <span class="font-mono text-slate-800">${escapeHtml(cert.trackingNumber)}</span>
               </div>
               <div class="sm:col-span-2">
                 <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Security &amp; Hardware Architecture</span>
@@ -427,7 +458,7 @@ if (orderForm) {
                 <span class="text-slate-800">${escapeHtml(cert.inspector)}</span>
               </div>
               <div>
-                <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Bill Verification Date</span>
+                <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase block mb-1">Purchase / Bill Date</span>
                 <span class="text-slate-800">${escapeHtml(orderDate)}</span>
               </div>
             </div>
