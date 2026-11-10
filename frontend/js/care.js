@@ -48,7 +48,6 @@ async function init() {
   // Handle clicking on service items in the cards
   document.querySelectorAll('[data-service-item]').forEach(itemLi => {
     itemLi.addEventListener('click', (e) => {
-      // Prevent double toggle if clicking directly on checkbox
       const checkbox = itemLi.querySelector('input[type="checkbox"]');
       const serviceName = itemLi.getAttribute('data-service-item');
       const parentCard = itemLi.closest('[data-service-card]');
@@ -63,15 +62,12 @@ async function init() {
         checkbox.checked = true;
         itemLi.classList.add('bg-amber-50/50', 'border-l-4', 'border-amber-600');
 
-        // Automatically switch the dropdown category to match the clicked item
         if (divisionSelect && categoryName) {
           divisionSelect.value = categoryName;
         }
       }
 
       updatePreview();
-
-      // Smooth scroll down to booking form
       document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
@@ -91,7 +87,6 @@ async function init() {
       const paymentMethod = document.querySelector('input[name="carePayment"]:checked')?.value || 'card';
       const servicesList = selectedServices.size > 0 ? Array.from(selectedServices).join(', ') : 'Standard Consultation';
       
-      // Post the data to your new backend API route
       try {
         const response = await fetch('/api/care/book', {
           method: 'POST',
@@ -113,16 +108,22 @@ async function init() {
         
         if (response.ok) {
           const result = await response.json();
-          toast(`Appointment Confirmed (${result.bookingId || refCode}) for ${division} [${servicesList}]. We will email your confirmation shortly.`, 'success');
+          toast(`Appointment Confirmed (${result.bookingId || refCode}) for ${division}.`, 'success');
+          
+          // Redirect to payment page if DuitNow QR is selected
+          if (paymentMethod === 'qr') {
+            setTimeout(() => {
+              window.location.href = `/payment/?ref=${result.bookingId || refCode}`;
+            }, 1500);
+          }
         } else {
-          toast(`Appointment Confirmed locally (${refCode}), but failed to sync to Admin Database.`, 'success');
+          toast(`Appointment Confirmed locally (${refCode}), but failed to sync to Admin Database.`, 'error');
         }
       } catch (err) {
         console.error('Error saving booking:', err);
-        toast(`Appointment Confirmed (${refCode}) but could not reach server.`, 'success');
+        toast(`Appointment Confirmed (${refCode}) but could not reach server.`, 'error');
       }
 
-      // Success toast is now handled inside the fetch block
       form.reset();
       selectedServices.clear();
       document.querySelectorAll('[data-service-item]').forEach(li => {
