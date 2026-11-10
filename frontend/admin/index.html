@@ -21,6 +21,7 @@
     <div class="mb-8 border-b border-slate-200">
       <nav class="-mb-px flex flex-wrap gap-x-6" aria-label="Tabs">
         <button id="tab-logistics" class="border-slate-900 text-slate-900 whitespace-nowrap border-b-2 py-4 px-1 text-xs sm:text-sm transition-colors">Logistics & Fulfillment</button>
+        <button id="tab-care" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-4 px-1 text-xs sm:text-sm transition-colors">Care Appointments</button>
         <button id="tab-catalog" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-4 px-1 text-xs sm:text-sm transition-colors">Catalog Management</button>
         <button id="tab-preview" class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-4 px-1 text-xs sm:text-sm transition-colors">Catalog Preview</button>
       </nav>
@@ -30,6 +31,30 @@
     <div id="view-logistics" class="block">
       <div id="admin-metrics" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"></div>
       <div id="admin-root"></div>
+    </div>
+
+    <!-- VIEW: CARE APPOINTMENTS -->
+    <div id="view-care" class="hidden">
+      <div class="mb-6 flex flex-wrap justify-between items-end gap-4">
+        <h2 class="text-2xl font-serif text-slate-900">Bespoke Care Appointments</h2>
+      </div>
+      <div class="bg-white border border-slate-200 shadow-sm overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[800px]">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+              <th class="py-4 px-6">Booking ID</th>
+              <th class="py-4 px-6">Date</th>
+              <th class="py-4 px-6">Customer</th>
+              <th class="py-4 px-6">Category & Method</th>
+              <th class="py-4 px-6">Payment</th>
+              <th class="py-4 px-6 text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody id="care-table-body" class="text-sm font-serif divide-y divide-slate-100">
+            <!-- Populated by admin.js -->
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- VIEW: CATALOG -->
@@ -118,6 +143,6 @@
   </div>
 
   <footer id="site-footer"></footer>
-  <script type="module" src="/js/admin.js?v=payment-ui-2"></script>
+  <script type="module" src="/js/admin.js?v=payment-ui-3"></script>
 </body>
 </html>

@@ -313,6 +313,26 @@
           <textarea id="care-notes" rows="3" placeholder="Let us know which specific cleaning or repair service your item needs..." class="w-full border border-slate-200 p-3 text-sm focus:border-slate-400 focus:outline-none transition-colors"></textarea>
         </div>
 
+        <!-- NEW PAYMENT METHOD SECTION -->
+        <div class="pt-4 border-t border-slate-100">
+          <label class="block text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-4">Payment Method (For Paid Services)</label>
+          <div class="flex flex-col sm:flex-row gap-4 sm:gap-6">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="carePayment" value="card" checked class="accent-slate-900 cursor-pointer">
+              <span class="text-sm font-medium text-slate-700">Credit / Debit Card</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="carePayment" value="qr" class="accent-slate-900 cursor-pointer">
+              <span class="text-sm font-medium text-slate-700">DuitNow QR</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="carePayment" value="in_store" class="accent-slate-900 cursor-pointer">
+              <span class="text-sm font-medium text-slate-700">Pay In-Boutique</span>
+            </label>
+          </div>
+        </div>
+        <!-- END PAYMENT METHOD SECTION -->
+
         <button type="submit" class="lumiere-btn w-full">BOOK APPOINTMENT</button>
       </form>
     </div>

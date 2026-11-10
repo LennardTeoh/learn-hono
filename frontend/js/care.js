@@ -88,9 +88,41 @@ async function init() {
       const refCode = 'CARE-' + Math.random().toString(36).substring(2, 7).toUpperCase();
       const division = divisionSelect.value;
       const extraNotes = notesInput.value.trim();
+      const paymentMethod = document.querySelector('input[name="carePayment"]:checked')?.value || 'card';
       const servicesList = selectedServices.size > 0 ? Array.from(selectedServices).join(', ') : 'Standard Consultation';
+      
+      // Post the data to your new backend API route
+      try {
+        const response = await fetch('/api/care/book', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fullName: nameInput.value.trim(),
+            emailAddress: emailInput.value.trim(),
+            serviceCategory: division,
+            services: Array.from(selectedServices),
+            preferredDate: dateInput.value,
+            paymentMethod: paymentMethod,
+            serialNumber: document.getElementById('care-serial').value.trim(),
+            dropOffMethod: document.getElementById('care-method').value,
+            notes: extraNotes
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          toast(`Appointment Confirmed (${result.bookingId || refCode}) for ${division} [${servicesList}]. We will email your confirmation shortly.`, 'success');
+        } else {
+          toast(`Appointment Confirmed locally (${refCode}), but failed to sync to Admin Database.`, 'success');
+        }
+      } catch (err) {
+        console.error('Error saving booking:', err);
+        toast(`Appointment Confirmed (${refCode}) but could not reach server.`, 'success');
+      }
 
-      toast(`Appointment Confirmed (${refCode}) for ${division} [${servicesList}]. We will email your confirmation shortly.`, 'success');
+      // Success toast is now handled inside the fetch block
       form.reset();
       selectedServices.clear();
       document.querySelectorAll('[data-service-item]').forEach(li => {

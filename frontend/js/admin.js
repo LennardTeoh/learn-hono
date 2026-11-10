@@ -77,7 +77,7 @@ async function init() {
 }
 
 function setupTabs() {
-  const views = ['logistics', 'catalog', 'preview'];
+  const views = ['logistics', 'care', 'catalog', 'preview'];
   const show = (selected) => {
     for (const view of views) {
       const active = view === selected;
@@ -92,6 +92,9 @@ function setupTabs() {
       tab.setAttribute('aria-pressed', String(active));
     }
     history.replaceState(null, '', selected === 'logistics' ? '/admin/' : `/admin/?view=${selected}`);
+    if (selected === 'care') {
+      loadCareAppointments();
+    }
   };
   for (const view of views) document.getElementById(`tab-${view}`).addEventListener('click', () => show(view));
   const initial = new URLSearchParams(location.search).get('view');
@@ -428,3 +431,51 @@ productForm?.addEventListener('submit', async (e) => {
 });
 
 init().catch(console.error);
+
+// Fetch and render Care Appointments
+async function loadCareAppointments() {
+  const tbody = document.getElementById('care-table-body');
+  if (!tbody) return;
+  
+  tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-serif">Loading appointments...</td></tr>';
+  
+  try {
+    const appointments = await api('/api/admin/care-appointments');
+    if (!appointments || appointments.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-serif">No appointments found.</td></tr>';
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    appointments.forEach(app => {
+      let badgeClass = 'bg-slate-100 text-slate-600';
+      if (app.status === 'SCHEDULED') badgeClass = 'bg-blue-100 text-blue-800';
+      if (app.status === 'COMPLETED') badgeClass = 'bg-green-100 text-green-800';
+      
+      tbody.innerHTML += `
+        <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
+          <td class="py-4 px-6 text-sm font-medium text-slate-900">${escapeHtml(app.id)}</td>
+          <td class="py-4 px-6 text-sm text-slate-500">${escapeHtml(app.preferred_date)}</td>
+          <td class="py-4 px-6 text-sm text-slate-900">
+            ${escapeHtml(app.customer_name)}<br>
+            <span class="text-xs text-slate-500">${escapeHtml(app.customer_email)}</span>
+          </td>
+          <td class="py-4 px-6 text-sm text-slate-900">
+            ${escapeHtml(app.service_category)}<br>
+            <span class="text-xs text-slate-500">${escapeHtml(app.drop_off_method || 'Boutique Drop-Off')}</span>
+          </td>
+          <td class="py-4 px-6 text-xs uppercase tracking-widest font-bold text-slate-500">
+            ${escapeHtml(app.payment_method).replace('_', ' ')}
+          </td>
+          <td class="py-4 px-6 text-right">
+            <span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeClass}">
+              ${escapeHtml(app.status)}
+            </span>
+          </td>
+        </tr>
+      `;
+    });
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load appointments: ${escapeHtml(err.message)}</td></tr>`;
+  }
+}
