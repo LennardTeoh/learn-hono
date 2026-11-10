@@ -8,6 +8,7 @@ import { orderRoutes } from './routes/orders'
 import { wishlistRoutes } from './routes/wishlist'
 import { HttpError } from './lib/http'
 import { reviewRoutes } from './routes/reviews'
+import { careRoutes, adminCareRoutes } from './routes/care' // <-- NEW CARE IMPORT
 
 const app = new Hono<AppEnv>()
 
@@ -21,7 +22,6 @@ app.use('/api/*', async (c, next) => {
       }
       return c.env.CORS_ORIGIN
     },
-    // CRITICAL: Ensure 'PATCH' is in this array to allow database updates
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'X-Captcha-Response', 'Idempotency-Key', 'Authorization'],
     credentials: true,
@@ -32,7 +32,6 @@ app.use('/api/*', async (c, next) => {
 
 app.get('/health', (c) => c.json({ ok: true, service: 'lumiere-api' }))
 
-// Links sent before the storefront callback URLs were made absolute.
 app.get('/verify/', (c) => c.redirect(new URL(`/verify/${new URL(c.req.url).search}`, c.env.APP_ORIGIN).toString()))
 app.get('/reset-password/', (c) => c.redirect(new URL(`/reset-password/${new URL(c.req.url).search}`, c.env.APP_ORIGIN).toString()))
 
@@ -61,10 +60,16 @@ app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
   if (deliveryFailed) return c.json({ error: 'Unable to send the email PIN. Please try again.' }, 502)
   return response ?? c.json({ error: 'Authentication response unavailable.' }, 500)
 })
+
 app.route('/api/products', productRoutes)
 app.route('/api/orders', orderRoutes)
 app.route('/api/user/wishlist', wishlistRoutes)
 app.route('/api/reviews', reviewRoutes)
+
+// --- NEW CARE ROUTES ---
+app.route('/api/care', careRoutes)
+app.route('/api/admin', adminCareRoutes)
+// -----------------------
 
 app.notFound((c) => c.json({ error: 'Not found.' }, 404))
 
