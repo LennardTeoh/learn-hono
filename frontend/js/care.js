@@ -112,9 +112,9 @@ async function init() {
         
         if (response.ok) {
           const result = await response.json();
-          toast(`Appointment Confirmed! Redirecting to purchase...`, 'success');
+          toast(`Appointment Confirmed! Redirecting to payment...`, 'success');
           
-          // Unconditional redirect to purchase page
+          // Unconditional redirect to payment page
           setTimeout(() => {
             window.location.href = `/payment/?ref=${result.bookingId || refCode}`;
           }, 1500);
