@@ -1,6 +1,9 @@
 import { renderShell, toast, setBusy, money, escapeHtml } from './ui.js';
 import { getCurrentUser } from './api.js';
 
+// Explicitly point to your live backend Worker to avoid 405 Method Not Allowed errors on Pages
+const API_URL = window.APP_CONFIG?.API_BASE || 'https://lumiere-api.p22014454.workers.dev';
+
 async function init() {
   await renderShell();
 
@@ -88,7 +91,8 @@ async function init() {
       const servicesList = selectedServices.size > 0 ? Array.from(selectedServices).join(', ') : 'Standard Consultation';
       
       try {
-        const response = await fetch('/api/care/book', {
+        // Send request explicitly to the worker API URL
+        const response = await fetch(`${API_URL}/api/care/book`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
