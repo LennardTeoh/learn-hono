@@ -26,6 +26,7 @@ async function init() {
       <h2 class="text-3xl font-serif text-slate-900 mb-6 lg:mb-10">Welcome, ${escapeHtml(firstName)}</h2>
       <ul class="space-y-2 lg:space-y-6 text-sm">
         <li><a href="/account/" class="text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">My Orders</a></li>
+        <li><a href="/account/appointments/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">My Appointments</a></li>
         <li><a href="/account/details/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Account Details</a></li>
         <li><a href="/account/saved/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Saved Items</a></li>
         <li><a href="/account/security/" class="text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest text-[10px] font-bold">Security Settings</a></li>
