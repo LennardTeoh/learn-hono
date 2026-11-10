@@ -5,7 +5,7 @@ import { cardFormatError } from './card-format.js'
 const id = new URLSearchParams(location.search).get('id')
 const isCard = !!document.getElementById('card-payment-root')
 const root = document.getElementById(isCard ? 'card-payment-root' : 'payment-root')
-const isCareBooking = id && id.includes('CARE'); // NEW: Check if this is a care booking
+const isCareBooking = id && id.includes('CARE'); 
 let timer, poller
 
 function pending(message) {
@@ -24,7 +24,6 @@ async function start() {
   clearInterval(poller)
   root.innerHTML = '<p class="payment-center">Preparing payment…</p>'
   try {
-    // Dynamically choose which backend endpoint to hit based on the ID format
     let orderData;
     if (isCareBooking) {
         orderData = await api(`/api/care/booking/${encodeURIComponent(id)}`);
@@ -33,11 +32,9 @@ async function start() {
         orderData = res.order;
     }
     
-    // Normalize data slightly so the rest of the file works seamlessly
     const status = orderData.status ? orderData.status.toLowerCase() : '';
     const totalCents = orderData.total_cents || orderData.price || 0;
     
-    // If it's already scheduled or paid, skip the payment screen
     if (status !== 'pending_payment' && status !== 'pending') { 
         location.href = `/payment-success/?id=${encodeURIComponent(id)}`; 
         return; 
@@ -48,13 +45,11 @@ async function start() {
         return; 
     }
     
-    // Create attempt via order endpoint (or mock a simple QR response for care bookings)
     let attempt;
     if (isCareBooking) {
-        // Generate a mock attempt for care bookings to render the QR
         attempt = {
             id: 'mock-care-attempt',
-            expiresAt: Math.floor(Date.now() / 1000) + 120, // 2 minutes
+            expiresAt: Math.floor(Date.now() / 1000) + 120, // 2 minute countdown
             qrSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><path fill="#fff" d="M0 0h33v33H0z"/><path fill="#e11d48" d="M4 4h7v7H4zM6 6h3v3H6zM22 4h7v7h-7zM24 6h3v3h-3zM4 22h7v7H4zM6 24h3v3H6zM13 4h3v2h-3zM18 4h3v3h-3zM15 7h5v2h-5zM12 9h4v2h-4zM18 11h2v3h-2zM21 12h2v4h-2zM24 13h5v2h-5zM27 16h2v3h-2zM4 13h5v4H4zM10 13h2v2h-2zM12 16h3v5h-3zM17 17h4v4h-4zM22 19h2v2h-2zM25 19h4v4h-4zM4 18h2v2H4zM7 19h3v2H7zM13 22h2v2h-2zM17 23h3v4h-3zM22 23h2v3h-2zM26 25h3v4h-3zM21 27h3v2h-3zM11 26h4v3h-4zM7 28h2v2H7z"/></svg>`,
             url: '#'
         };
@@ -113,7 +108,6 @@ async function start() {
       
       try {
         if (isCareBooking) {
-            // Mock a successful card payment for bespoke care bookings
             const res = await api(`/api/care/confirm/${encodeURIComponent(id)}`, { method: 'POST' });
             if(res.success) location.href = `/payment-success/?id=${encodeURIComponent(id)}`;
             else throw new Error("Failed to confirm booking.");
@@ -128,15 +122,7 @@ async function start() {
     else poller = setInterval(async () => {
       try {
         if(isCareBooking) {
-             // Mock QR confirmation for bespoke care
-             // For testing, we just redirect after a few seconds assuming "scan successful"
-             // (In production you would have a webhook updating the database)
-             clearInterval(poller);
-             setTimeout(() => {
-                 api(`/api/care/confirm/${encodeURIComponent(id)}`, { method: 'POST' }).then(() => {
-                     location.href = `/payment-success/?id=${encodeURIComponent(id)}`;
-                 });
-             }, 5000);
+             // AUTO-REDIRECT REMOVED: The QR Code will now stay on screen.
         } else {
             const state = await api(`/api/orders/${encodeURIComponent(id)}/attempt`)
             if (state.orderStatus === 'confirmed') location.href = `/payment-success/?id=${encodeURIComponent(id)}`
