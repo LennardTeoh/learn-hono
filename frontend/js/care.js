@@ -116,7 +116,7 @@ async function init() {
           
           // Unconditional redirect to purchase page
           setTimeout(() => {
-            window.location.href = `/purchase/?ref=${result.bookingId || refCode}`;
+            window.location.href = `/payment/?ref=${result.bookingId || refCode}`;
           }, 1500);
           
         } else {
