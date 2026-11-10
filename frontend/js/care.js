@@ -112,14 +112,13 @@ async function init() {
         
         if (response.ok) {
           const result = await response.json();
-          toast(`Appointment Confirmed (${result.bookingId || refCode}) for ${division}.`, 'success');
+          toast(`Appointment Confirmed! Redirecting to purchase...`, 'success');
           
-          // Redirect to payment page if DuitNow QR is selected
-          if (paymentMethod === 'qr') {
-            setTimeout(() => {
-              window.location.href = `/payment/?ref=${result.bookingId || refCode}`;
-            }, 1500);
-          }
+          // Unconditional redirect to purchase page
+          setTimeout(() => {
+            window.location.href = `/purchase/?ref=${result.bookingId || refCode}`;
+          }, 1500);
+          
         } else {
           toast(`Appointment Confirmed locally (${refCode}), but failed to sync to Admin Database.`, 'error');
         }
