@@ -90,7 +90,6 @@ careRoutes.post('/cancel/:id', async (c) => {
     const bookingId = c.req.param('id')
     const userEmail = session.user.email
 
-    // Ensure the booking belongs to this user before canceling
     const result = await c.env.DB.prepare(`
       UPDATE care_bookings 
       SET status = 'CANCELLED' 
@@ -107,6 +106,59 @@ careRoutes.post('/cancel/:id', async (c) => {
     return c.json({ error: 'Failed to cancel booking' }, 500)
   }
 })
+
+// GET: /api/care/booking/:id - Fetch a single booking for payment page
+careRoutes.get('/booking/:id', async (c) => {
+  try {
+    const bookingId = c.req.param('id');
+    const { results } = await c.env.DB.prepare(`
+      SELECT * FROM care_bookings WHERE id = ?
+    `).bind(bookingId).all();
+
+    if (!results || results.length === 0) {
+      return c.json({ error: 'Booking not found in database' }, 404);
+    }
+
+    const booking = results[0];
+    
+    // Assign pricing based on selected services for the QR code to generate
+    let mockPriceCents = 0;
+    const servicesStr = String(booking.selected_services || '').toLowerCase();
+    
+    if (servicesStr.includes('full movement overhaul')) mockPriceCents += 120000;
+    if (servicesStr.includes('corner scuff')) mockPriceCents += 45000;
+    if (servicesStr.includes('hardware & zipper')) mockPriceCents += 35000;
+    if (servicesStr.includes('scratch removal')) mockPriceCents += 20000;
+    if (servicesStr.includes('white gold rhodium')) mockPriceCents += 30000;
+    if (servicesStr.includes('chain soldering')) mockPriceCents += 25000;
+    
+    if (mockPriceCents === 0) mockPriceCents = 15000; // Mock RM 150 base fee if only complimentary selected
+
+    return c.json({ 
+        status: booking.status === 'SCHEDULED' ? 'pending_payment' : 'confirmed',
+        price: mockPriceCents,
+        ...booking 
+    });
+  } catch (err: any) {
+    console.error('Failed to fetch booking details:', err);
+    return c.json({ error: 'Failed to fetch booking details' }, 500);
+  }
+});
+
+// POST: /api/care/confirm/:id - Mark booking as paid after QR scan
+careRoutes.post('/confirm/:id', async (c) => {
+    try {
+        const bookingId = c.req.param('id');
+        
+        await c.env.DB.prepare(`
+            UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?
+        `).bind(bookingId).run();
+        
+        return c.json({ success: true });
+    } catch(err: any) {
+        return c.json({ error: 'Failed to confirm' }, 500);
+    }
+});
 
 // GET: /api/admin/care-appointments - Admin dashboard data fetch
 adminCareRoutes.get('/care-appointments', async (c) => {
