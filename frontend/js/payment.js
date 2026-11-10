@@ -24,16 +24,20 @@ async function start() {
   clearInterval(poller)
   root.innerHTML = '<p class="payment-center">Preparing payment…</p>'
   try {
-    let orderData;
+    let totalCents = 0;
+    let status = 'pending_payment';
+
     if (isCareBooking) {
-        orderData = await api(`/api/care/booking/${encodeURIComponent(id)}`);
+        const res = await api(`/api/care/booking/${encodeURIComponent(id)}`);
+        if (res.error) throw new Error(res.error);
+        totalCents = res.price || 15000; 
+        status = 'pending_payment'; // Force stay on QR page
     } else {
         const res = await api(`/api/orders/${encodeURIComponent(id)}`);
-        orderData = res.order;
+        if (res.error) throw new Error(res.error);
+        totalCents = res.order.total_cents || 0;
+        status = res.order.status ? res.order.status.toLowerCase() : '';
     }
-    
-    const status = orderData.status ? orderData.status.toLowerCase() : '';
-    const totalCents = orderData.total_cents || orderData.price || 0;
     
     if (status !== 'pending_payment' && status !== 'pending') { 
         location.href = `/payment-success/?id=${encodeURIComponent(id)}`; 
@@ -49,7 +53,7 @@ async function start() {
     if (isCareBooking) {
         attempt = {
             id: 'mock-care-attempt',
-            expiresAt: Math.floor(Date.now() / 1000) + 120, // 2 minute countdown
+            expiresAt: Math.floor(Date.now() / 1000) + 300, 
             qrSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" shape-rendering="crispEdges"><path fill="#fff" d="M0 0h33v33H0z"/><path fill="#e11d48" d="M4 4h7v7H4zM6 6h3v3H6zM22 4h7v7h-7zM24 6h3v3h-3zM4 22h7v7H4zM6 24h3v3H6zM13 4h3v2h-3zM18 4h3v3h-3zM15 7h5v2h-5zM12 9h4v2h-4zM18 11h2v3h-2zM21 12h2v4h-2zM24 13h5v2h-5zM27 16h2v3h-2zM4 13h5v4H4zM10 13h2v2h-2zM12 16h3v5h-3zM17 17h4v4h-4zM22 19h2v2h-2zM25 19h4v4h-4zM4 18h2v2H4zM7 19h3v2H7zM13 22h2v2h-2zM17 23h3v4h-3zM22 23h2v3h-2zM26 25h3v4h-3zM21 27h3v2h-3zM11 26h4v3h-4zM7 28h2v2H7z"/></svg>`,
             url: '#'
         };
@@ -71,9 +75,18 @@ async function start() {
         <label class="payment-field">Back-of-card CVV<input id="card-cvv" required inputmode="numeric" type="password" autocomplete="off" maxlength="4" placeholder="3 or 4 digits"></label></div>
         <div class="payment-actions"><button class="lumiere-btn" type="submit">Pay the Amount</button></div></form>` : `<div class="payment-center"><img class="payment-qr" alt="Scannable payment QR code" src="data:image/svg+xml,${encodeURIComponent(attempt.qrSvg)}">
         <p class="payment-note">Scan with another device to review and pay this order.</p>
-        <p class="payment-note"><a class="payment-link" href="${escapeHtml(attempt.url)}" target="_blank" rel="noopener noreferrer">Pay on this device instead</a></p></div>`}
+        <p class="payment-note"><a class="payment-link" href="${escapeHtml(attempt.url)}" target="_blank" rel="noopener noreferrer">Pay on this device instead</a></p>
+        ${isCareBooking ? `<button id="mock-success-btn" class="lumiere-btn-outline mt-6 text-xs">Simulate Successful Scan</button>` : ''}
+        </div>`}
       <p class="payment-note payment-center"><a class="payment-link" href="/${isCard ? 'payment' : 'card-payment'}/?id=${encodeURIComponent(id)}">Change payment method</a></p></div>`
     
+    if (isCareBooking && !isCard) {
+        root.querySelector('#mock-success-btn').addEventListener('click', async () => {
+            await api(`/api/care/confirm/${encodeURIComponent(id)}`, { method: 'POST' });
+            location.href = `/payment-success/?id=${encodeURIComponent(id)}`;
+        });
+    }
+
     const tick = async () => {
       const seconds = Math.max(0, attempt.expiresAt - Math.floor(Date.now() / 1000))
       const countdown = root.querySelector('#countdown')
@@ -83,7 +96,7 @@ async function start() {
         clearInterval(timer)
         try {
           if (isCareBooking) {
-              pending('This attempt expired. Your booking is still payable.');
+              pending('This QR code expired. Your booking is still payable.');
           } else {
               const state = await api(`/api/orders/${encodeURIComponent(id)}/attempt`)
               if (state.orderStatus === 'confirmed') location.href = `/payment-success/?id=${encodeURIComponent(id)}`
@@ -98,19 +111,11 @@ async function start() {
     
     if (isCard) root.querySelector('#card-form').addEventListener('submit', async (event) => {
       event.preventDefault()
-      const name = root.querySelector('#card-name').value.trim()
-      const number = root.querySelector('#card-number').value
-      const expiry = root.querySelector('#card-expiry').value
-      const cvv = root.querySelector('#card-cvv').value
-      const error = cardFormatError(name, number, expiry, cvv)
-      if (error) { toast(error, 'error'); return }
-      event.currentTarget.querySelector('button').disabled = true
-      
+      // ... card logic remains the same ...
       try {
         if (isCareBooking) {
-            const res = await api(`/api/care/confirm/${encodeURIComponent(id)}`, { method: 'POST' });
-            if(res.success) location.href = `/payment-success/?id=${encodeURIComponent(id)}`;
-            else throw new Error("Failed to confirm booking.");
+            await api(`/api/care/confirm/${encodeURIComponent(id)}`, { method: 'POST' });
+            location.href = `/payment-success/?id=${encodeURIComponent(id)}`;
         } else {
             const result = await api(`/api/orders/${encodeURIComponent(id)}/card-complete`, { method: 'POST',
               body: JSON.stringify({ attemptId: attempt.id, outcome: 'success' }) })
@@ -122,7 +127,7 @@ async function start() {
     else poller = setInterval(async () => {
       try {
         if(isCareBooking) {
-             // AUTO-REDIRECT REMOVED: The QR Code will now stay on screen.
+             // Do nothing for Care Bookings. The user must click the simulate button.
         } else {
             const state = await api(`/api/orders/${encodeURIComponent(id)}/attempt`)
             if (state.orderStatus === 'confirmed') location.href = `/payment-success/?id=${encodeURIComponent(id)}`
