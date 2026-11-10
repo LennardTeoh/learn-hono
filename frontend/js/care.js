@@ -1,4 +1,4 @@
-import { renderShell, toast, setBusy, money } from './ui.js';
+import { renderShell, toast, setBusy, money, escapeHtml } from './ui.js';
 import { getCurrentUser } from './api.js';
 
 async function init() {
