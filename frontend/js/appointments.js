@@ -26,7 +26,6 @@ async function init() {
     </aside>
   `;
 
-  // Start with a loading state for the main content
   root.innerHTML = sidebar + `
     <div class="w-full min-w-0 max-w-4xl pl-0 lg:pl-12">
       <div class="mb-12 border-b border-slate-200 pb-6">
@@ -39,7 +38,6 @@ async function init() {
     </div>
   `;
 
-  // Fetch appointments (We will add this backend route later)
   let appointments = [];
   let fetchError = null;
   try {
@@ -47,7 +45,6 @@ async function init() {
     appointments = res.bookings || res.data || [];
   } catch (err) {
     fetchError = err;
-    // Don't crash entirely if the route isn't built yet
     console.warn("Backend route for appointments not ready yet", err);
   }
 
@@ -62,17 +59,45 @@ async function init() {
       </div>
     `;
   } else {
-    // We will render the real cards here once the backend is connected
-    contentHtml = `<div class="space-y-6">` + appointments.map(apt => `
-      <div class="border border-slate-200 bg-white p-6">
-        <p class="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-2">Booking #${escapeHtml(apt.booking_id)}</p>
-        <h3 class="text-xl font-serif text-slate-900">${escapeHtml(apt.service_category)}</h3>
-        <p class="text-sm text-slate-600 mt-2">${escapeHtml(apt.services)}</p>
+    contentHtml = `<div class="space-y-6">` + appointments.map(apt => {
+      const isCancelled = apt.status === 'CANCELLED';
+      const statusColor = isCancelled ? 'border-red-200 bg-red-50 text-red-700' : 'border-green-200 bg-green-50 text-green-700';
+      
+      return `
+      <div class="border border-slate-200 bg-white p-6 relative">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <p class="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase mb-2">Booking #${escapeHtml(apt.booking_id)}</p>
+            <h3 class="text-xl font-serif text-slate-900">${escapeHtml(apt.service_category)}</h3>
+          </div>
+          <span class="inline-block border px-3 py-1 text-[10px] font-bold tracking-widest uppercase ${statusColor}">
+            ${escapeHtml(apt.status || 'SCHEDULED')}
+          </span>
+        </div>
+        
+        <details class="group mt-4 border-t border-slate-100 pt-4">
+          <summary class="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase cursor-pointer hover:text-slate-900 transition-colors select-none flex justify-between items-center outline-none">
+            View Details & Manage
+            <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </summary>
+          <div class="pt-6 space-y-4 text-sm text-slate-600">
+            <p><strong class="text-slate-900">Preferred Date:</strong> ${escapeHtml(apt.preferred_date || 'TBD')}</p>
+            <p><strong class="text-slate-900">Services Selected:</strong> ${escapeHtml(apt.services)}</p>
+            
+            ${!isCancelled ? `
+            <div class="pt-6 border-t border-slate-100">
+              <button data-cancel-id="${escapeHtml(apt.booking_id)}" class="text-red-600 hover:text-red-800 text-[10px] font-bold tracking-[0.2em] uppercase transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Cancel Appointment
+              </button>
+            </div>
+            ` : ''}
+          </div>
+        </details>
       </div>
-    `).join('') + `</div>`;
+    `}).join('') + `</div>`;
   }
 
-  // Update DOM with fetched data
   root.innerHTML = sidebar + `
     <div class="w-full min-w-0 max-w-4xl pl-0 lg:pl-12">
       <div class="mb-12 border-b border-slate-200 pb-6">
@@ -82,6 +107,34 @@ async function init() {
       ${contentHtml}
     </div>
   `;
+
+  // Attach cancel listeners
+  document.querySelectorAll('[data-cancel-id]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!confirm('Are you sure you want to cancel this appointment?')) return;
+      
+      const btnEl = e.currentTarget;
+      const id = btnEl.getAttribute('data-cancel-id');
+      const originalText = btnEl.innerHTML;
+      btnEl.innerHTML = 'Canceling...';
+      btnEl.disabled = true;
+
+      try {
+        const res = await api(`/api/care/cancel/${id}`, { method: 'POST' });
+        if (res.success) {
+          toast('Appointment cancelled successfully.', 'success');
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          throw new Error(res.error || 'Failed to cancel');
+        }
+      } catch (err) {
+        btnEl.innerHTML = originalText;
+        btnEl.disabled = false;
+        toast(err.message, 'error');
+      }
+    });
+  });
 }
 
 init().catch(console.error);

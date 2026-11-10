@@ -11,7 +11,6 @@ careRoutes.post('/book', async (c) => {
     const body = await c.req.json()
     const bookingId = `LUM-CARE-${Math.floor(1000 + Math.random() * 9000)}`
 
-    // Insert directly into the new D1 table
     await c.env.DB.prepare(`
       INSERT INTO care_bookings (
         id, customer_name, customer_email, service_category, 
@@ -41,7 +40,6 @@ careRoutes.post('/book', async (c) => {
 // GET: /api/care/my-bookings - Customer fetches their own appointments
 careRoutes.get('/my-bookings', async (c) => {
   try {
-    // 1. Authenticate user using your existing better-auth setup
     const auth = createAuth(c.env, () => {})
     const session = await auth.api.getSession({
       headers: c.req.raw.headers
@@ -53,7 +51,6 @@ careRoutes.get('/my-bookings', async (c) => {
 
     const userEmail = session.user.email
 
-    // 2. Fetch only the appointments matching this customer's email
     const { results } = await c.env.DB.prepare(`
       SELECT 
         id as booking_id, 
@@ -66,7 +63,6 @@ careRoutes.get('/my-bookings', async (c) => {
       ORDER BY created_at DESC
     `).bind(userEmail).all()
 
-    // 3. Parse the JSON services array back into a readable string for the frontend
     const formattedResults = results.map(apt => ({
       ...apt,
       services: (JSON.parse(apt.services as string || '[]')).join(', ')
@@ -79,10 +75,42 @@ careRoutes.get('/my-bookings', async (c) => {
   }
 })
 
+// POST: /api/care/cancel/:id - Customer cancels their own appointment
+careRoutes.post('/cancel/:id', async (c) => {
+  try {
+    const auth = createAuth(c.env, () => {})
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers
+    })
+
+    if (!session?.user?.email) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+
+    const bookingId = c.req.param('id')
+    const userEmail = session.user.email
+
+    // Ensure the booking belongs to this user before canceling
+    const result = await c.env.DB.prepare(`
+      UPDATE care_bookings 
+      SET status = 'CANCELLED' 
+      WHERE id = ? AND customer_email = ?
+    `).bind(bookingId, userEmail).run()
+
+    if (result.meta.changes === 0) {
+      return c.json({ error: 'Booking not found or unauthorized' }, 404)
+    }
+
+    return c.json({ success: true })
+  } catch (err: any) {
+    console.error('Failed to cancel booking:', err)
+    return c.json({ error: 'Failed to cancel booking' }, 500)
+  }
+})
+
 // GET: /api/admin/care-appointments - Admin dashboard data fetch
 adminCareRoutes.get('/care-appointments', async (c) => {
   try {
-    // Fetch all appointments, newest first
     const { results } = await c.env.DB.prepare(`
       SELECT * FROM care_bookings ORDER BY created_at DESC
     `).all()
