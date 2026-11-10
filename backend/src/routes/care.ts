@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import type { AppEnv } from '../types'
+import { createAuth } from '../lib/auth'
 
 export const careRoutes = new Hono<AppEnv>()
 export const adminCareRoutes = new Hono<AppEnv>()
@@ -34,6 +35,47 @@ careRoutes.post('/book', async (c) => {
   } catch (err: any) {
     console.error('Failed to insert care booking:', err)
     return c.json({ error: 'Failed to process booking' }, 500)
+  }
+})
+
+// GET: /api/care/my-bookings - Customer fetches their own appointments
+careRoutes.get('/my-bookings', async (c) => {
+  try {
+    // 1. Authenticate user using your existing better-auth setup
+    const auth = createAuth(c.env, () => {})
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers
+    })
+
+    if (!session?.user?.email) {
+      return c.json({ error: 'Unauthorized' }, 401)
+    }
+
+    const userEmail = session.user.email
+
+    // 2. Fetch only the appointments matching this customer's email
+    const { results } = await c.env.DB.prepare(`
+      SELECT 
+        id as booking_id, 
+        service_category, 
+        selected_services as services, 
+        preferred_date, 
+        status 
+      FROM care_bookings 
+      WHERE customer_email = ? 
+      ORDER BY created_at DESC
+    `).bind(userEmail).all()
+
+    // 3. Parse the JSON services array back into a readable string for the frontend
+    const formattedResults = results.map(apt => ({
+      ...apt,
+      services: (JSON.parse(apt.services as string || '[]')).join(', ')
+    }))
+
+    return c.json({ bookings: formattedResults })
+  } catch (err: any) {
+    console.error('Failed to fetch user bookings:', err)
+    return c.json({ error: 'Failed to fetch bookings' }, 500)
   }
 })
 
