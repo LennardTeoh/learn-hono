@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import type { AppEnv } from '../types'
 import { createAuth } from '../lib/auth'
 import QRCode from 'qrcode-svg'
@@ -8,6 +8,7 @@ export const careRoutes = new Hono<AppEnv>()
 export const adminCareRoutes = new Hono<AppEnv>()
 
 const nowSeconds = () => Math.floor(Date.now() / 1000)
+const hashToken = async (token: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))).map((byte) => byte.toString(16).padStart(2, '0')).join('')
 
 function calculateMockPrice(services: string | null): number {
     let mockPriceCents = 0;
@@ -114,7 +115,7 @@ careRoutes.get('/booking/:id', async (c) => {
   }
 });
 
-// POST: /api/care/booking/:id/attempts - Scannable QR generator
+// POST: /api/care/booking/:id/attempts - Generates real scannable QR matching orders.ts
 careRoutes.post('/booking/:id/attempts', async (c) => {
     try {
         const bookingId = c.req.param('id');
@@ -124,10 +125,19 @@ careRoutes.post('/booking/:id/attempts', async (c) => {
         
         const attemptId = crypto.randomUUID();
         const createdAt = nowSeconds();
-        const expiresAt = createdAt + 300; // 5 mins
-        const token = crypto.randomUUID() + crypto.randomUUID();
+        const expiresAt = createdAt + 120; // 2 minutes expiry matching store orders
+        const token = crypto.randomUUID() + crypto.randomUUID(); // Creates the 72-char token required by mock-pay
+        const priceCents = calculateMockPrice(booking.selected_services);
         
-        // Use a generic mock-pay link that works universally for any token
+        // Insert dummy order record & payment attempt so /mock-pay/ recognizes it natively
+        await c.env.DB.batch([
+            c.env.DB.prepare("UPDATE payment_attempts SET status = 'replaced' WHERE order_id = ? AND status = 'active'").bind(bookingId),
+            c.env.DB.prepare('INSERT INTO payment_attempts (id, order_id, method, status, created_at, expires_at, token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                .bind(attemptId, bookingId, 'qr', 'active', createdAt, expiresAt, await hashToken(token)),
+            c.env.DB.prepare(`INSERT OR REPLACE INTO orders (id, user_id, status, subtotal_cents, total_cents, active_attempt_id, created_at, idempotency_key) VALUES (?, 'system', 'pending_payment', ?, ?, ?, ?, ?)`)
+                .bind(bookingId, priceCents, priceCents, attemptId, createdAt, attemptId)
+        ]);
+        
         const url = new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
         const qrSvg = new QRCode({ content: url, color: '#e7366b', background: '#ffffff', padding: 4, width: 260, height: 260, ecl: 'M' }).svg();
         
@@ -143,9 +153,13 @@ careRoutes.get('/booking/:id/attempt', async (c) => {
     const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{status: string}>();
     if (!booking) return c.json({ error: 'Booking not found' }, 404);
     
+    const attempt = await c.env.DB.prepare(`SELECT id, method, status, expires_at FROM payment_attempts WHERE order_id = ? ORDER BY created_at DESC LIMIT 1`).bind(bookingId).first<{id: string; method: string; status: string; expires_at: number}>();
+    
+    const isExpired = attempt && attempt.status === 'active' && attempt.expires_at <= nowSeconds();
+    
     return c.json({ 
         orderStatus: booking.status === 'SCHEDULED' || booking.status === 'PENDING_PAYMENT' ? 'pending_payment' : 'confirmed', 
-        attempt: { status: 'active', expires_at: nowSeconds() + 300 } 
+        attempt: attempt ? { ...attempt, status: isExpired ? 'expired' : attempt.status } : null 
     });
 });
 
@@ -154,7 +168,10 @@ careRoutes.post('/booking/:id/card-complete', async (c) => {
     const { outcome } = await readJson<{ outcome?: string }>(c);
     
     if (outcome === 'success') {
-        await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
+        await c.env.DB.batch([
+            c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId),
+            c.env.DB.prepare(`UPDATE orders SET status = 'confirmed' WHERE id = ?`).bind(bookingId)
+        ]);
         return c.json({ orderStatus: 'confirmed' });
     }
     return c.json({ orderStatus: 'pending_payment' });
