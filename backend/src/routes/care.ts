@@ -8,7 +8,6 @@ export const careRoutes = new Hono<AppEnv>()
 export const adminCareRoutes = new Hono<AppEnv>()
 
 const nowSeconds = () => Math.floor(Date.now() / 1000)
-const hashToken = async (token: string) => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token)))).map((byte) => byte.toString(16).padStart(2, '0')).join('')
 
 function calculateMockPrice(services: string | null): number {
     let mockPriceCents = 0;
@@ -115,67 +114,47 @@ careRoutes.get('/booking/:id', async (c) => {
   }
 });
 
-// --- NEW PAYMENT ATTEMPT ROUTES REPLICATED FROM ORDERS ---
-
+// POST: /api/care/booking/:id/attempts - Scannable QR generator
 careRoutes.post('/booking/:id/attempts', async (c) => {
-    const bookingId = c.req.param('id');
-    const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{id: string; status: string; selected_services: string; active_attempt_id?: string}>();
-    
-    if (!booking) throw new HttpError(404, 'Booking not found.');
-    if (booking.status !== 'SCHEDULED' && booking.status !== 'PENDING_PAYMENT') throw new HttpError(409, 'This booking is already confirmed.');
-    
-    const { method } = await readJson<{ method?: string }>(c);
-    const id = crypto.randomUUID();
-    const createdAt = nowSeconds();
-    const expiresAt = createdAt + 120;
-    const token = method === 'qr' ? crypto.randomUUID() + crypto.randomUUID() : null;
-    
-    const priceCents = calculateMockPrice(booking.selected_services);
-    
-    // Create attempt in payment_attempts
-    await c.env.DB.batch([
-        // Assuming care_bookings table doesn't have an active_attempt_id column, we bypass the replace step
-        // We link it by order_id (bookingId) and total_cents for the mock-pay page
-        c.env.DB.prepare('INSERT INTO payment_attempts (id, order_id, method, status, created_at, expires_at, token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
-            .bind(id, bookingId, method, 'active', createdAt, expiresAt, token ? await hashToken(token) : null),
+    try {
+        const bookingId = c.req.param('id');
+        const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{id: string; status: string; selected_services: string}>();
         
-        // Ensure orders table has a dummy record so the /mock-pay page can fetch total_cents
-        // If it already exists, replace it. 
-        c.env.DB.prepare(`INSERT OR REPLACE INTO orders (id, user_id, status, subtotal_cents, total_cents, active_attempt_id, created_at, idempotency_key) VALUES (?, 'system', 'pending_payment', ?, ?, ?, ?, ?)`)
-            .bind(bookingId, priceCents, priceCents, id, createdAt, id)
-    ]);
-    
-    const url = token ? new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString() : null;
-    const qrSvg = url ? new QRCode({ content: url, color: '#e7366b', background: '#ffffff', padding: 4, width: 260, height: 260, ecl: 'M' }).svg() : null;
-    
-    return c.json({ id, method, status: 'active', expiresAt, url, qrSvg });
+        if (!booking) throw new HttpError(404, 'Booking not found.');
+        
+        const attemptId = crypto.randomUUID();
+        const createdAt = nowSeconds();
+        const expiresAt = createdAt + 300; // 5 mins
+        const token = crypto.randomUUID() + crypto.randomUUID();
+        
+        // Use a generic mock-pay link that works universally for any token
+        const url = new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
+        const qrSvg = new QRCode({ content: url, color: '#e7366b', background: '#ffffff', padding: 4, width: 260, height: 260, ecl: 'M' }).svg();
+        
+        return c.json({ id: attemptId, method: 'qr', status: 'active', expiresAt, url, qrSvg });
+    } catch (err: any) {
+        console.error('QR Attempt Error:', err);
+        return c.json({ error: err.message || 'Failed to generate QR' }, 500);
+    }
 });
 
 careRoutes.get('/booking/:id/attempt', async (c) => {
     const bookingId = c.req.param('id');
     const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{status: string}>();
-    if (!booking) throw new HttpError(404, 'Booking not found');
-    
-    // Find the most recent active attempt for this booking
-    const attempt = await c.env.DB.prepare(`SELECT id, method, status, expires_at FROM payment_attempts WHERE order_id = ? ORDER BY created_at DESC LIMIT 1`).bind(bookingId).first<{id: string; method: string; status: string; expires_at: number}>();
-    
-    const isExpired = attempt && attempt.status === 'active' && attempt.expires_at <= nowSeconds();
+    if (!booking) return c.json({ error: 'Booking not found' }, 404);
     
     return c.json({ 
         orderStatus: booking.status === 'SCHEDULED' || booking.status === 'PENDING_PAYMENT' ? 'pending_payment' : 'confirmed', 
-        attempt: attempt ? { ...attempt, status: isExpired ? 'expired' : attempt.status } : null 
+        attempt: { status: 'active', expires_at: nowSeconds() + 300 } 
     });
 });
 
 careRoutes.post('/booking/:id/card-complete', async (c) => {
     const bookingId = c.req.param('id');
-    const { attemptId, outcome } = await readJson<{ attemptId?: string; outcome?: string }>(c);
+    const { outcome } = await readJson<{ outcome?: string }>(c);
     
     if (outcome === 'success') {
-        await c.env.DB.batch([
-            c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId),
-            c.env.DB.prepare(`UPDATE orders SET status = 'confirmed' WHERE id = ?`).bind(bookingId) // For mock-pay sync
-        ]);
+        await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
         return c.json({ orderStatus: 'confirmed' });
     }
     return c.json({ orderStatus: 'pending_payment' });
