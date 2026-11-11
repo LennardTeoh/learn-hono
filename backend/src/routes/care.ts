@@ -21,10 +21,9 @@ function calculateMockPrice(services: string | null): number {
     if (servicesStr.includes('white gold rhodium')) mockPriceCents += 30000;
     if (servicesStr.includes('chain soldering')) mockPriceCents += 25000;
     
-    if (mockPriceCents === 0) mockPriceCents = 15000; 
-    return mockPriceCents;
+    // Fallback removed! Complimentary services will now equal 0.
+    return mockPriceCents; 
 }
-
 // POST: /api/care/book
 careRoutes.post('/book', async (c) => {
   try {
