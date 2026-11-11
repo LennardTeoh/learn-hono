@@ -1,4 +1,4 @@
-import { Hono, type Context } from 'hono'
+import { Hono } from 'hono'
 import type { AppEnv } from '../types'
 import { createAuth } from '../lib/auth'
 import QRCode from 'qrcode-svg'
@@ -115,7 +115,7 @@ careRoutes.get('/booking/:id', async (c) => {
   }
 });
 
-// POST: /api/care/booking/:id/attempts - Generates real scannable QR matching orders.ts
+// POST: /api/care/booking/:id/attempts - Generates scannable QR without touching orders table foreign keys
 careRoutes.post('/booking/:id/attempts', async (c) => {
     try {
         const bookingId = c.req.param('id');
@@ -125,17 +125,14 @@ careRoutes.post('/booking/:id/attempts', async (c) => {
         
         const attemptId = crypto.randomUUID();
         const createdAt = nowSeconds();
-        const expiresAt = createdAt + 120; // 2 minutes expiry matching store orders
-        const token = crypto.randomUUID() + crypto.randomUUID(); // Creates the 72-char token required by mock-pay
-        const priceCents = calculateMockPrice(booking.selected_services);
+        const expiresAt = createdAt + 120; // 2 minutes expiry
+        const token = crypto.randomUUID() + crypto.randomUUID(); 
         
-        // Insert dummy order record & payment attempt so /mock-pay/ recognizes it natively
+        // Insert directly into payment_attempts using order_id = bookingId (bypassing orders table constraints)
         await c.env.DB.batch([
             c.env.DB.prepare("UPDATE payment_attempts SET status = 'replaced' WHERE order_id = ? AND status = 'active'").bind(bookingId),
             c.env.DB.prepare('INSERT INTO payment_attempts (id, order_id, method, status, created_at, expires_at, token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                .bind(attemptId, bookingId, 'qr', 'active', createdAt, expiresAt, await hashToken(token)),
-            c.env.DB.prepare(`INSERT OR REPLACE INTO orders (id, user_id, status, subtotal_cents, total_cents, active_attempt_id, created_at, idempotency_key) VALUES (?, 'system', 'pending_payment', ?, ?, ?, ?, ?)`)
-                .bind(bookingId, priceCents, priceCents, attemptId, createdAt, attemptId)
+                .bind(attemptId, bookingId, 'qr', 'active', createdAt, expiresAt, await hashToken(token))
         ]);
         
         const url = new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
@@ -168,10 +165,7 @@ careRoutes.post('/booking/:id/card-complete', async (c) => {
     const { outcome } = await readJson<{ outcome?: string }>(c);
     
     if (outcome === 'success') {
-        await c.env.DB.batch([
-            c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId),
-            c.env.DB.prepare(`UPDATE orders SET status = 'confirmed' WHERE id = ?`).bind(bookingId)
-        ]);
+        await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
         return c.json({ orderStatus: 'confirmed' });
     }
     return c.json({ orderStatus: 'pending_payment' });
