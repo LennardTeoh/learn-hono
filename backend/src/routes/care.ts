@@ -29,7 +29,7 @@ function calculateMockPrice(services: string | null): number {
 careRoutes.post('/book', async (c) => {
   try {
     const body = await c.req.json()
-    const bookingId = `LUM-CARE-\${Math.floor(1000 + Math.random() * 9000)}`
+    const bookingId = `LUM-CARE-${Math.floor(1000 + Math.random() * 9000)}`
 
     await c.env.DB.prepare(`
       INSERT INTO care_bookings (
@@ -120,6 +120,7 @@ careRoutes.get('/booking/:id', async (c) => {
   }
 });
 
+// POST: /api/care/booking/:id/attempts - NOW SUPPORTS BOTH CARD AND QR
 careRoutes.post('/booking/:id/attempts', async (c) => {
     try {
         const bookingId = c.req.param('id');
@@ -127,36 +128,49 @@ careRoutes.post('/booking/:id/attempts', async (c) => {
         
         if (!booking) throw new HttpError(404, 'Booking not found.');
         
+        // Read the requested method ('card' or 'qr') from the frontend. Default to qr if missing.
+        const { method } = await readJson<{ method?: string }>(c).catch(() => ({ method: 'qr' }));
+        const attemptMethod = method === 'card' ? 'card' : 'qr';
+
         const attemptId = crypto.randomUUID();
         const createdAt = nowSeconds();
-        const expiresAt = createdAt + 120; 
-        const token = crypto.randomUUID() + crypto.randomUUID(); 
+        const expiresAt = createdAt + 300; 
         const priceCents = calculateMockPrice(booking.selected_services);
+
+        // Only generate a token if it's a QR code
+        const token = attemptMethod === 'qr' ? crypto.randomUUID() + crypto.randomUUID() : null; 
 
         const auth = createAuth(c.env, () => {})
         const session = await auth.api.getSession({ headers: c.req.raw.headers })
         if (!session?.user?.id) throw new Error('Unauthorized session');
         const userId = session.user.id;
         
+        // Save the correct method ('card' or 'qr') to the orders table
         await c.env.DB.prepare(`
             INSERT OR IGNORE INTO orders 
             (id, user_id, status, mock_method, subtotal_cents, shipping_cents, tax_cents, total_cents, shipping_name, address1, address2, city, postal_code, country, idempotency_key, created_at, verification_pin, delivery_method, state, phone) 
-            VALUES (?, ?, 'pending_payment', 'qr', ?, 0, 0, ?, 'Care Booking', 'Boutique', '', 'Kuala Lumpur', '50000', 'Malaysia', ?, ?, '000000', 'pickup', 'W.P. Kuala Lumpur', '+6000000000')
-        `).bind(bookingId, userId, priceCents, priceCents, bookingId, createdAt).run();
+            VALUES (?, ?, 'pending_payment', ?, ?, 0, 0, ?, 'Care Booking', 'Boutique', '', 'Kuala Lumpur', '50000', 'Malaysia', ?, ?, '000000', 'pickup', 'W.P. Kuala Lumpur', '+6000000000')
+        `).bind(bookingId, userId, attemptMethod, priceCents, priceCents, bookingId, createdAt).run();
 
         await c.env.DB.batch([
             c.env.DB.prepare("UPDATE payment_attempts SET status = 'replaced' WHERE order_id = ? AND status = 'active'").bind(bookingId),
             c.env.DB.prepare('INSERT INTO payment_attempts (id, order_id, method, status, created_at, expires_at, token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                .bind(attemptId, bookingId, 'qr', 'active', createdAt, expiresAt, await hashToken(token)),
-            c.env.DB.prepare("UPDATE orders SET active_attempt_id = ?, status = 'pending_payment' WHERE id = ?").bind(attemptId, bookingId)
+                .bind(attemptId, bookingId, attemptMethod, 'active', createdAt, expiresAt, token ? await hashToken(token) : null),
+            c.env.DB.prepare("UPDATE orders SET active_attempt_id = ?, status = 'pending_payment', mock_method = ? WHERE id = ?").bind(attemptId, attemptMethod, bookingId)
         ]);
         
-        const url = new URL(`/mock-pay/?token=\${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
-        const qrSvg = new QRCode({ content: url, color: '#e7366b', background: '#ffffff', padding: 4, width: 260, height: 260, ecl: 'M' }).svg();
+        let url = null;
+        let qrSvg = null;
         
-        return c.json({ id: attemptId, method: 'qr', status: 'active', expiresAt, url, qrSvg });
+        // Only build the QR visual if they actually selected QR
+        if (attemptMethod === 'qr' && token) {
+            url = new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
+            qrSvg = new QRCode({ content: url, color: '#e7366b', background: '#ffffff', padding: 4, width: 260, height: 260, ecl: 'M' }).svg();
+        }
+        
+        return c.json({ id: attemptId, method: attemptMethod, status: 'active', expiresAt, url, qrSvg });
     } catch (err: any) {
-        return c.json({ error: err.message || 'Failed to generate QR' }, 500);
+        return c.json({ error: err.message || 'Failed to generate attempt' }, 500);
     }
 });
 
@@ -211,7 +225,8 @@ adminCareRoutes.delete('/care-appointments/:id', async (c) => {
     const bookingId = c.req.param('id')
     await c.env.DB.batch([
       c.env.DB.prepare(`DELETE FROM care_bookings WHERE id = ?`).bind(bookingId),
-      c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(bookingId)
+      c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(bookingId),
+      c.env.DB.prepare(`DELETE FROM payment_attempts WHERE order_id = ?`).bind(bookingId)
     ])
     return c.json({ success: true })
   } catch (err: any) {

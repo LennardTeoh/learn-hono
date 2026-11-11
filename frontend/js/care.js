@@ -1,7 +1,7 @@
 import { renderShell, toast, setBusy, money, escapeHtml } from './ui.js';
 import { getCurrentUser } from './api.js';
 
-// Explicitly point to your live backend Worker to avoid 405 Method Not Allowed errors on Pages
+// Explicitly point to your live backend Worker
 const API_URL = window.APP_CONFIG?.API_BASE || 'https://lumiere-api.p22014454.workers.dev';
 
 async function init() {
@@ -84,11 +84,12 @@ async function init() {
       setBusy(submitBtn, true, 'BOOKING APPOINTMENT...');
 
       await new Promise((resolve) => setTimeout(resolve, 800));
-      const refCode = 'CARE-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      const refCode = 'LUM-CARE-' + Math.floor(1000 + Math.random() * 9000);
       const division = divisionSelect.value;
       const extraNotes = notesInput.value.trim();
+      
+      // Get the ACTUAL payment method chosen by the user
       const paymentMethod = document.querySelector('input[name="carePayment"]:checked')?.value || 'card';
-      const servicesList = selectedServices.size > 0 ? Array.from(selectedServices).join(', ') : 'Standard Consultation';
       
       try {
         // Send request explicitly to the worker API URL
@@ -112,11 +113,13 @@ async function init() {
         
         if (response.ok) {
           const result = await response.json();
+          const finalId = result.bookingId || refCode;
           toast(`Appointment Confirmed! Redirecting to payment...`, 'success');
           
-          // Unconditional redirect to payment page
+          // DYNAMIC REDIRECT based on user choice
           setTimeout(() => {
-            window.location.href = `/payment/?id=${result.bookingId || refCode}`;
+            const targetPath = paymentMethod === 'card' ? '/card-payment/' : '/payment/';
+            window.location.href = `${targetPath}?id=${finalId}`;
           }, 1500);
           
         } else {
@@ -125,19 +128,6 @@ async function init() {
       } catch (err) {
         console.error('Error saving booking:', err);
         toast(`Appointment Confirmed (${refCode}) but could not reach server.`, 'error');
-      }
-
-      form.reset();
-      selectedServices.clear();
-      document.querySelectorAll('[data-service-item]').forEach(li => {
-        li.querySelector('input').checked = false;
-        li.classList.remove('bg-amber-50/50', 'border-l-4', 'border-amber-600');
-      });
-      updatePreview();
-
-      if (user) {
-        if (nameInput && user.name) nameInput.value = user.name;
-        if (emailInput && user.email) emailInput.value = user.email;
       }
 
       setBusy(submitBtn, false);
