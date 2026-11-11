@@ -430,8 +430,19 @@ orderRoutes.delete('/admin/:id', async (c) => {
     const orderId = safeText(c.req.param('id'), 80)
     
     await c.env.DB.batch([
+      // 1. Break the circular dependency first
+      c.env.DB.prepare('UPDATE orders SET active_attempt_id = NULL WHERE id = ?').bind(orderId),
+      
+      // 2. Delete child records linked to payment attempts
+      c.env.DB.prepare('DELETE FROM payment_confirmations WHERE attempt_id IN (SELECT id FROM payment_attempts WHERE order_id = ?)').bind(orderId),
+      
+      // 3. Delete payment attempts
       c.env.DB.prepare('DELETE FROM payment_attempts WHERE order_id = ?').bind(orderId),
+      
+      // 4. Delete order items
       c.env.DB.prepare('DELETE FROM order_items WHERE order_id = ?').bind(orderId),
+      
+      // 5. Finally, delete the order itself
       c.env.DB.prepare('DELETE FROM orders WHERE id = ?').bind(orderId)
     ])
     
