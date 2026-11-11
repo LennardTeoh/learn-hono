@@ -25,7 +25,7 @@ function calculateMockPrice(services: string | null): number {
     return mockPriceCents;
 }
 
-// POST: /api/care/book - Customer booking submission
+// POST: /api/care/book
 careRoutes.post('/book', async (c) => {
   try {
     const body = await c.req.json()
@@ -52,7 +52,6 @@ careRoutes.post('/book', async (c) => {
 
     return c.json({ success: true, bookingId })
   } catch (err: any) {
-    console.error('Failed to insert care booking:', err)
     return c.json({ error: 'Failed to process booking' }, 500)
   }
 })
@@ -97,14 +96,23 @@ careRoutes.post('/cancel/:id', async (c) => {
   }
 })
 
-// GET: /api/care/booking/:id
+// GET: /api/care/booking/:id - Fetches booking status (syncing it with the orders table if paid)
 careRoutes.get('/booking/:id', async (c) => {
   try {
     const bookingId = c.req.param('id');
     const { results } = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).all();
     if (!results || results.length === 0) return c.json({ error: 'Booking not found in database' }, 404);
 
-    const booking = results[0];
+    let booking = results[0];
+    
+    // Check if the mobile payment marked the dummy order as 'confirmed'
+    const dummyOrder = await c.env.DB.prepare(`SELECT status FROM orders WHERE id = ?`).bind(bookingId).first<{status: string}>();
+    if (dummyOrder && dummyOrder.status === 'confirmed' && booking.status !== 'CONFIRMED') {
+        // Sync the statuses!
+        await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
+        booking.status = 'CONFIRMED';
+    }
+
     return c.json({ 
         status: booking.status === 'SCHEDULED' ? 'pending_payment' : 'confirmed',
         price: calculateMockPrice(booking.selected_services as string),
@@ -115,39 +123,35 @@ careRoutes.get('/booking/:id', async (c) => {
   }
 });
 
-// POST: /api/care/booking/:id/attempts - Safely structures inserts to prevent SQLite FK crashes
 careRoutes.post('/booking/:id/attempts', async (c) => {
     try {
         const bookingId = c.req.param('id');
-        const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{id: string; status: string; selected_services: string}>();
+        const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{id: string; status: string; selected_services: string; customer_email: string}>();
         
         if (!booking) throw new HttpError(404, 'Booking not found.');
         
         const attemptId = crypto.randomUUID();
         const createdAt = nowSeconds();
-        const expiresAt = createdAt + 120; // 2 minutes expiry
+        const expiresAt = createdAt + 120; 
         const token = crypto.randomUUID() + crypto.randomUUID(); 
         const priceCents = calculateMockPrice(booking.selected_services);
 
-        // 1. Get the securely authenticated user to satisfy the user_id foreign key
         const auth = createAuth(c.env, () => {})
         const session = await auth.api.getSession({ headers: c.req.raw.headers })
         if (!session?.user?.id) throw new Error('Unauthorized session');
         const userId = session.user.id;
         
-        // 2. Create the root dummy order FIRST without active_attempt_id to satisfy foreign key rules cleanly
         await c.env.DB.prepare(`
             INSERT OR IGNORE INTO orders 
             (id, user_id, status, mock_method, subtotal_cents, shipping_cents, tax_cents, total_cents, shipping_name, address1, address2, city, postal_code, country, idempotency_key, created_at, verification_pin, delivery_method, state, phone) 
             VALUES (?, ?, 'pending_payment', 'qr', ?, 0, 0, ?, 'Care Booking', 'Boutique', '', 'Kuala Lumpur', '50000', 'Malaysia', ?, ?, '000000', 'pickup', 'W.P. Kuala Lumpur', '+6000000000')
         `).bind(bookingId, userId, priceCents, priceCents, bookingId, createdAt).run();
 
-        // 3. Now it is perfectly safe to insert the attempt and link it back to the order (exact standard flow)
         await c.env.DB.batch([
             c.env.DB.prepare("UPDATE payment_attempts SET status = 'replaced' WHERE order_id = ? AND status = 'active'").bind(bookingId),
             c.env.DB.prepare('INSERT INTO payment_attempts (id, order_id, method, status, created_at, expires_at, token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
                 .bind(attemptId, bookingId, 'qr', 'active', createdAt, expiresAt, await hashToken(token)),
-            c.env.DB.prepare("UPDATE orders SET active_attempt_id = ? WHERE id = ?").bind(attemptId, bookingId)
+            c.env.DB.prepare("UPDATE orders SET active_attempt_id = ?, status = 'pending_payment' WHERE id = ?").bind(attemptId, bookingId)
         ]);
         
         const url = new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
@@ -155,22 +159,27 @@ careRoutes.post('/booking/:id/attempts', async (c) => {
         
         return c.json({ id: attemptId, method: 'qr', status: 'active', expiresAt, url, qrSvg });
     } catch (err: any) {
-        console.error('QR Attempt Error:', err);
         return c.json({ error: err.message || 'Failed to generate QR' }, 500);
     }
 });
 
 careRoutes.get('/booking/:id/attempt', async (c) => {
     const bookingId = c.req.param('id');
-    const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{status: string}>();
-    if (!booking) return c.json({ error: 'Booking not found' }, 404);
+    
+    // We MUST check the dummy 'orders' table status because that is the only one the mobile phone updates!
+    const dummyOrder = await c.env.DB.prepare(`SELECT status FROM orders WHERE id = ?`).bind(bookingId).first<{status: string}>();
+    if (!dummyOrder) return c.json({ error: 'Booking not found' }, 404);
     
     const attempt = await c.env.DB.prepare(`SELECT id, method, status, expires_at FROM payment_attempts WHERE order_id = ? ORDER BY created_at DESC LIMIT 1`).bind(bookingId).first<{id: string; method: string; status: string; expires_at: number}>();
-    
     const isExpired = attempt && attempt.status === 'active' && attempt.expires_at <= nowSeconds();
     
+    // If the dummy order says confirmed, sync it to the care_bookings table so the success page knows!
+    if (dummyOrder.status === 'confirmed') {
+        await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
+    }
+    
     return c.json({ 
-        orderStatus: booking.status === 'SCHEDULED' || booking.status === 'PENDING_PAYMENT' ? 'pending_payment' : 'confirmed', 
+        orderStatus: dummyOrder.status, 
         attempt: attempt ? { ...attempt, status: isExpired ? 'expired' : attempt.status } : null 
     });
 });
