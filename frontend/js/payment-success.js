@@ -16,7 +16,7 @@ async function init() {
     if (res.error) throw new Error(res.error)
     
     status = res.status
-    totalCents = res.price || 15000
+    totalCents = res.price || 0
     displayId = res.id || id
     isPaid = status === 'confirmed' || status === 'paid'
 

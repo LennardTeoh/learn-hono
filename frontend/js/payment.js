@@ -30,8 +30,17 @@ async function start() {
     if (isCareBooking) {
         const res = await api(`/api/care/booking/${encodeURIComponent(id)}`);
         if (res.error) throw new Error(res.error);
-        totalCents = res.price || 15000; 
+        
+        // FIXED: Removed the 15000 fallback. It will now correctly evaluate to 0.
+        totalCents = res.price || 0; 
         status = res.status ? res.status.toLowerCase() : '';
+        
+        // NEW: If complimentary (RM 0.00), auto-confirm and skip the payment screen entirely!
+        if (totalCents === 0 && (status === 'scheduled' || status === 'pending_payment')) {
+            await api(`/api/care/booking/${encodeURIComponent(id)}/card-complete`, { method: 'POST', body: JSON.stringify({ outcome: 'success' }) });
+            location.href = `/payment-success/?id=${encodeURIComponent(id)}`;
+            return;
+        }
     } else {
         const res = await api(`/api/orders/${encodeURIComponent(id)}`);
         if (res.error) throw new Error(res.error);
