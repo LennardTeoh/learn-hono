@@ -457,7 +457,7 @@ productForm?.addEventListener('submit', async (e) => {
 
 init().catch(console.error);
 
-// Fetch and render Care Appointments
+// Fetch and render Care Appointments with Manual Status Override
 async function loadCareAppointments() {
   const tbody = document.getElementById('care-table-body');
   if (!tbody) return;
@@ -473,9 +473,11 @@ async function loadCareAppointments() {
     
     tbody.innerHTML = '';
     appointments.forEach(app => {
-      let badgeClass = 'bg-slate-100 text-slate-600';
-      if (app.status === 'SCHEDULED') badgeClass = 'bg-blue-100 text-blue-800';
-      if (app.status === 'COMPLETED') badgeClass = 'bg-green-100 text-green-800';
+      // Dynamic colors based on the current status
+      let badgeClass = 'text-slate-600 bg-slate-50 border-slate-200';
+      if (app.status === 'SCHEDULED' || app.status === 'PENDING') badgeClass = 'text-amber-700 bg-amber-50 border-amber-200';
+      if (app.status === 'CONFIRMED' || app.status === 'PAID') badgeClass = 'text-green-700 bg-green-50 border-green-200';
+      if (app.status === 'COMPLETED') badgeClass = 'text-blue-700 bg-blue-50 border-blue-200';
       
       tbody.innerHTML += `
         <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors bg-white">
@@ -494,9 +496,14 @@ async function loadCareAppointments() {
           </td>
           <td class="py-4 px-6 text-right">
             <div class="flex items-center justify-end gap-3">
-              <span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeClass}">
-                ${escapeHtml(app.status)}
-              </span>
+              <!-- INTERACTIVE STATUS DROPDOWN -->
+              <select data-update-status="${app.id}" class="inline-block px-2 py-1 text-[9px] font-bold tracking-widest uppercase border rounded cursor-pointer outline-none transition-colors appearance-none text-center ${badgeClass}">
+                <option value="SCHEDULED" ${app.status === 'SCHEDULED' || app.status === 'PENDING' ? 'selected' : ''}>PENDING</option>
+                <option value="PAID" ${app.status === 'PAID' || app.status === 'CONFIRMED' ? 'selected' : ''}>PAID</option>
+                <option value="COMPLETED" ${app.status === 'COMPLETED' ? 'selected' : ''}>COMPLETED</option>
+                <option value="CANCELLED" ${app.status === 'CANCELLED' ? 'selected' : ''}>CANCELLED</option>
+              </select>
+              <!-- DELETE BUTTON -->
               <button data-delete-booking="${app.id}" class="text-slate-300 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50 cursor-pointer" title="Delete Appointment">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
@@ -506,7 +513,40 @@ async function loadCareAppointments() {
       `;
     });
 
-    // Listener for the new appointment Delete button
+    // Listener for manual status updates
+    document.querySelectorAll('[data-update-status]').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const id = e.currentTarget.getAttribute('data-update-status');
+        const newStatus = e.currentTarget.value;
+        const originalClass = e.currentTarget.className;
+        
+        e.currentTarget.disabled = true;
+        
+        try {
+          const res = await api(`/api/admin/care-appointments/${id}/status`, { 
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus })
+          });
+          
+          if (res.success || res.ok) {
+            // Update the dropdown colors visually to match the new status
+            e.currentTarget.className = e.currentTarget.className.replace(/(text|bg|border)-[a-z]+-\d+/g, '').trim();
+            if (newStatus === 'SCHEDULED') e.currentTarget.classList.add('text-amber-700', 'bg-amber-50', 'border-amber-200');
+            else if (newStatus === 'PAID') e.currentTarget.classList.add('text-green-700', 'bg-green-50', 'border-green-200');
+            else if (newStatus === 'COMPLETED') e.currentTarget.classList.add('text-blue-700', 'bg-blue-50', 'border-blue-200');
+            else e.currentTarget.classList.add('text-slate-600', 'bg-slate-50', 'border-slate-200');
+          } else {
+            throw new Error(res.error || 'Failed to update');
+          }
+        } catch (err) {
+          alert('Failed to update status: ' + err.message);
+          e.currentTarget.className = originalClass; // revert on failure
+        }
+        e.currentTarget.disabled = false;
+      });
+    });
+
+    // Listener for the appointment Delete button
     document.querySelectorAll('[data-delete-booking]').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.getAttribute('data-delete-booking');
