@@ -29,7 +29,7 @@ function calculateMockPrice(services: string | null): number {
 careRoutes.post('/book', async (c) => {
   try {
     const body = await c.req.json()
-    const bookingId = `LUM-CARE-${Math.floor(1000 + Math.random() * 9000)}`
+    const bookingId = `LUM-CARE-\${Math.floor(1000 + Math.random() * 9000)}`
 
     await c.env.DB.prepare(`
       INSERT INTO care_bookings (
@@ -96,19 +96,16 @@ careRoutes.post('/cancel/:id', async (c) => {
   }
 })
 
-// GET: /api/care/booking/:id - Fetches booking status (syncing it with the orders table if paid)
+// GET: /api/care/booking/:id
 careRoutes.get('/booking/:id', async (c) => {
   try {
     const bookingId = c.req.param('id');
     const { results } = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).all();
-    if (!results || results.length === 0) return c.json({ error: 'Booking not found in database' }, 404);
+    if (!results || results.length === 0) return c.json({ error: 'Booking not found' }, 404);
 
     let booking = results[0];
-    
-    // Check if the mobile payment marked the dummy order as 'confirmed'
     const dummyOrder = await c.env.DB.prepare(`SELECT status FROM orders WHERE id = ?`).bind(bookingId).first<{status: string}>();
     if (dummyOrder && dummyOrder.status === 'confirmed' && booking.status !== 'CONFIRMED') {
-        // Sync the statuses!
         await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
         booking.status = 'CONFIRMED';
     }
@@ -154,7 +151,7 @@ careRoutes.post('/booking/:id/attempts', async (c) => {
             c.env.DB.prepare("UPDATE orders SET active_attempt_id = ?, status = 'pending_payment' WHERE id = ?").bind(attemptId, bookingId)
         ]);
         
-        const url = new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
+        const url = new URL(`/mock-pay/?token=\${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
         const qrSvg = new QRCode({ content: url, color: '#e7366b', background: '#ffffff', padding: 4, width: 260, height: 260, ecl: 'M' }).svg();
         
         return c.json({ id: attemptId, method: 'qr', status: 'active', expiresAt, url, qrSvg });
@@ -165,15 +162,12 @@ careRoutes.post('/booking/:id/attempts', async (c) => {
 
 careRoutes.get('/booking/:id/attempt', async (c) => {
     const bookingId = c.req.param('id');
-    
-    // We MUST check the dummy 'orders' table status because that is the only one the mobile phone updates!
     const dummyOrder = await c.env.DB.prepare(`SELECT status FROM orders WHERE id = ?`).bind(bookingId).first<{status: string}>();
     if (!dummyOrder) return c.json({ error: 'Booking not found' }, 404);
     
     const attempt = await c.env.DB.prepare(`SELECT id, method, status, expires_at FROM payment_attempts WHERE order_id = ? ORDER BY created_at DESC LIMIT 1`).bind(bookingId).first<{id: string; method: string; status: string; expires_at: number}>();
     const isExpired = attempt && attempt.status === 'active' && attempt.expires_at <= nowSeconds();
     
-    // If the dummy order says confirmed, sync it to the care_bookings table so the success page knows!
     if (dummyOrder.status === 'confirmed') {
         await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
     }
@@ -187,7 +181,6 @@ careRoutes.get('/booking/:id/attempt', async (c) => {
 careRoutes.post('/booking/:id/card-complete', async (c) => {
     const bookingId = c.req.param('id');
     const { outcome } = await readJson<{ outcome?: string }>(c);
-    
     if (outcome === 'success') {
         await c.env.DB.batch([
             c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId),
@@ -205,5 +198,23 @@ adminCareRoutes.get('/care-appointments', async (c) => {
     return c.json(results)
   } catch (err: any) {
     return c.json({ error: 'Failed to fetch appointments' }, 500)
+  }
+})
+
+// DELETE: /api/admin/care-appointments/:id
+adminCareRoutes.delete('/care-appointments/:id', async (c) => {
+  try {
+    const auth = createAuth(c.env, () => {})
+    const session = await auth.api.getSession({ headers: c.req.raw.headers })
+    if (session?.user?.email !== 'lumiere.csproject@gmail.com') return c.json({ error: 'Unauthorized.' }, 403)
+
+    const bookingId = c.req.param('id')
+    await c.env.DB.batch([
+      c.env.DB.prepare(`DELETE FROM care_bookings WHERE id = ?`).bind(bookingId),
+      c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(bookingId)
+    ])
+    return c.json({ success: true })
+  } catch (err: any) {
+    return c.json({ error: 'Failed to delete appointment' }, 500)
   }
 })

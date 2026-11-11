@@ -117,7 +117,7 @@ orderRoutes.post('/', async (c) => {
     throw new HttpError(400, 'Complete the Malaysia contact and address details.')
   }
 
-  // 🔥 THE FIX: Generate a short, 8-character uppercase hex string for all new orders
+  // Generate a short, 8-character uppercase hex string for all new orders
   const orderId = crypto.randomUUID().split('-')[0].toUpperCase()
   
   // Generate the unique 6-digit PIN
@@ -317,12 +317,14 @@ orderRoutes.get('/all', async (c) => {
     throw new HttpError(403, 'Unauthorized. Admin access only.')
   }
   
+  // Filter out any order IDs that start with 'LUM-CARE'
   const result = await c.env.DB
     .prepare(
       `SELECT orders.id, orders.status, orders.mock_method, orders.paid_at, orders.tracking_number, orders.subtotal_cents, orders.shipping_cents, orders.tax_cents, orders.total_cents,
               orders.shipping_name, orders.delivery_method, orders.state, orders.phone, user.email, orders.created_at, orders.verification_pin
        FROM orders 
        LEFT JOIN user ON orders.user_id = user.id
+       WHERE orders.id NOT LIKE 'LUM-CARE-%'
        ORDER BY orders.created_at DESC LIMIT 100`
     )
     .all()
@@ -336,7 +338,9 @@ orderRoutes.get('/', async (c) => {
   const result = await c.env.DB
     .prepare(
       `SELECT id, status, mock_method, paid_at, tracking_number, subtotal_cents, shipping_cents, tax_cents, total_cents, delivery_method, created_at, verification_pin
-       FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
+       FROM orders 
+       WHERE user_id = ? AND id NOT LIKE 'LUM-CARE-%' 
+       ORDER BY created_at DESC LIMIT 50`
     )
     .bind(user.id)
     .all()
@@ -413,4 +417,26 @@ orderRoutes.patch('/:id/shipping', async (c) => {
   }
   
   throw new HttpError(500, 'Failed to update order')
+})
+
+// DELETE: /api/orders/admin/:id - Delete standard order from Logistics page
+orderRoutes.delete('/admin/:id', async (c) => {
+  try {
+    const user = await requireUser(c)
+    if (user.email !== ADMIN_EMAIL) {
+      throw new HttpError(403, 'Unauthorized. Admin access only.')
+    }
+    
+    const orderId = safeText(c.req.param('id'), 80)
+    
+    await c.env.DB.batch([
+      c.env.DB.prepare('DELETE FROM payment_attempts WHERE order_id = ?').bind(orderId),
+      c.env.DB.prepare('DELETE FROM order_items WHERE order_id = ?').bind(orderId),
+      c.env.DB.prepare('DELETE FROM orders WHERE id = ?').bind(orderId)
+    ])
+    
+    return c.json({ ok: true })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })

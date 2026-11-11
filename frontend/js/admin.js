@@ -297,7 +297,6 @@ function renderAdminTable(root, orders) {
   };
 
   const rows = orders.map(order => {
-
     let dateStr = new Date(order.created_at * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const idShort = order.id.split('-')[0].substring(0, 8).toUpperCase();
     const currentStatus = (order.status || 'confirmed').toLowerCase();
@@ -312,18 +311,44 @@ function renderAdminTable(root, orders) {
         <td class="py-4 px-4 text-sm"><span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeColor}">${currentStatus === 'pending_payment' ? 'Pending Payment' : currentStatus}</span>${order.paid_at ? '<p class="mt-1 text-xs text-green-700">Payment successful</p>' : ''}</td>
         <td class="py-4 px-4 text-sm font-serif text-slate-700">${order.tracking_number ? `<span class="font-bold">${escapeHtml(order.tracking_number)}</span>` : '<span class="text-slate-300 italic">Unassigned</span>'}</td>
         <td class="py-4 px-4 text-right">
-          <button data-order-id="${order.id}" class="update-order-btn border border-slate-900 text-slate-900 px-4 py-2 min-h-11 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-pointer">Update</button>
+          <div class="flex items-center justify-end gap-2">
+            <button data-order-id="${order.id}" class="update-order-btn border border-slate-900 text-slate-900 px-4 py-2 min-h-11 text-[9px] font-bold tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors cursor-pointer">Update</button>
+            <button data-delete-order="${order.id}" class="text-slate-300 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50 cursor-pointer" title="Delete Order">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
         </td>
       </tr>
     `;
   }).join('');
   
-  root.innerHTML = `<p class="mb-2 text-xs text-slate-500 lg:hidden">Scroll the table to view status and actions.</p><div class="overflow-x-auto shadow-sm border border-slate-200" role="region" aria-label="Orders table" tabindex="0"><table class="w-full text-left border-collapse min-w-[900px]"><thead><tr class="bg-slate-100 border-b border-slate-200"><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Order ID</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Date</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Customer</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Revenue</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Status</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Tracking</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  root.innerHTML = `<p class="mb-2 text-xs text-slate-500 lg:hidden">Scroll the table to view status and actions.</p><div class="overflow-x-auto shadow-sm border border-slate-200" role="region" aria-label="Orders table" tabindex="0"><table class="w-full text-left border-collapse min-w-[900px]"><thead><tr class="bg-slate-100 border-b border-slate-200"><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Order ID</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Date</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Customer</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Revenue</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Status</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase">Tracking</th><th class="py-4 px-4 text-[10px] font-bold tracking-widest text-slate-900 uppercase text-right">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 
   root.querySelectorAll('.update-order-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const orderId = btn.getAttribute('data-order-id');
-      window.location.href = `/admin/order/?id=${orderId}`;
+      window.location.href = `/admin/order/?id=${btn.getAttribute('data-order-id')}`;
+    });
+  });
+
+  // Listener for the new order Delete button
+  root.querySelectorAll('[data-delete-order]').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.currentTarget.getAttribute('data-delete-order');
+      if (!confirm(`Permanently delete order #${id.split('-')[0].substring(0,8).toUpperCase()}?`)) return;
+      
+      const row = e.currentTarget.closest('tr');
+      e.currentTarget.disabled = true;
+      try {
+        const res = await api(`/api/orders/admin/${id}`, { method: 'DELETE' });
+        if (res.success || res.ok) {
+          row.style.transition = 'opacity 0.3s';
+          row.style.opacity = '0';
+          setTimeout(() => row.remove(), 300);
+        }
+      } catch (err) {
+        alert('Failed to delete order: ' + err.message);
+        e.currentTarget.disabled = false;
+      }
     });
   });
 }
@@ -468,13 +493,41 @@ async function loadCareAppointments() {
             ${escapeHtml(app.payment_method).replace('_', ' ')}
           </td>
           <td class="py-4 px-6 text-right">
-            <span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeClass}">
-              ${escapeHtml(app.status)}
-            </span>
+            <div class="flex items-center justify-end gap-3">
+              <span class="inline-block px-2.5 py-1 text-[9px] font-bold tracking-widest uppercase ${badgeClass}">
+                ${escapeHtml(app.status)}
+              </span>
+              <button data-delete-booking="${app.id}" class="text-slate-300 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50 cursor-pointer" title="Delete Appointment">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
           </td>
         </tr>
       `;
     });
+
+    // Listener for the new appointment Delete button
+    document.querySelectorAll('[data-delete-booking]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const id = e.currentTarget.getAttribute('data-delete-booking');
+        if (!confirm(`Permanently delete appointment ${id}?`)) return;
+        
+        const row = e.currentTarget.closest('tr');
+        e.currentTarget.disabled = true;
+        try {
+          const res = await api(`/api/admin/care-appointments/${id}`, { method: 'DELETE' });
+          if (res.success || res.ok) {
+            row.style.transition = 'opacity 0.3s';
+            row.style.opacity = '0';
+            setTimeout(() => row.remove(), 300);
+          }
+        } catch (err) {
+          alert('Failed to delete appointment: ' + err.message);
+          e.currentTarget.disabled = false;
+        }
+      });
+    });
+
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load appointments: ${escapeHtml(err.message)}</td></tr>`;
   }
