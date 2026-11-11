@@ -84,15 +84,21 @@ async function init() {
       setBusy(submitBtn, true, 'BOOKING APPOINTMENT...');
 
       await new Promise((resolve) => setTimeout(resolve, 800));
+      
+      // FIXED: Uses string concatenation so it never breaks in deployment
       const refCode = 'LUM-CARE-' + Math.floor(1000 + Math.random() * 9000);
       const division = divisionSelect.value;
       const extraNotes = notesInput.value.trim();
       
-      // Get the ACTUAL payment method chosen by the user
-      const paymentMethod = document.querySelector('input[name="carePayment"]:checked')?.value || 'card';
+      // Look for the specific radio buttons in your care form
+      const qrRadio = document.getElementById('care-payment-qr');
+      const cardRadio = document.getElementById('care-payment-card');
+      
+      let paymentMethod = 'card';
+      if (qrRadio && qrRadio.checked) paymentMethod = 'qr';
+      if (cardRadio && cardRadio.checked) paymentMethod = 'card';
       
       try {
-        // Send request explicitly to the worker API URL
         const response = await fetch(`${API_URL}/api/care/book`, {
           method: 'POST',
           headers: {
@@ -118,8 +124,11 @@ async function init() {
           
           // DYNAMIC REDIRECT based on user choice
           setTimeout(() => {
-            const targetPath = paymentMethod === 'card' ? '/card-payment/' : '/payment/';
-            window.location.href = `${targetPath}?id=${finalId}`;
+            if (paymentMethod === 'card') {
+                window.location.href = `/card-payment/?id=${finalId}`;
+            } else {
+                window.location.href = `/payment/?id=${finalId}`;
+            }
           }, 1500);
           
         } else {
