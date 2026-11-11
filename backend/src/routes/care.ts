@@ -115,24 +115,42 @@ careRoutes.get('/booking/:id', async (c) => {
   }
 });
 
-// POST: /api/care/booking/:id/attempts - Generates scannable QR without touching orders table foreign keys
+// POST: /api/care/booking/:id/attempts - Generates scannable QR safely satisfying orders FK
 careRoutes.post('/booking/:id/attempts', async (c) => {
     try {
         const bookingId = c.req.param('id');
-        const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{id: string; status: string; selected_services: string}>();
+        const booking = await c.env.DB.prepare(`SELECT * FROM care_bookings WHERE id = ?`).bind(bookingId).first<{id: string; status: string; selected_services: string; customer_email: string}>();
         
         if (!booking) throw new HttpError(404, 'Booking not found.');
         
         const attemptId = crypto.randomUUID();
         const createdAt = nowSeconds();
-        const expiresAt = createdAt + 120; // 2 minutes expiry
+        const expiresAt = createdAt + 120; 
         const token = crypto.randomUUID() + crypto.randomUUID(); 
+        const priceCents = calculateMockPrice(booking.selected_services);
+
+        // 1. Find or create a valid user_id for the foreign key requirement
+        let user = await c.env.DB.prepare(`SELECT id FROM user WHERE email = ?`).bind(booking.customer_email).first<{id: string}>();
+        let userId = user ? user.id : null;
         
-        // Insert directly into payment_attempts using order_id = bookingId (bypassing orders table constraints)
+        if (!userId) {
+            // Fallback to get any user if email doesn't match directly
+            user = await c.env.DB.prepare(`SELECT id FROM user LIMIT 1`).first<{id: string}>();
+            userId = user ? user.id : 'system-user';
+        }
+        
+        // 2. Insert dummy order record to satisfy the foreign key constraint on payment_attempts
+        await c.env.DB.prepare(`
+            INSERT OR IGNORE INTO orders (id, user_id, status, subtotal_cents, total_cents, created_at, idempotency_key) 
+            VALUES (?, ?, 'pending_payment', ?, ?, ?, ?)
+        `).bind(bookingId, userId, priceCents, priceCents, createdAt, bookingId).run();
+
+        // 3. Insert payment attempt and update order active attempt
         await c.env.DB.batch([
             c.env.DB.prepare("UPDATE payment_attempts SET status = 'replaced' WHERE order_id = ? AND status = 'active'").bind(bookingId),
             c.env.DB.prepare('INSERT INTO payment_attempts (id, order_id, method, status, created_at, expires_at, token_hash) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                .bind(attemptId, bookingId, 'qr', 'active', createdAt, expiresAt, await hashToken(token))
+                .bind(attemptId, bookingId, 'qr', 'active', createdAt, expiresAt, await hashToken(token)),
+            c.env.DB.prepare("UPDATE orders SET active_attempt_id = ? WHERE id = ?").bind(attemptId, bookingId)
         ]);
         
         const url = new URL(`/mock-pay/?token=${encodeURIComponent(token)}`, c.env.APP_ORIGIN).toString();
@@ -165,7 +183,10 @@ careRoutes.post('/booking/:id/card-complete', async (c) => {
     const { outcome } = await readJson<{ outcome?: string }>(c);
     
     if (outcome === 'success') {
-        await c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId).run();
+        await c.env.DB.batch([
+            c.env.DB.prepare(`UPDATE care_bookings SET status = 'CONFIRMED' WHERE id = ?`).bind(bookingId),
+            c.env.DB.prepare(`UPDATE orders SET status = 'confirmed' WHERE id = ?`).bind(bookingId)
+        ]);
         return c.json({ orderStatus: 'confirmed' });
     }
     return c.json({ orderStatus: 'pending_payment' });
