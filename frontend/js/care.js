@@ -85,18 +85,19 @@ async function init() {
 
       await new Promise((resolve) => setTimeout(resolve, 800));
       
-      // FIXED: Uses string concatenation so it never breaks in deployment
       const refCode = 'LUM-CARE-' + Math.floor(1000 + Math.random() * 9000);
       const division = divisionSelect.value;
       const extraNotes = notesInput.value.trim();
       
-      // Look for the specific radio buttons in your care form
+      // Look for all three radio buttons
       const qrRadio = document.getElementById('care-payment-qr');
       const cardRadio = document.getElementById('care-payment-card');
+      const storeRadio = document.getElementById('care-payment-store');
       
-      let paymentMethod = 'card';
+      let paymentMethod = 'card'; // default
       if (qrRadio && qrRadio.checked) paymentMethod = 'qr';
       if (cardRadio && cardRadio.checked) paymentMethod = 'card';
+      if (storeRadio && storeRadio.checked) paymentMethod = 'in_store';
       
       try {
         const response = await fetch(`${API_URL}/api/care/book`, {
@@ -120,11 +121,18 @@ async function init() {
         if (response.ok) {
           const result = await response.json();
           const finalId = result.bookingId || refCode;
-          toast(`Appointment Confirmed! Redirecting to payment...`, 'success');
+          
+          if (paymentMethod === 'in_store') {
+            toast(`Appointment Confirmed! See you at the boutique.`, 'success');
+          } else {
+            toast(`Appointment Confirmed! Redirecting to payment...`, 'success');
+          }
           
           // DYNAMIC REDIRECT based on user choice
           setTimeout(() => {
-            if (paymentMethod === 'card') {
+            if (paymentMethod === 'in_store') {
+                window.location.href = '/account/appointments/'; // Skips payment entirely
+            } else if (paymentMethod === 'card') {
                 window.location.href = `/card-payment/?id=${finalId}`;
             } else {
                 window.location.href = `/payment/?id=${finalId}`;
