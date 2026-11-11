@@ -217,37 +217,32 @@ adminCareRoutes.get('/care-appointments', async (c) => {
 // DELETE: /api/admin/care-appointments/:id
 adminCareRoutes.delete('/care-appointments/:id', async (c) => {
   try {
-    const auth = createAuth(c.env, () => { })
+    const auth = createAuth(c.env, () => {})
     const session = await auth.api.getSession({ headers: c.req.raw.headers })
     if (session?.user?.email !== 'lumiere.csproject@gmail.com') return c.json({ error: 'Unauthorized.' }, 403)
 
     const bookingId = c.req.param('id')
+    
     await c.env.DB.batch([
-      c.env.DB.prepare(`DELETE FROM care_bookings WHERE id = ?`).bind(bookingId),
-      c.env.DB.prepare(`DELETE FROM orders WHERE id = ?`).bind(bookingId),
-      c.env.DB.prepare(`DELETE FROM payment_attempts WHERE order_id = ?`).bind(bookingId)
+      // 1. Break the circular dependency for the dummy order
+      c.env.DB.prepare('UPDATE orders SET active_attempt_id = NULL WHERE id = ?').bind(bookingId),
+      
+      // 2. Delete child records linked to payment attempts (just in case)
+      c.env.DB.prepare('DELETE FROM payment_confirmations WHERE attempt_id IN (SELECT id FROM payment_attempts WHERE order_id = ?)').bind(bookingId),
+      
+      // 3. Delete the payment attempts
+      c.env.DB.prepare('DELETE FROM payment_attempts WHERE order_id = ?').bind(bookingId),
+      
+      // 4. Delete the dummy order
+      c.env.DB.prepare('DELETE FROM orders WHERE id = ?').bind(bookingId),
+      
+      // 5. Finally, delete the actual care appointment
+      c.env.DB.prepare('DELETE FROM care_bookings WHERE id = ?').bind(bookingId)
     ])
+    
     return c.json({ success: true })
   } catch (err: any) {
+    console.error('Delete Error:', err);
     return c.json({ error: 'Failed to delete appointment' }, 500)
   }
-  // PATCH: /api/admin/care-appointments/:id/status (Manual override)
-  adminCareRoutes.patch('/care-appointments/:id/status', async (c) => {
-    try {
-      const auth = createAuth(c.env, () => { })
-      const session = await auth.api.getSession({ headers: c.req.raw.headers })
-      if (session?.user?.email !== 'lumiere.csproject@gmail.com') return c.json({ error: 'Unauthorized.' }, 403)
-
-      const bookingId = c.req.param('id')
-      const { status } = await readJson<{ status: string }>(c)
-
-      await c.env.DB.prepare(`UPDATE care_bookings SET status = ? WHERE id = ?`)
-        .bind(status.toUpperCase(), bookingId).run()
-
-      return c.json({ success: true })
-    } catch (err: any) {
-      return c.json({ error: 'Failed to update status' }, 500)
-    }
-  })
-
 })
